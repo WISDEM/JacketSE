@@ -1,0 +1,3 @@
+graft src/jacketse/sphinx_build/html
+recursive-include src/jacketse/test *.py
+
