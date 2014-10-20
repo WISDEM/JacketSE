@@ -3247,7 +3247,7 @@ if __name__ == '__main__':
     #PyObject *f = PySys_GetObject("stdout")
     #PyFile_WriteString
 
-    #--- Set inputs ---#
+    #--- Set Jacket Input Parameters ---#
     Jcktins=JcktGeoInputs()
     Jcktins.nlegs =4
     Jcktins.nbays =5
@@ -3257,10 +3257,7 @@ if __name__ == '__main__':
     Jcktins.VPFlag = True    #vertical pile T/F;  to enable piles in frame3DD set pileinputs.ndiv>0
     Jcktins.clamped= False    #whether or not the bottom of the structure is rigidly connected. Use False when equivalent spring constants are being used.
     Jcktins.AFflag = False  #whether or not to use apparent fixity piles
-    Jcktins.PreBuildTPLvl = 3  #if >0, the TP is prebuilt according to rules per PreBuildTP
-    #Launch the assembly: before or after the component input definition?
-    myjckt=set_as_top(JacketAsmly(Jcktins.clamped,Jcktins.AFflag,Jcktins.PreBuildTPLvl))
-    myjckt.JcktGeoIn=Jcktins
+    Jcktins.PreBuildTPLvl = 2  #if >0, the TP is prebuilt according to rules per PreBuildTP
 
     #Soil inputs
     Soilinputs=SoilGeoInputs()
@@ -3273,8 +3270,6 @@ if __name__ == '__main__':
     Soilinputs.PenderSwtch   =False #True
     Soilinputs.SoilSF   =1.
 
-    myjckt.Soilinputs=Soilinputs
-
     #Water and wind inputs
     Waterinputs=WaterInputs()
     Waterinputs.wdepth   =30.
@@ -3285,11 +3280,8 @@ if __name__ == '__main__':
     Windinputs.HH=100. #CHECK HOW THIS COMPLIES....
     Windinputs.U50HH=30. #assumed gust speed
 
-    myjckt.Waterinputs=Waterinputs
-    myjckt.Windinputs=Windinputs
-
     #RNA loads              Fx-z,         Mxx-zz
-    myjckt.RNA_F=np.array([1000.e3,0.,0.,0.,0.,0.])
+    RNA_F=np.array([1000.e3,0.,0.,0.,0.,0.])
 
     #Pile data
     Pilematin=MatInputs()
@@ -3306,9 +3298,7 @@ if __name__ == '__main__':
     Pileinputs.tpile=tpile
     Pileinputs.Lp=Lp #[m] Embedment length
 
-    myjckt.Pileinputs=Pileinputs
-
-    #Legs Data
+    #Legs data
     legmatin=MatInputs()
     legmatin.matname=(['steel','steel','steel','steel'])
     legmatin.E=np.array([2.0e11])
@@ -3321,10 +3311,7 @@ if __name__ == '__main__':
     leginputs.Dleg=Dleg
     leginputs.tleg=tleg
 
-    myjckt.leginputs=leginputs
-
-    #The following is a passthrough variables
-    myjckt.legbot_stmphin =1.5  #Distance from bottom of leg to second joint along z; must be>0
+    legbot_stmphin =1.5  #Distance from bottom of leg to second joint along z; must be>0
 
     #Xbrc data
     Xbrcmatin=MatInputs()
@@ -3339,7 +3326,6 @@ if __name__ == '__main__':
     Xbrcinputs.ndiv=2#2
     Xbrcinputs.Xbrcmatins=Xbrcmatin
     Xbrcinputs.precalc=True   #This can be set to true if we want Xbraces to be precalculated in D and t, in which case the above set Dbrc and tbrc would be overwritten
-    myjckt.Xbrcinputs=Xbrcinputs
 
     #Mbrc data
     Mbrcmatin=MatInputs()
@@ -3352,9 +3338,6 @@ if __name__ == '__main__':
     Mbrcinputs.ndiv=2
     Mbrcinputs.Mbrcmatins=Mbrcmatin
     Mbrcinputs.precalc=True   #This can be set to true if we want Mudbrace to be precalculated in D and t, in which case the above set Dbrc_mud and tbrc_mud would be overwritten
-
-    myjckt.Mbrcinputs=Mbrcinputs
-
     #Hbrc data
     Hbrcmatin=MatInputs()
     Hbrcmatin.matname=np.array(['steel'])
@@ -3367,12 +3350,9 @@ if __name__ == '__main__':
     Hbrcinputs.Hbrcmatins=Hbrcmatin
     Hbrcinputs.precalc=True   #This can be set to true if we want Hbrace to be set=Xbrace top D and t, in which case the above set Dbrch and tbrch would be overwritten
 
-    myjckt.Hbrcinputs=Hbrcinputs
-
     #TP data
     TPlumpinputs=TPlumpMass()
     TPlumpinputs.mass=300.e3 #[kg]
-    myjckt.TPlumpinputs=TPlumpinputs
 
     TPstmpsmatin=MatInputs()
     TPbrcmatin=MatInputs()
@@ -3381,7 +3361,6 @@ if __name__ == '__main__':
     TPbrcmatin.E=np.array([ 2.5e11])
     TPstemmatin.matname=np.array(['steel']).repeat(2)
     TPstemmatin.E=np.array([ 2.1e11]).repeat(2)
-
 
     TPinputs=TPGeoInputs()
     TPinputs.TPbrcmatins=TPbrcmatin
@@ -3401,21 +3380,7 @@ if __name__ == '__main__':
     TPinputs.tstem=np.array([0.1,0.11,0.11])
     TPinputs.hstem=np.array([4.,3.,1.])
 
-    myjckt.TPinputs=TPinputs
-
-    #RNA data
-    RNAins=RNAprops()
-    RNAins.mass=3*350.e3
-    RNAins.Ixx=86.579E+6
-    RNAins.Iyy=53.530E+6
-    RNAins.Izz=58.112E+6
-    RNAins.CMzoff=2.34
-    RNAins.yawangle=45.  #angle with respect to global X, CCW looking from above, wind from left
-    RNAins.rna_weightM=True
-
-    myjckt.RNAinputs=RNAins
-
-    #Tower Data
+    #Tower data
     Twrmatin=MatInputs()
     Twrmatin.matname=np.array(['steel'])
     Twrmatin.E=np.array([ 2.77e11])
@@ -3432,8 +3397,17 @@ if __name__ == '__main__':
     Twrinputs.DTRb=Db/tb
     Twrinputs.Dt=Dt
 
-    myjckt.Twrinputs=Twrinputs
-    myjckt.TwrRigidTop=True #False       #False=Account for RNA via math rather than a physical rigidmember
+    TwrRigidTop=True #False       #False=Account for RNA via math rather than a physical rigidmember
+
+    #RNA data
+    RNAins=RNAprops()
+    RNAins.mass=3*350.e3
+    RNAins.Ixx=86.579E+6
+    RNAins.Iyy=53.530E+6
+    RNAins.Izz=58.112E+6
+    RNAins.CMzoff=2.34
+    RNAins.yawangle=45.  #angle with respect to global X, CCW looking from above, wind from left
+    RNAins.rna_weightM=True
 
     #Frame3DD parameters
     FrameAuxIns=Frame3DDaux()
@@ -3447,7 +3421,31 @@ if __name__ == '__main__':
     FrameAuxIns.shift = 0.0            # shift value ... for unrestrained structures
     FrameAuxIns.gvector=np.array([0.,0.,-9.8065])    #GRAVITY
 
+
+
+    #-----Launch the assembly-----#
+
+    myjckt=set_as_top(JacketAsmly(Jcktins.clamped,Jcktins.AFflag,Jcktins.PreBuildTPLvl))
+
+    #Pass all inputs to assembly
+    myjckt.JcktGeoIn=Jcktins
+    myjckt.Soilinputs=Soilinputs
+    myjckt.Waterinputs=Waterinputs
+    myjckt.Windinputs=Windinputs
+    myjckt.RNA_F=RNA_F
+    myjckt.Pileinputs=Pileinputs
+    myjckt.leginputs=leginputs
+    myjckt.legbot_stmphin =legbot_stmphin
+    myjckt.Xbrcinputs=Xbrcinputs
+    myjckt.Mbrcinputs=Mbrcinputs
+    myjckt.Hbrcinputs=Hbrcinputs
+    myjckt.TPlumpinputs=TPlumpinputs
+    myjckt.TPinputs=TPinputs
+    myjckt.RNAinputs=RNAins
+    myjckt.Twrinputs=Twrinputs
+    myjckt.TwrRigidTop=TwrRigidTop
     myjckt.FrameAuxIns=FrameAuxIns
+
 
     #--- RUN JACKET ---#
     myjckt.run()
