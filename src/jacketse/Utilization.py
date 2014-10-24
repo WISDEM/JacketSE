@@ -317,6 +317,7 @@ class UtilAssembly(Assembly):
 
 
     def configure(self):
+
         self.add('PrepArray',PrepArray())
         self.add('rotorLoads', RotorLoads())
         self.add('TwrUtil', TwrUtilization())

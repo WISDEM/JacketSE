@@ -940,7 +940,7 @@ class TwrGeoInputs(VariableTree):
     DTRt = Float(120.,  units=None, desc='Diameter to thickness ration at the top')
     TwrSecH=Float(30.,  units='m', desc='Length of Buckling Section- it will be assumed that every submember is associated with this length')
     Kbuck    = Float(1, units=None,desc='Tower Kbuckling Factor')   #Effective length factor
-    wrmatins= VarTree(MatInputs(),        desc="Tower Material Data")
+    Twrmatins= VarTree(MatInputs(),        desc="Tower Material Data")
     ndiv     = Array([10], units=None,desc='Array[1 or 2]: Number of FE elements per Tower member: two members max (uniform + tapered) ; CMzOFF Rigid Member is not included here. Note if ndiv is smaller than [2,10],it will be adjusted to a [2,10] value.')
     DeltaZmax= Float(           units='m',desc='Maximum DeltaZ desired for the tower FE lengths. If input then ndiv will be adjusted to verify deltaz<=deltaZmax.')
 
@@ -1169,11 +1169,11 @@ class Soil(Component):
 #_____________________________________________________#
 class PileGeoOutputs(VariableTree):
     """Basic Geometric Outputs needed to build Piles of Jacket"""
-    PileObj   = Instance(Klass=Tube,                          desc='Object of Class Tube for Non-AF portion of Pile')
-    AFObj     = Instance(Klass=Tube,                           desc='Object of Class Tube for AF portion of Pile')
-    joints   = Array(np.array([]),units='m', dtype=np.float, desc='Pile Joint (with legs) Coordinates (3,nlegs=nfaces)')
-    nodes    = Array(np.array([]),units='m', dtype=np.float, desc='Piles'' intermediate Coordinates for nodes (3,ndiv-1,nlegs=nfaces)')
-    NodesPiles= Int(0,           units=None,                 desc='Number of Pile Nodes (1 Face) not counting joints at legs')
+    PileObj     = Instance(Klass=Tube,                          desc='Object of Class Tube for Non-AF portion of Pile')
+    AFObj       = Instance(Klass=Tube,                          desc='Object of Class Tube for AF portion of Pile')
+    joints      = Array(np.array([]),units='m', dtype=np.float, desc='Pile Joint (with legs) Coordinates (3,nlegs=nfaces)')
+    nodes       = Array(np.array([]),units='m', dtype=np.float, desc='Piles'' intermediate Coordinates for nodes (3,ndiv-1,nlegs=nfaces)')
+    nNodesPile  = Int(0,             units=None,                desc='Number of Pile Nodes (1 Face) not counting joints at legs')
     #Dpileout    = Float(units='m', desc='Pile Outer Diameter revisted for battered piles')    #TO DO I would like this one to take Dleg[0] value if not given, or be adjusted for size if VPFlag=false
     #tpileout    = Float(units='m', desc='Pile Wall Thickness passed through or assumed = leg bottom t')     #TO DO I would like this one to take tleg[0] value if not given
 
@@ -1973,8 +1973,8 @@ class BuildGeometry(Component):
         #jnt_frc=np.hstack((jnt_in_no,junk1)).reshape(-1,7)
 
         #SET REACTION NODE IDS
-        self.JcktGeoOut.ReactNIDs=out1[0:totnNodeleg:nNodesPileg].reshape([-1,1])  #IDs of reaction nodes
-        self.JcktGeoOut.Reacts=np.hstack((self.JcktGeoOut.ReactNIDs,np.ones([nlegs,1]).repeat(6,axis=1)))
+        ReactNIDs=out1[0:totnNodeleg:nNodesPileg].reshape([-1,1])  #IDs of reaction nodes
+        self.JcktGeoOut.Reacts=np.hstack((ReactNIDs,np.ones([nlegs,1]).repeat(6,axis=1)))
 
         #Store pile and leg nodes (1 leg only) z-coordinate for use later in loading
         self.pillegZs=pilegnodes[0:nNodesPileg,2]  #
@@ -2018,7 +2018,7 @@ class PileEmbdL(Component):
         tp=self.PileObjout.t
         rho_p=self.PileObjout.mat[0].rho  # density
 
-        Lp0=-EmbedLength(Dp,tp,rho_p,Nhead,self.SoilObj,gravity=self.gravity)*self.SoilObj.SoilSF
+        Lp0=-EmbedLength(Dp,tp,rho_p,Nhead,self.SoilObj,gravity=abs(self.gravity))*self.SoilObj.SoilSF
 
         print('>>>>>>>>>>  needed embedment Lp0=',Lp0) #s
 
@@ -2670,11 +2670,40 @@ class RunFrame3DDmodal(Component):
             self.Frameouts2.top_deflection=np.array([displacements.dx[0,-1],displacements.dy[0,-1],displacements.dz[0,-1]])
 
 #______________________________________________________________________________#
+#        Auxiliary Component to Calculate ABS
+class ABSaux(Component):
+    """This is an auxiliary component that hopefully we will be able to remove once OpenMDAO gets fixed to get the correct connections when operations are specified"""
+    #ins
+    varin  = Float(  iotype='in',desc='Variable to be ABSed.')
+    #outs
+    varout = Float(  iotype='in',desc='ABSed Variable')
+
+    def execute(self):
+       self.varout=np.abs(self.varin)
+#______________________________________________________________________________#
+#        Auxiliary Component to handle Frameouts appropriately
+class FrameOutsaux(Component):
+    """This is an auxiliary component that hopefully we will be able to remove once OpenMDAO gets fixed to properly handle boundary variables"""
+    #ins
+    Frameouts_ins  = VarTree(Frame3DDOutputs(),   iotype='in',  desc='Basic output data from Frame3DD')
+    #ins
+    Frameouts_outs = VarTree(Frame3DDOutputs(),   iotype='out', desc='Basic output data from Frame3DD')
+
+    def execute(self):
+       self.Frameouts_outs=self.Frameouts_ins
+
+
+#______________________________________________________________________________#
+
+
+
+
+#______________________________________________________________________________#
 #                                 Assembly
 #______________________________________________________________________________#
 
 
-class JacketAsmly(Assembly):
+class JacketSE(Assembly):
 
     #ins
     JcktGeoIn=   VarTree(JcktGeoInputs(),iotype='in', desc='Jacket Geometry Basic Inputs')
@@ -2707,7 +2736,7 @@ class JacketAsmly(Assembly):
         self.AFflag = AFflag
         self.PrebuildTP = PrebuildTP
         #PrebuildTP=  Bool(True, iotype='in', desc='If TRUE then the TP will have dimensions connected to those of legs and braces, and some TP inputs will be overwritten.')
-        super(JacketAsmly,self).__init__()
+        super(JacketSE,self).__init__()
 
     def configure(self):
 
@@ -2732,19 +2761,23 @@ class JacketAsmly(Assembly):
         self.add('TotMass',ComponentMass())
         self.add('BrcCriteria',BrcCriteria())
 
+        self.add('ABS1',ABSaux())  #aux component
+        self.add('ABS2',ABSaux())  #aux component
+        self.add('FrameOut',FrameOutsaux()) #auxiliary component
+
         # BUILD UP THE DRIVER
         self.driver.workflow.add(['Soil','PreBuild', 'Legs', 'Piles', 'Xbraces', 'Mudbraces', 'Hbraces'])
 
         if self.PrebuildTP:
             self.driver.workflow.add(['PreBuildTP'])
 
-        self.driver.workflow.add(['TP','Tower','Build','Loads','Frame3DD'])
+        self.driver.workflow.add(['TP','Tower','Build','ABS1','Loads','Frame3DD'])
 
         if not (self.clamped or self.AFflag):
             clamped=False #use this boolean to reduce checks below
             self.driver.workflow.add(['SPIstiffness','Frame3DD2'])
 
-        self.driver.workflow.add(['Utilization','Embedment','BrcCriteria','TotMass' ])
+        self.driver.workflow.add(['FrameOut','ABS2','Utilization','Embedment','BrcCriteria','TotMass' ])
         #________________________#
 
 
@@ -2863,7 +2896,11 @@ class JacketAsmly(Assembly):
         self.connect('PreBuild.al_bat3D',          'Loads.al_bat3D')
         self.connect('JcktGeoIn.nlegs' ,           'Loads.nlegs')
         self.connect('Build.JcktGeoOut.nodes',     'Loads.nodes')
-        self.connect('abs(FrameAuxIns.gvector[2])','Loads.gravity')  #Need absolute value here.
+        #self.connect('abs(FrameAuxIns.gvector[2])','Loads.gravity')  #Need absolute value here.
+        self.connect('FrameAuxIns.gvector[2]','ABS1.varin')
+        self.connect('ABS1.varout','Loads.gravity')
+
+
         #self.connect('Tower.Twrouts.TopMass[-1]','Loads.CMzoff')
         self.connect('TwrRigidTop',                'Loads.TwrRigidTop')
 
@@ -2904,6 +2941,7 @@ class JacketAsmly(Assembly):
         else:
             self.connect('Frame3DD2.Frameouts.forces','Utilization.MbrFrcs')
 
+
         self.connect('Build.XjntIDs',              'Utilization.XjntIDs')
         self.connect('Build.KjntIDs',              'Utilization.KjntIDs')
             #tower
@@ -2918,7 +2956,11 @@ class JacketAsmly(Assembly):
         self.connect('Tower.Dt',                   'Utilization.Dt')
         self.connect('Tower.tt',                   'Utilization.tt')
         self.connect('Twrinputs.TwrSecH',          'Utilization.L_reinforced' )
-        self.connect('abs(FrameAuxIns.gvector[2])','Utilization.g') #Need absolute value here
+        #self.connect('abs(FrameAuxIns.gvector[2])','Utilization.g') #Need absolute value here
+        self.connect('FrameAuxIns.gvector[2]','ABS2.varin')
+        self.connect('ABS2.varout','Utilization.g')
+        #self.connect('FrameAuxIns.gvector[2]','Utilization.g') #Need absolute value here  - changed Utilization to take care of teh abs as it was somehow triggering an error during optimization
+
         self.connect('IECpsfIns',                  'Utilization.IECpsfIns')
         #self.Utilization.r_hub = np.zeros(3)
         #self.connect('Tower.Twrouts.rna_yawedcm','Utilization.r_cm')  #Yawed coordinated of CM
@@ -2941,7 +2983,7 @@ class JacketAsmly(Assembly):
         else:
             self.connect('Frame3DD2.Frameouts.forces','Embedment.MbrFrcs')
 
-        self.connect('abs(FrameAuxIns.gvector[2])',   'Embedment.gravity')  #Need absolute value here
+        self.connect('abs(FrameAuxIns.gvector[2])',   'Embedment.gravity')  #Need absolute value here, Embedment takes care of it anyway, but somehow this abs does not trigger errors in optimzer as opposed to others
         self.connect('Pileinputs.Lp',                 'Embedment.Lp')
 
         #Total Mass
@@ -2960,9 +3002,11 @@ class JacketAsmly(Assembly):
 
         if clamped:
             self.create_passthrough('Frame3DD.Frameouts')
+            self.connect('Frame3DD.Frameouts','FrameOut.Frameouts_ins')  #Needed to please the optimizer in OPENmdao
         else:
             self.create_passthrough('Frame3DD2.Frameouts')
             self.create_passthrough('SPIstiffness.SPI_Kmat')
+            self.connect('Frame3DD2.Frameouts','FrameOut.Frameouts_ins')
 
         self.create_passthrough('Embedment.Lp0rat')
         self.create_passthrough('TotMass.ToTMass')
@@ -3425,7 +3469,7 @@ if __name__ == '__main__':
 
     #-----Launch the assembly-----#
 
-    myjckt=set_as_top(JacketAsmly(Jcktins.clamped,Jcktins.AFflag,Jcktins.PreBuildTPLvl))
+    myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,Jcktins.PreBuildTPLvl))
 
     #Pass all inputs to assembly
     myjckt.JcktGeoIn=Jcktins
@@ -3470,7 +3514,7 @@ if __name__ == '__main__':
         # ----------------------
 
         # --- Objective ---
-        myjckt.driver.add_objective('(Frameouts.mass[0]+Embedment.Mpiles)/1.e6')
+        myjckt.driver.add_objective('(FrameOut.Frameouts_outs.mass[0]+Embedment.Mpiles)/1.e6')
         # ----------------------
 
         # --- Design Variables ---
@@ -3491,7 +3535,7 @@ if __name__ == '__main__':
         myjckt.driver.add_parameter('Twrinputs.Htwr2frac',low=MnCnst[14], high=MxCnst[14])
 
        #--- Constraints ---#
-        myjckt.driver.add_constraint('Frameouts.Freqs[0] >=0.25')
+        myjckt.driver.add_constraint('FrameOut.Frameouts_outs.Freqs[0] >=0.25')
         myjckt.driver.add_constraint('max(Utilization.tower_utilization.GLUtil) <=1.0')
         myjckt.driver.add_constraint('max(Utilization.tower_utilization.EUshUtil) <=1.0')
         myjckt.driver.add_constraint('jacket_utilization.t_util <=1.0')
