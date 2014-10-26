@@ -20,20 +20,8 @@ class RNAprops(VariableTree):
     """Basic Inertial and Geometric Properties of RNA"""
     mass=Float(   units='kg',    desc='RNA mass')    #RNA mass [kg]
     I   =Array(np.zeros(6), dtype=np.float, units='kg*m**2',desc='RNA [IXX,IYY,IZZ,IXY,IXZ,IYZ] @tower top flange')
-    #Ixx=Float(    units='kg*m**2', desc='RNA IXX @tower top flange')    #RNA Ixx
-    #Iyy=Float(    units='kg*m**2', desc='RNA IYY @tower top flange')    #RNA Iyy
-    #Izz=Float(    units='kg*m**2', desc='RNA IZZ @tower top flange')    #RNA Izz
-    #Ixy=Float(0.0,units='kg*m**2', desc='RNA  @tower top flange ')    #RNA Ixy
-    #Ixz=Float(0.0,units='kg*m**2', desc='RNA  @tower top flange')    #RNA Ixz
-    #Iyz=Float(0.0,units='kg*m**2', desc='RNA  @tower top flange')    #RNA Iyz
-    CMoff=Array(np.zeros(3), dtype=np.float,units='m', desc='RNA CM [x,y,z] offset from Tower Top Flange')       # RNA CMzoff [m]
-    #CMxoff=Float(0.,   units='m', desc='RNA CM x offset from Tower Top Flange')       # RNA CMxoff [m]
-    #CMyoff=Float(0.,   units='m', desc='RNA CM y offset from Tower Top Flange')       # RNA CMyoff [m]
-    #CMzoff=Float(0.,   units='m', desc='RNA CM z offset from Tower Top Flange')       # RNA CMzoff [m]
+    CMoff=Array(np.zeros(3), dtype=np.float,units='m', desc='RNA CM [x,y,z] offset from Tower Top Flange')       # RNA CMx,y,zoff [m]
     Thoff=Array(np.zeros(3), dtype=np.float,units='m',desc='Rotor Hub Center [x,y,z] offset from Tower Top Flange')       # Thrust point of application [m]
-    #Thxoff=Float(0.,    units='m', desc='Rotor Hub Center x offset from Tower Top Flange')       # Thrust point of application [m]
-    #Thyoff=Float(0.,    units='m', desc='Rotor Hub Center y offset from Tower Top Flange')       #
-    #Thzoff=Float(0.,    units='m', desc='Rotor Hub Center z offset from Tower Top Flange')       #
 
     rna_weightM = Bool(True, units=None, desc='flag to consider or not the RNA weight effect on Moment')
 
