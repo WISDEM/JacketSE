@@ -224,13 +224,6 @@ class JcktLoadPost(Component):
         al_bat3D=self.al_bat3D
         VPFlag=self.VPFlag
 
-        CMxoff=self.RNAinputs.CMxoff
-        CMyoff=self.RNAinputs.CMyoff
-        CMzoff=self.RNAinputs.CMzoff
-        Thxoff=self.RNAinputs.Thxoff
-        Thyoff=self.RNAinputs.Thyoff
-        Thzoff=self.RNAinputs.Thzoff
-
         TwrRigidTop=self.TwrRigidTop
 
         pilendIDs=self.pilendIDs
@@ -354,14 +347,14 @@ class JcktLoadPost(Component):
         #Store yaw-rotated forces and moments at the hub still  [3,2]
         self.Loadouts.RNAload=np.dot(DIRCOSwind,RNAload)
 
-        Deltax=Thxoff-CMxoff
-        Deltay=Thyoff-CMyoff
-        Deltaz=Thzoff-CMzoff
+        Deltax=self.RNAinputs.Thoff[0]-self.RNAinputs.CMoff[0]
+        Deltay=self.RNAinputs.Thoff[1]-self.RNAinputs.CMoff[1]
+        Deltaz=self.RNAinputs.Thoff[2]-self.RNAinputs.CMoff[2]
 
         if  not(TwrRigidTop):
-            Deltax=Thxoff
-            Deltay=Thyoff
-            Deltaz=Thzoff
+            Deltax=self.RNAinputs.Thoff[0]
+            Deltay=self.RNAinputs.Thoff[1]
+            Deltaz=self.RNAinputs.Thoff[2]
 
         #Rotor Loads - no weight yet
         RNAload[0,1] += -RNAload[1,0]*Deltaz + RNAload[2,0]*Deltay #Mxx=-Fy*Deltaz +Fz*deltay
@@ -588,7 +581,7 @@ if __name__ == '__main__':
     test.al_bat3D=.78
     test.RNA_F       =[1000.,0.,0.,0.,0.,0.]
     test.TwrRigidTop =True
-    test.CMzoff=1.34
+    test.RNAinputs.CMoff[2]=1.34
     test.gravity=9.81
 
 

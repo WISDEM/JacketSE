@@ -981,8 +981,8 @@ class Tower(Component):
     def execute(self):
         #Simplify nomenclature
         yawangle=self.RNAinputs.yawangle
-        CMzoff=np.copy(self.RNAinputs.CMzoff)
-        Thzoff  =self.RNAinputs.Thzoff   #Float(units='m',    desc='Distance from hub centerline to Tower top along z. If left blank, it will be set = RNAInputs.CMzoff' )
+        CMzoff=np.copy(self.RNAinputs.CMoff[2])
+        Thzoff  =self.RNAinputs.Thoff[2]   #Float(units='m',    desc='Distance from hub centerline to Tower top along z. If left blank, it will be set = RNAInputs.CMzoff' )
         Db=self.Twrins.Db
         Dt=self.Twrins.Dt
         tb = Db/self.Twrins.DTRb
@@ -1007,7 +1007,7 @@ class Tower(Component):
         self.Twrouts.HH=self.HH
 
         if not Thzoff:  #INitialize this one if absent
-            Thzoff=self.RNAinputs.CMzoff
+            Thzoff=self.RNAinputs.CMoff[2]
 
         if not(Htwr) and not(self.Twrouts.HH):  #Htwr not specified, HH is specified
             sys.exit('!!!You must specify either HH and Thzoff, or Htwr!!!')
@@ -1091,15 +1091,15 @@ class Tower(Component):
         self.Twrouts.Twr2RNAObj=Tube(np.array([]),np.array([]),np.array([]),self.Twrins.Kbuck,np.array([])) #Initialize
 
         #Now store the RNA concentrated mass for later in the assembling
-        self.Twrouts.TopMass=np.array([self.RNAinputs.mass,self.RNAinputs.Ixx,self.RNAinputs.Iyy,self.RNAinputs.Izz,\
-                                       self.RNAinputs.Ixy,self.RNAinputs.Ixz,self.RNAinputs.Iyz,\
-                                       self.RNAinputs.CMxoff,self.RNAinputs.CMyoff,self.RNAinputs.CMzoff])
+        self.Twrouts.TopMass=np.array([self.RNAinputs.mass,self.RNAinputs.I[0],self.RNAinputs.I[1],self.RNAinputs.I[2],\
+                                       self.RNAinputs.I[3],self.RNAinputs.I[4],self.RNAinputs.I[5],\
+                                       self.RNAinputs.CMoff[0],self.RNAinputs.CMoff[1],self.RNAinputs.CMoff[2]])
 
         #Note account for position of RNA for weight effects onto loading, not onto frequency
         InerTensor=np.zeros([3,3])
-        InerTensor[0,:]=np.array([self.RNAinputs.Ixx,self.RNAinputs.Ixy,self.RNAinputs.Ixz])
-        InerTensor[1,:]=np.array([self.RNAinputs.Ixy,self.RNAinputs.Iyy,self.RNAinputs.Iyz])
-        InerTensor[2,:]=np.array([self.RNAinputs.Ixz,self.RNAinputs.Iyz,self.RNAinputs.Izz])
+        InerTensor[0,:]=np.array([self.RNAinputs.I[0],self.RNAinputs.I[3],self.RNAinputs.I[4]])
+        InerTensor[1,:]=np.array([self.RNAinputs.I[3],self.RNAinputs.I[1],self.RNAinputs.I[5]])
+        InerTensor[2,:]=np.array([self.RNAinputs.I[4],self.RNAinputs.I[5],self.RNAinputs.I[2]])
         DIRCOS=np.array([ [cosd(yawangle) ,    -sind(yawangle), 0.],
                           [    sind(yawangle) , cosd(yawangle), 0.],
                           [    0.,                         0.,  1.]])
@@ -1108,13 +1108,13 @@ class Tower(Component):
         self.Twrouts.TopMass_yaw=self.Twrouts.TopMass.copy()  #This accounts for yaw angle
         self.Twrouts.TopMass_yaw[1:7]=np.array([InerTensor[0,0],InerTensor[1,1],InerTensor[2,2],\
                                              InerTensor[0,1],InerTensor[0,2],InerTensor[1,2]])
-        self.Twrouts.TopMass_yaw[7:]=np.dot(DIRCOS, np.array([self.RNAinputs.CMxoff,self.RNAinputs.CMyoff,self.RNAinputs.CMzoff]))
+        self.Twrouts.TopMass_yaw[7:]=np.dot(DIRCOS, np.array([self.RNAinputs.CMoff[0],self.RNAinputs.CMoff[1],self.RNAinputs.CMoff[2]]))
 
-        self.Twrouts.Thoff_yaw=np.dot(DIRCOS, np.array([self.RNAinputs.Thxoff,self.RNAinputs.Thyoff,self.RNAinputs.Thzoff]))  #THIS SHOULD GO ELSEWHERE, but it is convenient since I ma rotating stuff
+        self.Twrouts.Thoff_yaw=np.dot(DIRCOS, np.array([self.RNAinputs.Thoff[0],self.RNAinputs.Thoff[1],self.RNAinputs.Thoff[2]]))  #THIS SHOULD GO ELSEWHERE, but it is convenient since I ma rotating stuff
         self.Twrouts.rna_yawedcm=np.copy(self.Twrouts.TopMass_yaw[7:])
         #RIGID MEMBER
         if RigidTop:
-            self.Twrouts.Twr2RNAObj=RigidMember(D=Dt,t=tt,L=self.RNAinputs.CMzoff)
+            self.Twrouts.Twr2RNAObj=RigidMember(D=Dt,t=tt,L=self.RNAinputs.CMoff[2])
             self.Twrouts.TopMass[9]=0.  #Note remove CMzoff in case rigid member (should also be cmx,yoff but those are not used in teh rigid member yet)
             self.Twrouts.TopMass_yaw[9]=0.  #Note remove CMzoff in case rigid member (should also be cmx,yoff but those are not used in teh rigid member yet)
 
@@ -2964,12 +2964,8 @@ class JacketSE(Assembly):
         self.connect('IECpsfIns',                  'Utilization.IECpsfIns')
         #self.Utilization.r_hub = np.zeros(3)
         #self.connect('Tower.Twrouts.rna_yawedcm','Utilization.r_cm')  #Yawed coordinated of CM
-        self.connect('RNAinputs.CMxoff',          'Utilization.r_cm[0]')
-        self.connect('RNAinputs.CMyoff',          'Utilization.r_cm[1]')
-        self.connect('RNAinputs.CMzoff',          'Utilization.r_cm[2]')
-        self.connect('RNAinputs.Thxoff',          'Utilization.r_hub[0]')
-        self.connect('RNAinputs.Thyoff',          'Utilization.r_hub[1]')
-        self.connect('RNAinputs.Thzoff',          'Utilization.r_hub[2]')
+        self.connect('RNAinputs.CMoff',            'Utilization.r_cm')
+        self.connect('RNAinputs.Thoff',            'Utilization.r_hub')
         #self.connect('Tower.Twrouts.Thoff_yaw','Utilization.r_hub')
         self.Utilization.tilt = 0.0
 
@@ -3290,7 +3286,8 @@ if __name__ == '__main__':
     #PyObject *f = PySys_GetObject("stdout")
     #PyFile_WriteString
 
-    optimize = True        #Set this one to True if you want a test on optimization
+    optimize = False        #Set this one to True if you want a test on optimization
+    SNOPTflag=False
 
     #--- Set Jacket Input Parameters ---#
     Jcktins=JcktGeoInputs()
@@ -3447,10 +3444,10 @@ if __name__ == '__main__':
     #RNA data
     RNAins=RNAprops()
     RNAins.mass=3*350.e3
-    RNAins.Ixx=86.579E+6
-    RNAins.Iyy=53.530E+6
-    RNAins.Izz=58.112E+6
-    RNAins.CMzoff=2.34
+    RNAins.I[0]=86.579E+6
+    RNAins.I[1]=53.530E+6
+    RNAins.I[2]=58.112E+6
+    RNAins.CMoff[2]=2.34
     RNAins.yawangle=45.  #angle with respect to global X, CCW looking from above, wind from left
     RNAins.rna_weightM=True
 
@@ -3506,11 +3503,16 @@ if __name__ == '__main__':
 
         # --- Setup Optimizer ---
         myjckt.replace('driver', pyOptDriver())
-        myjckt.driver.optimizer = 'SNOPT'
-        myjckt.driver.options = {'Major feasibility tolerance': 1e-3,
+        if SNOPTflag:
+            myjckt.driver.optimizer = 'SNOPT'
+            myjckt.driver.options = {'Major feasibility tolerance': 1e-3,
                                  'Minor feasibility tolerance': 1e-3,
                                  'Major optimality tolerance': 1e-3,
                                  'Function precision': 1e-3}
+        else:
+            myjckt.driver.optimizer = 'COBYLA'
+            myjckt.driver.options = {'RHOEND':1.e-3,'MAXFUN':2000,'IPRINT':1}
+
         # ----------------------
 
         # --- Objective ---
@@ -3597,7 +3599,7 @@ if __name__ == '__main__':
     twr_zs=myjckt.Tower.Twrouts.nodes[2, :-myjckt.TwrRigidTop]
     twr_ds=np.hstack((myjckt.Tower.Twrouts.TwrObj.D,myjckt.Tower.Dt))
 
-    fig2= plt.figure(2,figsize=(5.0, 3.5))
+    fig2= plt.figure(2,figsize=(6.0, 3.5))
 
     ax1=plt.subplot2grid((3, 3), (0, 0), colspan=2, rowspan=3)
 
