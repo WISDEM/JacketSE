@@ -3286,7 +3286,7 @@ if __name__ == '__main__':
     #PyObject *f = PySys_GetObject("stdout")
     #PyFile_WriteString
 
-    optimize = False        #Set this one to True if you want a test on optimization
+    optimize = True        #Set this one to True if you want a test on optimization
     SNOPTflag=False
 
     #--- Set Jacket Input Parameters ---#
@@ -3540,10 +3540,10 @@ if __name__ == '__main__':
         myjckt.driver.add_constraint('FrameOut.Frameouts_outs.Freqs[0] >=0.25')
         myjckt.driver.add_constraint('max(Utilization.tower_utilization.GLUtil) <=1.0')
         myjckt.driver.add_constraint('max(Utilization.tower_utilization.EUshUtil) <=1.0')
-        myjckt.driver.add_constraint('jacket_utilization.t_util <=1.0')
-        myjckt.driver.add_constraint('jacket_utilization.cb_util <=1.0')
-        myjckt.driver.add_constraint('jacket_utilization.KjntUtil <= 1.0')
-        myjckt.driver.add_constraint('jacket_utilization.XjntUtil <= 1.0')
+        myjckt.driver.add_constraint('Utilization.jacket_utilization.t_util <=1.0')
+        myjckt.driver.add_constraint('Utilization.jacket_utilization.cb_util <=1.0')
+        myjckt.driver.add_constraint('Utilization.jacket_utilization.KjntUtil <= 1.0')
+        myjckt.driver.add_constraint('Utilization.jacket_utilization.XjntUtil <= 1.0')
         # ----------------------
 
         # --- recorder ---
