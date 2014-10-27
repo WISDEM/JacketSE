@@ -39,7 +39,7 @@ class WindInputs(VariableTree):
     al_shear = Float(0.14, units=None, desc='power law exponent wind from IEC 61400-3')
     psi = Float(45.,units='deg', desc='Wind angle relative to downwind. positive according to RHR with positive z direction')
     rho = Float(1.225, units='kg*m**-3', desc='Air Density. Set to 0 if no tower wind load is included (thrust from rotor still on)')
-    U50HH = Float(70., units='m/s', desc='50-yr return 3-s gust [m/s] :From IEC Class I')
+    U50HH = Float(70., units='m/s', desc='50-yr return 3-s gust [m/s] :From IEC Class I-III or whatever gust to be associated with DLC under consideration (e.g. 30 m/s for DLC 1.6 under max thrust)')
     HH = Float(units='m', desc='Hub-height above MSL')
     mu = Float(1.7934e-5, units='kg/(m*s)', desc='dynamic viscosity of air')
     Cdj =Float(iotype='in', units=None, desc='User input drag coefficient for jacket members, if left blank it will be automatically calculated based on Cylinder Re')

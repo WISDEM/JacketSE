@@ -1,14 +1,14 @@
 #-------------------------------------------------------------------------------
-# Name:        JacketOpt_SNOPT.py variant of JacketOpt_Peregrine.py
-# Purpose:     It Expects to read data from input files and then calls the optimizer based on that.
-#              In particular it uses the table of cases for the LCOE analysis project.
-#              It all started from JacketOpt_OldStyle.py.
-#                     NOTE HERE DESVARS ARE NOT MADE DIMENSIOLESS!!! JUST objfunc and cosntraints! vs JacketOPt_Peregrine
+# Name:        JacketOpt_PyOPT.py variant of JacketOpt_Peregrine.py
+# Purpose:     It Expects Input DATA to be edited directly from 1 input file and then calls the optimizer based on that.
+#              This is a non-multicase variant that started from JacketOpt_PyOPT_multicaseTable.py
+#              See MyJacketInputs.py for an example of input file.
+#              NOTE: HERE DESVARS ARE NOT MADE DIMENSIOLESS!!! JUST objfunc and cosntraints! vs JacketOPt_Peregrine
 # Author:      rdamiani
 #
-# Created:     6/2014 based off of JacketOpt_Peregrine.py
+# Created:     10/2014 based off of JacketOpt_PyOPT_multicaseTable.py
 # Copyright:   (c) rdamiani 2014
-# Licence:     <your licence>
+# License:     Apache (2014)
 #-------------------------------------------------------------------------------
 import numpy as np
 import scipy.optimize
@@ -27,10 +27,11 @@ except:
 import time
 import sys
 import os
+import ntpath
 
-#from PlotJacket import main as PlotJacket  #COMMENT THIS ONE OUT FOR PEREGRINE"S SAKE
+from PlotJacket import main as PlotJacket  #COMMENT THIS ONE OUT FOR PEREGRINE"S SAKE
 
-from ReadSaveOpt1Line import ReadTab1Line,SaveOpt1Line,ReadOptFile,DesVars
+from ReadSaveOpt1Line import DesVars
 
 
 #__________________________________________________________#
@@ -40,76 +41,56 @@ from ReadSaveOpt1Line import ReadTab1Line,SaveOpt1Line,ReadOptFile,DesVars
 
 #__________________________________________________________#
 
-def JcktOpt1line(casefile,caseno,xlsfilename,f0epsilon=0.05,guessfromoutfile=[],SNOPTflag=False):
+def JcktOpt(casefile,SNOPTflag=False):
     """Optimizer which reads one line caseno out of table file casefile:\n
     INPUT \n
         casefile -string, complete path+filename to table file of cases. \n
-        caseno   -int, case number (also row out of the table to be read). \n
-        xlsfilename -string, complete path+filename to excel file, whose sheet for the current caseno case will be added/updated. \n
     OPTIONALS \n
-        f0epsilon -float, (1+f0eps)*f0 will be the upper bound for the f0 constraint. \n
-        guessfromoutfile -string, complete path+name to an optimization output file where to read guesses from. \n
+        SNOPTflag -boolean, if True it will use SNOPT else COBYLA both from pyOPT. \n
+
     OUTPUT \n
-        It will create a final configuration optimized for the design parameters in the caseno row of casefile table. \n
-        Also, it will save text and excel file for design variables, and summary for report, respectively. \n
-        Figures will also be made of configuration and tower utilization. (not in peregrine where you can then use reconall.py \n
-        casename -string, case name for hte current case usable by other programs
+        It will create a final configuration optimized for the design parameters in the casefile file. \n
+        Also, it will save a dump-recorder file, and summary for report, respectively. \n
+        Figures will also be made of configuration and tower utilization.  \n
         myjckt   -OPenMdao assembly of JacketSE, final configuration after optimization
         \n
         """
-    #This is the optimizer that will act on 1 case from a table
-    global f0,f0eps, DTRsdiff, mxftprint
-    import SetJacketInputsPeregrine
-    import ntpath
+    global DTRsdiff,f0,f0eps,jcktDTRmin,mxftprint  #global vars to pass a few parameters around through the constraints
+
+    directory, module_name = os.path.split(casefile)
+    module_name = os.path.splitext(module_name)[0]
+
+    path = list(sys.path)
+    sys.path.insert(0, directory)
+    try:
+        MyJacketInputs = __import__(module_name)
+    finally:
+        sys.path[:] = path # restore
 
     desvars=DesVars() #instanct of design variables
-    #First read design parameters and des var bounds
-    Desprms,_,desvarbds,desvarmeans,guesses,casename=ReadTab1Line(casefile,caseno,desvars.dvars.keys())
-    #USING bds as desvarbds
 
-    #Assign mxftprint
-    mxftprint=Desprms.mxftprint
+    #Read Input & Build the initial assembly and get guesses, for the x design variable array check out objfunc
+    myjckt,f0,f0epsilon,jcktDTRmin,DTRsdiff,mxftprint,guesses,desvarbds=MyJacketInputs.main()
 
-    #Target frequency
-    f0=Desprms.f0
     f0eps=f0epsilon
 
-    #Then set up an initial guess at the Design variables and use it also to instantiate the assembly
-
-    for ii,key in enumerate(desvars.dvars):
-        #print key  #debug
-        setattr(desvars,key,desvarmeans[ii])
-
-    #Then build the initial assembly
-    myjckt=SetJacketInputsPeregrine.main(Desprms,desvars)
-    #myjckt.run()
-#   x       0     1            2              3     4    5       6       7        8        9        10    11    12   13      14      15      16
-#         batter,Dp,           tp,             Lp,   Dleg,tleg,    Dbrc   tbrc    Dmdbrc   tmdbrc     Dgir,tgir    Db, DTRb,   Dt,    DTRt,     H2frac,
-    #guess=[12., desvarmeans[1], desvarbds[2,0],50.,  1.6, 0.0254,  0.8, 0.0254,     1.5,0.03,         1.0, 0.03,  6.5, 120., 3.5,      120., 0.2]/desvarmeans
-    #guess=[10.88,    2.73, 0.037,50.,                    1.5, 0.054,  0.83, 0.027,     1.54,0.036,        1.0, 0.03,   6.8, 124., 3.5,      124., 0.2]/desvarmeans
-    #guess=desvarmeans/desvarmeans
-    guess=guesses#/desvarmeans  #GUESS FROM TESTMATRIX TABLE
-    #OR guess from previous output file
-    if guessfromoutfile:
-        desvarguess=ReadOptFile(guessfromoutfile)
-        for ii,key in enumerate(desvarguess.dvars):
-            guess[ii]=getattr(desvarguess,key)#/desvarmeans[ii]
+    guess=guesses
 
     varlist=desvars.dvars.keys()
     if not(DTRsdiff):#DTRs FIXED TO EACH OTHER
         idx=varlist.index('DTRt')
         varlist.pop(idx)
         guess=np.delete(guess,idx)
-        desvarmeans=np.delete(desvarmeans,idx)
         desvarbds=np.delete(desvarbds,idx,0)
 
+    desvarmeans=np.mean(desvarbds,1)
 
     #SET UP THE PROBLEM
-    opt_prob=pyOpt.Optimization('LCOE 1 Line Case no. {:d} Optimization'.format(caseno), objfunc)
+    opt_prob=pyOpt.Optimization('Jacket Optimization via SNOPTFLAG= {:x} '.format(SNOPTflag), objfunc)
 
     opt_prob.addObj('mass')
     for ii,key in enumerate(varlist):
-        opt_prob.addVar(key,'c',lower=desvarbds[ii,0],upper=desvarbds[ii,1],value=guess[ii])  #/desvarmeans[ii]
+        opt_prob.addVar(key,'c',lower=desvarbds[ii,0],upper=desvarbds[ii,1],value=guess[ii])
 
     opt_prob.addConGroup('cnstrts',28,type='i')
 
@@ -121,7 +102,7 @@ def JcktOpt1line(casefile,caseno,xlsfilename,f0epsilon=0.05,guessfromoutfile=[],
 
 
     if SNOPTflag:
-        opt_prob.write2file(outfile=os.path.join(os.path.dirname(casefile),'pyopt_snopt_'+str(caseno).zfill(2)+'.hst'), disp_sols=False, solutions=[])
+        opt_prob.write2file(outfile=os.path.join(os.path.dirname(casefile),'pyopt_snopt_'+'.hst'), disp_sols=False, solutions=[])
         #set some strings for MPI incase
         mpistr=''
         printfstr='pyopt_snopt_print_'
@@ -136,8 +117,8 @@ def JcktOpt1line(casefile,caseno,xlsfilename,f0epsilon=0.05,guessfromoutfile=[],
         opt.setOption('Major feasibility tolerance',1.e-3)
         opt.setOption('Major optimality tolerance',1.e-3)
         opt.setOption('Minor feasibility tolerance',1.e-3)
-        opt.setOption('Print file',os.path.join(os.path.dirname(casefile),printfstr+str(caseno).zfill(2)+'.out'))
-        opt.setOption('Summary file',os.path.join(os.path.dirname(casefile),summfstr+str(caseno).zfill(2)+'.out'))
+        opt.setOption('Print file',os.path.join(os.path.dirname(casefile),printfstr+'.out'))
+        opt.setOption('Summary file',os.path.join(os.path.dirname(casefile),summfstr+'.out'))
         opt.setOption('Solution','Yes')
         #Solve
         tt = time.time()
@@ -160,7 +141,7 @@ def JcktOpt1line(casefile,caseno,xlsfilename,f0epsilon=0.05,guessfromoutfile=[],
         opt.setOption('RHOEND',1.e-3)
         opt.setOption('MAXFUN',2000)
         opt.setOption('IPRINT',1)
-        opt.setOption('IFILE',os.path.join(os.path.dirname(casefile),ifilestr+str(caseno).zfill(2)+'.hst') ) #store cobyla output
+        opt.setOption('IFILE',os.path.join(os.path.dirname(casefile),ifilestr+'.hst') ) #store cobyla output
         [fstr, xstr, inform]=opt(opt_prob,  True,           False,             True,          False, *args)
     ###opt_problem={}, store_sol=True, disp_opts=False, store_hst=False, hot_start=False
 
@@ -202,7 +183,7 @@ def JcktWrapper(x,myjckt,desvarmeans,desvarbds):
 
     """This function builds up the actual model and calculates Jacket stresses and utilization.
     INPUT
-        x         -list(N), as in DesVars with that order, but ALL NORMALIZED BY THEIR AVERAGES!!!! \n
+        x         -list(N), as in DesVars with that order \n
         myjckt    -assmebly of jacketSE.\n
         desvarmeans -array(N), average values for each design variable.\n
         """
@@ -213,29 +194,29 @@ def JcktWrapper(x,myjckt,desvarmeans,desvarbds):
 #   batter,Dp,   tp,       Lp,   Dleg,tleg,    Dbrc   tbrc    Dmdbrc   tmdbrc     Dgir,tgir   Db,DTRb,   Dt,DTRt,     H2frac,
 
 
-    myjckt.JcktGeoIn.batter=x[0]#*desvarmeans[0]
+    myjckt.JcktGeoIn.batter=x[0]
 
 
-    myjckt.Pileinputs.Dpile=x[1]#*desvarmeans[1]
-    myjckt.Pileinputs.tpile=x[2]#*desvarmeans[2]
-    myjckt.Pileinputs.Lp   =x[3]#*desvarmeans[3]
+    myjckt.Pileinputs.Dpile=x[1]
+    myjckt.Pileinputs.tpile=x[2]
+    myjckt.Pileinputs.Lp   =x[3]
 
-    myjckt.leginputs.Dleg  =np.asarray([x[4]]).repeat(myjckt.JcktGeoIn.nbays+1) #*desvarmeans[4]
-    myjckt.leginputs.tleg  =np.asarray([x[5]]).repeat(myjckt.JcktGeoIn.nbays+1)  #*desvarmeans[5]
+    myjckt.leginputs.Dleg  =np.asarray([x[4]]).repeat(myjckt.JcktGeoIn.nbays+1)
+    myjckt.leginputs.tleg  =np.asarray([x[5]]).repeat(myjckt.JcktGeoIn.nbays+1)
 
     myjckt.Xbrcinputs.precalc=False
-    myjckt.Xbrcinputs.Dbrc    =np.asarray([x[6]]).repeat(myjckt.JcktGeoIn.nbays)  #*desvarmeans[6]
-    myjckt.Xbrcinputs.tbrc    =np.asarray([x[7]]).repeat(myjckt.JcktGeoIn.nbays)  #*desvarmeans[7]
+    myjckt.Xbrcinputs.Dbrc    =np.asarray([x[6]]).repeat(myjckt.JcktGeoIn.nbays)
+    myjckt.Xbrcinputs.tbrc    =np.asarray([x[7]]).repeat(myjckt.JcktGeoIn.nbays)
     myjckt.Mbrcinputs.precalc=False
-    myjckt.Mbrcinputs.Dbrc_mud =x[8]#*desvarmeans[8]
-    myjckt.Mbrcinputs.tbrc_mud =x[9]#*desvarmeans[9]
+    myjckt.Mbrcinputs.Dbrc_mud =x[8]
+    myjckt.Mbrcinputs.tbrc_mud =x[9]
 
-    myjckt.TPinputs.Dgir  =x[10]#*desvarmeans[10]
-    myjckt.TPinputs.tgir  =x[11]#*desvarmeans[11]
+    myjckt.TPinputs.Dgir  =x[10]
+    myjckt.TPinputs.tgir  =x[11]
 
-    myjckt.Twrinputs.Db    =x[12]#*desvarmeans[12]
-    myjckt.Twrinputs.DTRb  =x[13]#*desvarmeans[13]
-    myjckt.Twrinputs.Dt    =x[14]#*desvarmeans[14]
+    myjckt.Twrinputs.Db    =x[12]
+    myjckt.Twrinputs.DTRb  =x[13]
+    myjckt.Twrinputs.Dt    =x[14]
     myjckt.Twrinputs.DTRt  =myjckt.Twrinputs.DTRb#x[15]*desvarmeans[15]  #myjckt.Twrinputs.DTRb.copy()   #can use DTRt=DTRb here for simplicity
 
     myjckt.Twrinputs.Htwr2frac =x[15+int(DTRsdiff)]#*desvarmeans[16]
@@ -246,9 +227,9 @@ def JcktWrapper(x,myjckt,desvarmeans,desvarbds):
     myjckt.run()
 
     #Get Frame3dd mass
-    mass=myjckt.Frameouts2.mass[0] +myjckt.Mpiles  #Total structural mass
+    mass=myjckt.FrameOut.Frameouts_outs.mass[0] +myjckt.Mpiles  #Total structural mass
     #Get Frame3dd-calculated 1st natural frequency
-    f1=myjckt.Frameouts2.Freqs[0]
+    f1=myjckt.FrameOut.Frameouts_outs.Freqs[0]
 
     #Get Model calculated TP mass
     TPmass=myjckt.TP.TPouts.mass
@@ -306,8 +287,11 @@ def JcktWrapper(x,myjckt,desvarmeans,desvarbds):
 
 def objfunc(x,myjckt,desvarmeans,desvarbds):
     mass = JcktWrapper(x,myjckt,desvarmeans,desvarbds)[0]/1.5e6
-
+    #          x=  [ batter,  Dpile,    tpile,        Lp,   Dleg,     tleg,       Dbrc,   tbrc,     Dbrc_mud,   tbrc_mud,   Dgir,      tgir,      Db,   DTRb   Dt,   DTRt   Htwr2fac        dck_widthfact]
     cnstrts=[0.0]*28 #given as negatives, since PYOPT wants <0
+
+    #Note the minus signs here for pyOPT's sake (it wants constraints <0, as opposed to regular python cobyla)
+
     cnstrts[0]=-f0Cnstrt1(x,myjckt,desvarmeans,desvarbds)
     cnstrts[1]=-f0Cnstrt2(x,myjckt,desvarmeans,desvarbds)
     cnstrts[2]=-cbCnstrt(x,myjckt,desvarmeans,desvarbds)
@@ -495,6 +479,11 @@ def tlegCnstrt(x,myjckt,desvarmeans,desvarbds):  #bound of t for cobyla t>1"
     print('tleg constraint=',cnstrt)
     return cnstrt#
 
+def tlegCnstrt2(x,myjckt,desvarmeans,desvarbds):  #bound of t for cobyla t<max
+    idx=5
+    cnstrt=maxcnstrt(x,idx,desvarmeans,desvarbds)
+    print('tleg constraint2=',cnstrt)
+    return cnstrt#
 def Dleg2tlegCnstrt(x,myjckt,desvarmeans,desvarbds):  #bound of DTRleg>1
     global jcktDTRmin
     idx0=4
@@ -515,6 +504,11 @@ def tbrcCnstrt(x,myjckt,desvarmeans,desvarbds):  #bound of t for cobyla t>1"
     cnstrt=mincnstrt(x,idx,desvarmeans,desvarbds)
     print('tbrc constraint=',cnstrt)
     return cnstrt#
+def tbrcCnstrt2(x,myjckt,desvarmeans,desvarbds):  #bound of t for cobyla t<max
+    idx=7
+    cnstrt=maxcnstrt(x,idx,desvarmeans,desvarbds)
+    print('tbrc constraint2=',cnstrt)
+    return cnstrt#
 
 def Dbrc2tbrcCnstrt(x,myjckt,desvarmeans,desvarbds):  #bound of DTRbrc>1
     global jcktDTRmin
@@ -534,6 +528,11 @@ def tmudCnstrt(x,myjckt,desvarmeans,desvarbds):  #bound of t for cobyla t>1"
     idx=9
     cnstrt=mincnstrt(x,idx,desvarmeans,desvarbds)
     print('tmud constraint=',cnstrt)
+    return cnstrt#
+def tmudCnstrt2(x,myjckt,desvarmeans,desvarbds):  #bound of t for cobyla t<max
+    idx=9
+    cnstrt=maxcnstrt(x,idx,desvarmeans,desvarbds)
+    print('tmud constraint2=',cnstrt)
     return cnstrt#
 
 def Dmud2mudCnstrt(x,myjckt,desvarmeans,desvarbds):  #bound of DTRmud>1
@@ -642,6 +641,11 @@ def XbCrit05(x,myjckt,desvarmeans,desvarbds): #XbrcCrit05
     print('Xbrc constraint05=', XBrcCrit05)
     return XBrcCrit05
 
+def NorsokCnstrt(x,myjckt,desvarmeans,desvarbds): # -Norsok angle leg-brace >30 deg
+    NorsokMin=30.*np.pi/180.
+    cnstrt=(myjckt.PreBuild.beta3D- NorsokMin)/NorsokMin
+    print('Xbrc Norsok constraint=', cnstrt)
+    return cnstrt
  #Mudbrc constraints
 def MbCrit01(x,myjckt,desvarmeans,desvarbds): #MbrcCrit01
     global xlast,MudCrit01
@@ -805,50 +809,25 @@ def mincnstrt(x,idx,desvarmeans,desvarbds):
 
 #______________________________________________________________________________#
 
-def main():
-    global    DTRsdiff,jcktDTRmin
-    DTRsdiff=False    ##SET THIS TO TRUE IF YOU WANT DTRs to be different between base and top
-    jcktDTRmin=22.  ##Set this one to the minimum DTR allowed, mostly for 60+waterdepths
+def main(casefile='MyJacketInputs.py',SNOPTflag='True'):
+    #global    DTRsdiff,jcktDTRmin
+    #DTRsdiff=False    ##SET THIS TO TRUE IF YOU WANT DTRs to be different between base and top
+    #jcktDTRmin=22.  ##Set this one to the minimum DTR allowed, mostly for 60+waterdepths
 
-    guessfromoutfile=[]
+
     if len(sys.argv)>1:
         casefile=sys.argv[1]
-        casenostart=int(sys.argv[2])
-        casenoends=int(sys.argv[3])
-        xlsfilename=sys.argv[4]
-        SNOPTflag=False
-        if len(sys.argv)>5:
-            SNOPTflag= (sys.argv[5].lower() == 'true')
-            if len(sys.argv)>6:
-                guessfromoutfile=sys.argv[6]
+        SNOPTflag=bool(sys.argv[2])
 
     else:
-        casefile=r'D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\LCOE_ANALYSIS\testmatrix.dat'
-      #  casefile=r'C:\PROJECTS\OFFSHORE_WIND\LCOE_COSTANALYSIS\testmatrixspec.dat'
-        casenostart=82  #UHREACT
-        casenoends=82
-        SNOPTflag=False
-        xlsfilename=r'D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\LCOE_ANALYSIS\outputs.xls'
-     #   xlsfilename=r'C:\PROJECTS\OFFSHORE_WIND\LCOE_COSTANALYSIS\outputs.xls'
+        casefile=r'MyJacketInputs.py'
+        SNOPTflag=True
 
-        #guessfromoutfile='D:\\RRD_ENGINEERING\\PROJECTS\\NREL\\OFFSHOREWIND\\LCOE_ANALYSIS\\CASES_55_63_tobereplaced\\55_R2D0H0M0T0S0_out.dat'
-        #guessfromoutfile='D:\\RRD_ENGINEERING\\PROJECTS\\NREL\\OFFSHOREWIND\\LCOE_ANALYSIS\\CASES_10_18_tobereplaced\\10_R0D1H0M0T0S0_out.dat'
-        #guessfromoutfile=r'C:\PROJECTS\OFFSHORE_WIND\LCOE_COSTANALYSIS\COBYLA\08_R0D0H2M1T0S0_out.dat'
+    myjckt,casename=JcktOpt(casefile,SNOPTflag=SNOPTflag)
+    sys.stdout.flush()  #This for peregrine
 
-
-    f0epsilon=0.05 #upper f0 allowed
-    for caseno in range(casenostart,casenoends+1):
-        if caseno>27:
-            f0epsilon=0.35
-        print('#____________________________________________#\n')
-        print(('#JacketOpt_SNOPT NOW PROCESSING CASE No. {:d} #\n').format(caseno) )
-        print('#____________________________________________#\n')
-        myjckt,casename=JcktOpt1line(casefile,caseno,xlsfilename,f0epsilon=f0epsilon, guessfromoutfile=guessfromoutfile,SNOPTflag=SNOPTflag)
-        guessfromoutfile=os.path.join(os.path.dirname(casefile),casename + '_out.dat')
-        sys.stdout.flush()  #This for peregrine
-
-    ##SAMPLE CALL FROM OUTSIDE ENVIRONMENT
-    ##python JacketOpt_Peregrine.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\LCOE_ANALYSIS\testmatrix.dat 55 55 D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\LCOE_ANALYSIS\output.xls True D:\\RRD_ENGINEERING\\PROJECTS\\NREL\\OFFSHOREWIND\\LCOE_ANALYSIS\\CASES_55_63_tobereplaced\\55_R2D0H0M0T0S0_out.dat
+    ##SAMPLE CALL FROM OUTSIDE IDE
+    ##python JacketOpt_PyOPT.py C:\RRD\PYTHON\WISDEM\JacketSE\src\jacketse\MyJacketInputs.py True
 
 
 

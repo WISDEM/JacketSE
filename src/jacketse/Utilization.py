@@ -18,7 +18,8 @@ from openmdao.main.datatypes.api import Int, Float, Array, VarTree, Bool
 # from commonse.Tube import Tube
 # from commonse.RigidMember import RigidMember
 import ApiCodeChecks as API
-from towerse.tower import AeroLoads, RotorLoads
+from towerse.tower import AeroLoads
+from commonse.rna import RotorLoads
 from towerse.towerSupplement import hoopStressEurocode, shellBucklingEurocode, bucklingGL, vonMisesStressUtilization
 from VarTrees import JcktGeoOutputs, TwrGeoOutputs
 from commonse.Frustum import frustum

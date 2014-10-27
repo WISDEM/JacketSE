@@ -222,6 +222,12 @@ class legs(Component):
         weld2D   =  self.JcktPrms.weld2D
         dck_width=self.dck_width
         Dleg=self.leginputs.Dleg
+        tleg=self.leginputs.tleg
+        if any(Dleg == 0.) :
+            Dleg=Dleg[0].repeat(Dleg.size)
+        if any(tleg == 0.) :
+            tleg=tleg[0].repeat(tleg.size)
+
         ndiv=self.leginputs.ndiv
         legmatins =self.leginputs.legmatins
         stump_h=self.legbot_stmph    #Leg bottom stump vertical height
@@ -274,7 +280,7 @@ class legs(Component):
         #now to create the Tube object one per member:
         #first: replicate Dleg, tleg appropriately toa ccoutn for members
         Dlegs=Dleg.repeat(ndiv)
-        tlegs=self.leginputs.tleg.repeat(ndiv)
+        tlegs=tleg.repeat(ndiv)
         #then replicate equally the material objects
         legmats=legmats.repeat(ndiv)
         #if (self.legmats.size==1) :
@@ -334,6 +340,11 @@ class Xbraces(Component):
         #Simplify nomenclature
         Dbrc=self.Xbrcinputs.Dbrc
         tbrc=self.Xbrcinputs.tbrc
+        if any(Dbrc == 0.) :
+            Dbrc=Dbrc[0].repeat(Dbrc.size)
+        if any(tbrc == 0.) :
+            tbrc=tbrc[0].repeat(tbrc.size)
+
         nbays=self.nbays
         ndiv=self.Xbrcinputs.ndiv
         nlegs=self.legjnts.shape[1]
@@ -1033,9 +1044,10 @@ class Tower(Component):
                 ndiv[0]=np.ceil(Htwr2/dzbot_min)
             deltaZs=np.hstack((np.array([Htwr2/ndiv[0]]).repeat(ndiv[0]), np.array([Htwrtop/ndiv[1]]).repeat(ndiv[1]))).flatten()
         else:
-            ndiv[0]=np.max([ndiv[0],np.ceil(Htwr/DeltaZmax)])
-            ndiv=np.max([ndiv,np.array([10])],0).astype(int)  #make sure we have at least 10 elements in the tapered section
-            deltaZs=np.array([Htwr/ndiv[0]]).repeat(ndiv[0]).flatten()
+            #This is to bypass the issue where the user might have input ndiv(2), although it should be ndiv(1), so ndiv[1] rules
+            ndiv[0]=ndiv[-1]=np.max([ndiv[-1],np.ceil(Htwr/DeltaZmax)])
+            ndiv=np.max([ndiv,np.array([10]).repeat(ndiv.size)],0).astype(int)  #make sure we have at least 10 elements in the tapered section (only section), we still assume it is a 2-element array
+            deltaZs=np.array([Htwr/ndiv[-1]]).repeat(ndiv[-1]).flatten()
 
         deltaZcum=np.hstack((0.,deltaZs.cumsum()))
 
@@ -2315,7 +2327,7 @@ class JacketSE(Assembly):
     Windinputs   = VarTree(WindInputs(),   iotype='in', desc='Wind Data')
     Soilinputs   = VarTree(SoilGeoInputs(),iotype='in', desc='Soil Data')
 
-    RNA_F       =Array(dtype=np.float,  iotype='in',desc='Unfactored Rotor Forces and Moments, excluding weight. Array(6)')
+    RNA_F       =Array(np.zeros(6), iotype='in', desc='Unfactored Rotor Forces and Moments, excluding weight. Array(6)')
     IECpsfIns = VarTree(IEC_PSFS(), iotype='in', desc='Basic IEC psfs')
 
     TwrRigidTop =Bool( units=None,iotype='in',desc='Rigid Member used in tower top or not')
@@ -2366,6 +2378,7 @@ class JacketSE(Assembly):
 
         self.driver.workflow.add(['TP','Tower','Build','ABS1','Loads','Frame3DD'])
 
+        clamped=True #initialize
         if not (self.clamped or self.AFflag):
             clamped=False #use this boolean to reduce checks below
             self.driver.workflow.add(['SPIstiffness','Frame3DD2'])
@@ -2877,7 +2890,7 @@ if __name__ == '__main__':
     #PyFile_WriteString
 
     optimize = True        #Set this one to True if you want a test on optimization
-    SNOPTflag=False
+    SNOPTflag= True
 
     #--- Set Jacket Input Parameters ---#
     Jcktins=JcktGeoInputs()
@@ -3114,10 +3127,10 @@ if __name__ == '__main__':
         myjckt.driver.add_parameter('Pileinputs.Dpile',   low=MnCnst[1],  high=MxCnst[1])
         myjckt.driver.add_parameter('Pileinputs.tpile',   low=MnCnst[2],  high=MxCnst[2])
         myjckt.driver.add_parameter('Pileinputs.Lp',      low=MnCnst[3],  high=MxCnst[3])
-        myjckt.driver.add_parameter('leginputs.Dleg',     low=MnCnst[4],  high=MxCnst[4])
-        myjckt.driver.add_parameter('leginputs.tleg',     low=MnCnst[5],  high=MxCnst[5])
-        myjckt.driver.add_parameter('Xbrcinputs.Dbrc',    low=MnCnst[6],  high=MxCnst[6])
-        myjckt.driver.add_parameter('Xbrcinputs.tbrc',    low=MnCnst[7],  high=MxCnst[7])
+        myjckt.driver.add_parameter('leginputs.Dleg[0]',     low=MnCnst[4],  high=MxCnst[4])
+        myjckt.driver.add_parameter('leginputs.tleg[0]',     low=MnCnst[5],  high=MxCnst[5])
+        myjckt.driver.add_parameter('Xbrcinputs.Dbrc[0]',    low=MnCnst[6],  high=MxCnst[6])
+        myjckt.driver.add_parameter('Xbrcinputs.tbrc[0]',    low=MnCnst[7],  high=MxCnst[7])
         myjckt.driver.add_parameter('Mbrcinputs.Dbrc_mud',low=MnCnst[8],  high=MxCnst[8])
         myjckt.driver.add_parameter('Mbrcinputs.tbrc_mud',low=MnCnst[9],  high=MxCnst[9])
         myjckt.driver.add_parameter('Twrinputs.Db',       low=MnCnst[10], high=MxCnst[10])
@@ -3127,7 +3140,7 @@ if __name__ == '__main__':
         myjckt.driver.add_parameter('Twrinputs.Htwr2frac',low=MnCnst[14], high=MxCnst[14])
 
        #--- Constraints ---#
-        myjckt.driver.add_constraint('FrameOut.Frameouts_outs.Freqs[0] >=0.25')
+        myjckt.driver.add_constraint('FrameOut.Frameouts_outs.Freqs[0] >=0.22')
         myjckt.driver.add_constraint('max(Utilization.tower_utilization.GLUtil) <=1.0')
         myjckt.driver.add_constraint('max(Utilization.tower_utilization.EUshUtil) <=1.0')
         myjckt.driver.add_constraint('Utilization.jacket_utilization.t_util <=1.0')
@@ -3137,7 +3150,7 @@ if __name__ == '__main__':
         # ----------------------
 
         # --- recorder ---
-        myjckt.recorders = [DumpCaseRecorder()]
+        myjckt.recorders = [DumpCaseRecorder('optimization.dat')]
         # ----------------------
 
     #--- RUN JACKET ---#

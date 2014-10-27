@@ -47,7 +47,7 @@ def main(recordfile):
     myjckt.driver.disp=1
 
     #4. Objective #TO DO ADD PILE MASS
-    myjckt.driver.add_objective('(Frame3DDmodal.Frameouts2.mass[0]+Embedment.Mpiles)/1.e6')
+    myjckt.driver.add_objective('(FrameOut.Frameouts_outs.mass[0]+Embedment.Mpiles)/1.e6')
 
     #5. Design Variables
 
@@ -68,14 +68,14 @@ def main(recordfile):
     myjckt.driver.add_parameter('Twrinputs.Htwr2frac', low=MnCnst[14], high=MxCnst[14])# /factors[14],scaler=factors[14]
 
     #6. Constraitns
-    myjckt.driver.add_constraint('Frame3DDmodal.Frameouts2.Freqs[0] >=0.25')
+    myjckt.driver.add_constraint('FrameOut.Frameouts_outs.Freqs[0] >=0.25')
     myjckt.driver.add_constraint('max(Utilization.tower_utilization.GLUtil) <=1.0')
 
     myjckt.driver.add_constraint('max(Utilization.tower_utilization.EUshUtil) <=1.0')
-   # myjckt.driver.add_constraint('myjckt.jacket_utilization.t_util <=1.0')
-   # myjckt.driver.add_constraint('myjckt.jacket_utilization.cb_util <=1.0')
-   # myjckt.driver.add_constraint('myjckt.jacket_utilization.KjntUtil <= 1.0')
-   # myjckt.driver.add_constraint('myjckt.jacket_utilization.XjntUtil <= 1.0')
+   # myjckt.driver.add_constraint('Utilization.jacket_utilization.t_util <=1.0')
+   # myjckt.driver.add_constraint('Utilization.jacket_utilization.cb_util <=1.0')
+   # myjckt.driver.add_constraint('Utilization.jacket_utilization.KjntUtil <= 1.0')
+   # myjckt.driver.add_constraint('Utilization.jacket_utilization.XjntUtil <= 1.0')
 
     #7 recorder
 
@@ -91,7 +91,7 @@ def main(recordfile):
     print "\n"
     print "Minimum found at (%f, %f, %f)" % (myjckt.Tower.Twrins.Db,myjckt.Tower.Twrins.Dt,myjckt.Tower.Twrins.Htwr2frac)
     print "Minimum found at DTRb DTRt(%f, %f)" % (myjckt.Tower.Twrins.DTRb,myjckt.Tower.Twrins.DTRt)
-    print "Minimum found at Freq %f"  % (myjckt.Frameouts2.Freqs[0])
+    print "Minimum found at Freq %f"  % (myjckt.FrameOut.Frameouts_outs.Freqs[0])
     print "Minimum found at GLutil EUutil %f %f"  % (np.max(myjckt.tower_utilization.GLUtil),np.max(myjckt.tower_utilization.EUshUtil))
     print "Elapsed time: ", time.time()-tt, "seconds"
     print "Execution count: ", myjckt.exec_count
