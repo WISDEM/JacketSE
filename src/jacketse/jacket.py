@@ -2334,6 +2334,8 @@ class JacketSE(Assembly):
 
     #outs
     #JcktGeoOut = VarTree(JcktGeoOutputs(), iotype='out', desc='Geometry of the Jacket -Node Coordinates and Member Connectivity')
+    Twrouts  = VarTree(TwrGeoOutputs(), iotype='out', desc='Basic Output data for Tower')
+    Legouts  = VarTree(LegGeoOutputs(), iotype='out', desc='Leg Geometry Output')
 
     def __init__(self, clamped=False, AFflag=False, PrebuildTP=2):
 
@@ -2615,6 +2617,10 @@ class JacketSE(Assembly):
         self.create_passthrough('Embedment.Mpiles') #Mass of all piles with given Lp
         self.create_passthrough('BrcCriteria.MudBrcCriteria') #MudBrace constraints
         self.create_passthrough('BrcCriteria.XBrcCriteria') #XBrace constraints
+
+        self.connect('Tower.Twrouts','Twrouts')
+        self.connect('Legs.legouts','Legouts')
+
 #_____________________________________________________#
 
 class ComponentMass(Component):  #TO DO
@@ -2889,7 +2895,7 @@ if __name__ == '__main__':
     #PyObject *f = PySys_GetObject("stdout")
     #PyFile_WriteString
 
-    optimize = True        #Set this one to True if you want a test on optimization
+    optimize = False        #Set this one to True if you want a test on optimization
     SNOPTflag= True
 
     #--- Set Jacket Input Parameters ---#

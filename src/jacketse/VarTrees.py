@@ -47,12 +47,12 @@ class TwrGeoOutputs(VariableTree):
     """Basic Geometric Outputs needed to build Tower of Jacket."""
     TwrObj   =  Instance(Klass=Tube,                             desc='Object of Class Tube for Tower portion of Jacket')
     Twr2RNAObj =Instance(Klass=RigidMember,                      desc='Object of Class RigidMember for Rigid Tower portion')
-    joints   = Array(np.array([]),units='m', dtype=np.float, desc='Pile Joint (with legs) Coordinates (3,nlegs=nfaces)')
-    nodes    = Array(np.array([]),units='m', dtype=np.float, desc='Tower ALL Nodes'' Coordinates (3,nNodes)')
-    nNodes   = Int(0,           units=None,                  desc='Number of Tower Nodes INCLUDING joint at TP')
-    nElems   = Int(0,           units=None,                  desc='Number of of elements in the flexible portion of tower')
-    mass =     Float(           units='kg',                  desc='Tower Mass')
-    TopMass  = Array(np.zeros([10]),         dtype=np.float, desc='Tower Top mass, Ixx, Iyy, Izz,Ixy,Ixz,Iyz,CMxoff,CMyoff,CMzoff from RNA properties in input')
+    joints   = Array(np.array([]),    units='m', dtype=np.float, desc='Pile Joint (with legs) Coordinates (3,nlegs=nfaces)')
+    nodes    = Array(np.empty((3,10)),units='m', dtype=np.float, desc='Tower ALL Nodes'' Coordinates (3,nNodes)')
+    nNodes   = Int(0,           units=None,                      desc='Number of Tower Nodes INCLUDING joint at TP')
+    nElems   = Int(0,           units=None,                      desc='Number of of elements in the flexible portion of tower')
+    mass =     Float(           units='kg',                      desc='Tower Mass')
+    TopMass  = Array(np.zeros([10]),            dtype=np.float, desc='Tower Top mass, Ixx, Iyy, Izz,Ixy,Ixz,Iyz,CMxoff,CMyoff,CMzoff from RNA properties in input')
     TopMass_yaw  = Array(np.zeros([10]),        dtype=np.float, desc='Tower Top mass, Ixx, Iyy, Izz,Ixy,Ixz,Iyz,CMxoff,CMyoff,CMzoff from RNA properties in input including yaw angle w.r.t. Global XYZ')
 
     HH       = Float(            units='m', desc='Hub-Height')
