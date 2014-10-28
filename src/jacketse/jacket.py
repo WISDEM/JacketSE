@@ -1140,7 +1140,7 @@ class Tower(Component):
         V01,CM01 = frustum(Db-2*tb, Dt-2*tt, Htwr-Htwr2)
         Vfrst = V0 - V01  #Frustum
         # mass
-        self.Twrouts.mass = Twrmats[0].rho*Vunif + Twrmats[Htwr2Flg].rho*Vfrst
+        self.Twrouts.mass = Twrmats[0].rho*Vunif + Twrmats[-1].rho*Vfrst
 #_____________________________________________________#
 class SoilGeoInputs(VariableTree):
     """Basic Soil Properties needed to assess Soil and Embedment Length"""

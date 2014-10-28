@@ -86,7 +86,7 @@ def JcktOpt(casefile,SNOPTflag=False):
     desvarmeans=np.mean(desvarbds,1)
 
     #SET UP THE PROBLEM
-    opt_prob=pyOpt.Optimization('Jacket Optimization via SNOPTFLAG= {:x} '.format(SNOPTflag), objfunc)
+    opt_prob=pyOpt.Optimization('Jacket Optimization via SNOPTFLAG= {!r:^} '.format(SNOPTflag), objfunc)
 
     opt_prob.addObj('mass')
     for ii,key in enumerate(varlist):
@@ -137,27 +137,31 @@ def JcktOpt(casefile,SNOPTflag=False):
 
         opt =pyOpt.COBYLA(pll_type=mpistr)
 
-        #opt.setOption('RHOBEG',0.01)
+        opt.setOption('RHOBEG',0.001)
         opt.setOption('RHOEND',1.e-3)
         opt.setOption('MAXFUN',2000)
         opt.setOption('IPRINT',1)
-        opt.setOption('IFILE',os.path.join(os.path.dirname(casefile),ifilestr+'.hst') ) #store cobyla output
-        [fstr, xstr, inform]=opt(opt_prob,  True,           False,             True,          False, *args)
+        #opt.setOption('IFILE',os.path.join(os.path.dirname(casefile),ifilestr+'.hst') ) #store cobyla output
+
+        #Solve
+        tt = time.time()
+
+        [fstr, xstr, inform]=opt(opt_prob,  True,           False,             False,          False, *args)
     ###opt_problem={}, store_sol=True, disp_opts=False, store_hst=False, hot_start=False
 
 
     print opt_prob.solution(0)
 
     print "\n"
-    print "Minimum mass Mjacket, MPiles, TPmass = %f %f %f" %(myjckt.Frameouts2.mass[0],myjckt.Mpiles,myjckt.TP.TPouts.mass)
-    print "Minimum mass Tower, Jacket(no tower no piles) = %f %f" %(myjckt.Tower.Twrouts.mass,myjckt.Frameouts2.mass[0]-myjckt.Tower.Twrouts.mass)
+    print "Minimum mass Mjacket, MPiles, TPmass = %f %f %f" %(myjckt.FrameOut.Frameouts_outs.mass[0],myjckt.Mpiles,myjckt.TP.TPouts.mass)
+    print "Minimum mass Tower, Jacket(no tower no piles) = %f %f" %(myjckt.Tower.Twrouts.mass,myjckt.FrameOut.Frameouts_outs.mass[0]-myjckt.Tower.Twrouts.mass)
     print "Minimum found at Dpile=%f, tpile=%f  Lp=%f " % (myjckt.Piles.Pileinputs.Dpile,myjckt.Piles.Pileinputs.tpile,myjckt.Piles.Pileinputs.Lp)
     print "Minimum found at Dbrc=%f, tbrc=%f  " % (myjckt.Xbraces.Xbrcouts.LLURObj.D[0],myjckt.Xbraces.Xbrcouts.LLURObj.t[0])
     print "Minimum found at Dbrcmud=%f, tbrcmud=%f  " % (myjckt.Mudbraces.Mbrcouts.brcObj.D[0],myjckt.Mudbraces.Mbrcouts.brcObj.t[0])
     print "Minimum found at batter=%f, dckwidth=%f, Dleg=%f, tleg=%f,  " % (myjckt.JcktGeoIn.batter,myjckt.dck_width, myjckt.leginputs.Dleg[0],myjckt.leginputs.tleg[0])
     print "Minimum found at Dgir=%f, tgir=%f " % (myjckt.TPinputs.Dgir,myjckt.TPinputs.tgir)
     print "Minimum found at Db=%f DTRb=%f Dt=%f DTRt=%f H2frac=%f " % (myjckt.Tower.Twrins.Db,myjckt.Tower.Twrins.DTRb,myjckt.Tower.Twrins.Dt,myjckt.Tower.Twrins.DTRt,myjckt.Tower.Twrins.Htwr2frac)
-    print "Minimum found at Freq %f"  % (myjckt.Frameouts2.Freqs[0])
+    print "Minimum found at Freq %f"  % (myjckt.FrameOut.Frameouts_outs.Freqs[0])
     print "Minimum found at GLutil=%f EUutil=%f"  % (np.nanmax(myjckt.tower_utilization.GLUtil),np.nanmax(myjckt.tower_utilization.EUshUtil))
     print "Minimum found at Mudline Footprint=%f"  % (myjckt.wbase)
     print "Elapsed time: ", time.time()-tt, "seconds"
@@ -817,7 +821,7 @@ def main(casefile='MyJacketInputs.py',SNOPTflag='True'):
 
     if len(sys.argv)>1:
         casefile=sys.argv[1]
-        SNOPTflag=bool(sys.argv[2])
+        SNOPTflag=sys.argv[2].lower() == 'true'
 
     else:
         casefile=r'MyJacketInputs.py'
