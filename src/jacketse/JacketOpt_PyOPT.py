@@ -1,8 +1,9 @@
 #-------------------------------------------------------------------------------
 # Name:        JacketOpt_PyOPT.py variant of JacketOpt_Peregrine.py
 # Purpose:     It Expects Input DATA to be edited directly from 1 input file and then calls the optimizer based on that.
-#              This is a non-multicase variant that started from JacketOpt_PyOPT_multicaseTable.py
-#              See MyJacketInputs.py for an example of input file.
+#              !!!!!!!!!!!In particular it used to use a table of cases for the LCOE analysis project.!!!!!!!!!!!!
+#              This can also be a non-multicase variant that started from JacketOpt_PyOPT_multicaseTable.py
+#              See MyJacketInputs.py for an example of individual input file.
 #              NOTE: HERE DESVARS ARE NOT MADE DIMENSIOLESS!!! JUST objfunc and cosntraints! vs JacketOPt_Peregrine
 # Author:      rdamiani
 #
@@ -31,7 +32,7 @@ import ntpath
 
 from PlotJacket import main as PlotJacket  #COMMENT THIS ONE OUT FOR PEREGRINE"S SAKE
 
-from ReadSaveOpt1Line import DesVars
+from ReadSaveOpt1Line import ReadTab1Line,SaveOpt1Line,ReadOptFile,DesVars
 
 
 #__________________________________________________________#
@@ -41,52 +42,102 @@ from ReadSaveOpt1Line import DesVars
 
 #__________________________________________________________#
 
-def JcktOpt(casefile,SNOPTflag=False):
-    """Optimizer which reads one line caseno out of table file casefile:\n
+def JcktOpt(prmsfile, SNOPTflag=False, tablefile=[], caseno=[],xlsfilename=[],guessfromoutfile=[],f0epsset=[],DTRsdiffset=[],jcktDTRminset=[]):
+
+    """Optimizer which either reads one line caseno out of table file tablefile,\n
+       or an individual input file prmsfile. Note you need to provide a prmfile also in the multicase table case. \n
+
     INPUT \n
-        casefile -string, complete path+filename to table file of cases. \n
+        prmsfile  -string, complete path+filename to main parameter setting file (e.g.: MyJacketInputFile.py for an individual case, or SetJacketInputsPeregrine.py for multicase table case). \n
+
     OPTIONALS \n
         SNOPTflag -boolean, if True it will use SNOPT else COBYLA both from pyOPT. \n
 
+               The following are all needed in case of mullticase table input file.\n
+        tablefile -string, complete path+filename to table file of cases, or \n
+        caseno      -int, case number (also row out of the table to be read). Only for multicase table case.\n
+        xlsfilename -string, complete path+filename to excel file, whose sheet for the current caseno case will be added/updated.Only for multicase table case. \n
+        guessfromoutfile -string, complete path+name to an optimization output file where to read guesses from. Only for multicase table case. \n
+        f0epsset       -Float,       Set this to a value such that the f0*(1+f0epsilon) will not be exceeded: Only for multicase table case.\n
+        DTRsdiffset    -Boolean,     Set this to True if DTRs are to be different between base and top. Only for multicase table case. \n
+        jcktDTRminset  -Float,       Set this one to the minimum jacket member DTR allowed, mostly for 60+waterdepths: Only for multicase table case.\n
+
     OUTPUT \n
-        It will create a final configuration optimized for the design parameters in the casefile file. \n
+        It will create a final configuration optimized for the design parameters in the prmsfile file. \n
         Also, it will save a dump-recorder file, and summary for report, respectively. \n
         Figures will also be made of configuration and tower utilization.  \n
-        myjckt   -OPenMdao assembly of JacketSE, final configuration after optimization
+        casename -string, case name for hte current case usable by other programs. \n
+        myjckt   -OPenMdao assembly of JacketSE, final configuration after optimization.
         \n
         """
     global DTRsdiff,f0,f0eps,jcktDTRmin,mxftprint  #global vars to pass a few parameters around through the constraints
 
-    directory, module_name = os.path.split(casefile)
+    desvars=DesVars() #instanct of design variables
+
+
+    directory, module_name = os.path.split(prmsfile)
     module_name = os.path.splitext(module_name)[0]
 
     path = list(sys.path)
     sys.path.insert(0, directory)
     try:
-        MyJacketInputs = __import__(module_name)
+        MyJacketInputs = __import__(module_name)  #This can be either MyJacketInputs or SetJacketInputsPeregrine
     finally:
         sys.path[:] = path # restore
 
-    desvars=DesVars() #instanct of design variables
+    casename='JacketOpt' #initialize
+    if caseno: #This is the case of a table of multiple cases file
 
-    #Read Input & Build the initial assembly and get guesses, for the x design variable array check out objfunc
-    myjckt,f0,f0epsilon,jcktDTRmin,DTRsdiff,mxftprint,guesses,desvarbds=MyJacketInputs.main()
+        #Set global variables that are passed through keywords
+        f0epsilon=f0epsset
+        DTRsdiff=DTRsdiffset
+        jcktDTRmin=jcktDTRminset
+
+            #First read design parameters and des var bounds
+        Desprms,_,desvarbds,desvarmeans,guesses,casename=ReadTab1Line(tablefile,caseno,desvars.dvars.keys())
+        #USING bds as desvarbds
+
+        #Assign mxftprint
+        mxftprint=Desprms.mxftprint
+
+        #Target frequency
+        f0=Desprms.f0
+        #Then set up an initial guess at the Design variables and use it also to instantiate the assembly
+
+        for ii,key in enumerate(desvars.dvars):
+            #print key  #debug
+            setattr(desvars,key,desvarmeans[ii])
+
+        #Then build the initial assembly
+        myjckt=MyJacketInputs.main(Desprms,desvars)
+
+    else:
+        #Read Input & Build the initial assembly and get guesses, for the x design variable array check out objfunc
+        myjckt,f0,f0epsilon,jcktDTRmin,DTRsdiff,mxftprint,guesses,desvarbds=MyJacketInputs.main()
+        desvarmeans=np.mean(desvarbds,1)
 
     f0eps=f0epsilon
 
     guess=guesses
 
-    varlist=desvars.dvars.keys()
-    if not(DTRsdiff):#DTRs FIXED TO EACH OTHER
-        idx=varlist.index('DTRt')
-        varlist.pop(idx)
-        guess=np.delete(guess,idx)
-        desvarbds=np.delete(desvarbds,idx,0)
+    if guessfromoutfile:  #This only used when multiple case file is used
+        desvarguess=ReadOptFile(guessfromoutfile)
+        for ii,key in enumerate(desvarguess.dvars):
+            guess[ii]=getattr(desvarguess,key)#/desvarmeans[ii]
 
-    desvarmeans=np.mean(desvarbds,1)
+    varlist=desvars.dvars.keys()
+    idx_DTRt=varlist.index('DTRt')
+    if not(DTRsdiff):#DTRs FIXED TO EACH OTHER
+        varlist.pop(idx_DTRt)
+        guess=np.delete(guess,idx_DTRt)
+        desvarmeans=np.delete(desvarmeans,idx_DTRt)
+        desvarbds=np.delete(desvarbds,idx_DTRt,0)
+
 
     #SET UP THE PROBLEM
     opt_prob=pyOpt.Optimization('Jacket Optimization via SNOPTFLAG= {!r:^} '.format(SNOPTflag), objfunc)
+    if caseno:
+        opt_prob=pyOpt.Optimization('LCOE 1 Line Case no. {:d} Optimization'.format(caseno), objfunc)
 
     opt_prob.addObj('mass')
     for ii,key in enumerate(varlist):
@@ -100,9 +151,16 @@ def JcktOpt(casefile,SNOPTflag=False):
     #Finally call the optimizer
     args=(myjckt,desvarmeans,desvarbds)
 
-
+    strname2='' #initialize
     if SNOPTflag:
-        opt_prob.write2file(outfile=os.path.join(os.path.dirname(casefile),'pyopt_snopt_'+'.hst'), disp_sols=False, solutions=[])
+        strname='pyopt_snopt_'+'.hst'
+
+        if caseno:
+            strname2=str(caseno).zfill(2)
+            strname='pyopt_snopt_'+strname2+'.hst'
+
+        opt_prob.write2file(outfile=os.path.join(os.path.dirname(prmsfile),strname), disp_sols=False, solutions=[])
+
         #set some strings for MPI incase
         mpistr=''
         printfstr='pyopt_snopt_print_'
@@ -117,8 +175,9 @@ def JcktOpt(casefile,SNOPTflag=False):
         opt.setOption('Major feasibility tolerance',1.e-3)
         opt.setOption('Major optimality tolerance',1.e-3)
         opt.setOption('Minor feasibility tolerance',1.e-3)
-        opt.setOption('Print file',os.path.join(os.path.dirname(casefile),printfstr+'.out'))
-        opt.setOption('Summary file',os.path.join(os.path.dirname(casefile),summfstr+'.out'))
+        opt.setOption('Print file',os.path.join(os.path.dirname(prmsfile),printfstr+strname2+'.out'))
+        opt.setOption('Summary file',os.path.join(os.path.dirname(prmsfile),summfstr+strname2+'.out'))
+
         opt.setOption('Solution','Yes')
         #Solve
         tt = time.time()
@@ -141,7 +200,7 @@ def JcktOpt(casefile,SNOPTflag=False):
         opt.setOption('RHOEND',1.e-3)
         opt.setOption('MAXFUN',2000)
         opt.setOption('IPRINT',1)
-        #opt.setOption('IFILE',os.path.join(os.path.dirname(casefile),ifilestr+'.hst') ) #store cobyla output
+        opt.setOption('IFILE',os.path.join(os.path.dirname(prmsfile),ifilestr+strname2+'.hst') ) #store cobyla output
 
         #Solve
         tt = time.time()
@@ -168,15 +227,16 @@ def JcktOpt(casefile,SNOPTflag=False):
     print "Execution count: ", myjckt.exec_count
 
     #STORE RESULTS
-    if not(DTRsdiff):#DTRs FIXED TO EACH OTHER, reexpand array
-        idx_DTRb=desvars.dvars.keys().index('DTRb')
-        xstr=np.insert(xstr,idx_DTRt,xstr[idx_DTRb])
+    outdir=ntpath.dirname(prmsfile)
+    if caseno:
+        if not(DTRsdiff):#DTRs FIXED TO EACH OTHER, reexpand array
+            idx_DTRb=desvars.dvars.keys().index('DTRb')
+            xstr=np.insert(xstr,idx_DTRt,xstr[idx_DTRb])
 
-    outdir=ntpath.dirname(casefile)
-    SaveOpt1Line(outdir,caseno,casename,desvars,xstr,myjckt,xlsfilename,Desprms)
+            SaveOpt1Line(outdir,caseno,casename,desvars,xstr,myjckt,xlsfilename,Desprms)
 
     #Plot
-    #PlotJacket(myjckt,util=True,savefileroot=outdir+'\\'+casename)
+    PlotJacket(myjckt,util=True,savefileroot=ntpath.join(outdir,casename))
 
     return myjckt,casename
 #__________________________________________________________#
@@ -813,27 +873,87 @@ def mincnstrt(x,idx,desvarmeans,desvarbds):
 
 #______________________________________________________________________________#
 
-def main(casefile='MyJacketInputs.py',SNOPTflag='True'):
-    #global    DTRsdiff,jcktDTRmin
-    #DTRsdiff=False    ##SET THIS TO TRUE IF YOU WANT DTRs to be different between base and top
-    #jcktDTRmin=22.  ##Set this one to the minimum DTR allowed, mostly for 60+waterdepths
+def main(prmsfile='MyJacketInputs.py',SNOPTflag='True',tablefile=[], f0epsilon=0.1,DTRsdiff_set=False,jcktDTRmin_set=22.,multi=False):
 
+    #NOTE SET THE UPPER KEYWORDS TOO FOR MULTICASE TABLE
 
-    if len(sys.argv)>1:
-        casefile=sys.argv[1]
+    """
+    INPUT THROUGH KEYWORDS INTO MAIN:
+        The following are needed as keywords above here only if multiplecase table is going to be run, else ignore.\n
+    f0epsilon       -Float,       Set this to a value such that the f0*(1+f0epsilon) will not be exceeded: This is to be fixed here only in case of multiple-case tables. Note it is overriden belo, so in case modify, this was for LCOE project. \n
+    DTRsdiff_set    -Boolean,     Set this to True if DTRs are to be different between base and top: This is to be fixed here only in case of multiple-case tables. \n
+    jcktDTRmin_set  -Float,       Set this one to the minimum jacket member DTR allowed, mostly for 60+waterdepths: This is to be fixed here only in case of multiple-case tables.\n
+    multi           -Boolean,     Set it to True if multiple case file, else False.
+    """
+
+#take care of possible external (outside of IDE) run
+
+    if len(sys.argv)>1 and len(sys.argv)<5: #This means individual case
+        prmsfile=sys.argv[1]
         SNOPTflag=sys.argv[2].lower() == 'true'
 
-    else:
-        casefile=r'MyJacketInputs.py'
+    elif len(sys.argv)>1:       #This means multicase table
+        multi=True
+        guessfromoutfile=[]
+
+        prmsfile=sys.argv[1]
+        tablefile=sys.argv[2]
+        casenostart=int(sys.argv[3])
+        casenoends=int(sys.argv[4])
+        xlsfilename=sys.argv[5]
+        SNOPTflag=False
+        if len(sys.argv)>6:
+            SNOPTflag= (sys.argv[6].lower() == 'true')
+            if len(sys.argv)>7:
+                guessfromoutfile=sys.argv[7]
+
+    #Now check whether we are not passing stuff from command line and we want to assign defaults
+
+    elif not multi:  # INDIVIDUAL FILE
+        prmsfile=r'MyJacketInputs.py'
         SNOPTflag=True
 
-    myjckt,casename=JcktOpt(casefile,SNOPTflag=SNOPTflag)
-    sys.stdout.flush()  #This for peregrine
+    else:           #MULTICASE TABLE FILE
+        prmsfile=r'SetJacketInputsPeregrine.py'
+        tablefile=r'D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\LCOE_ANALYSIS\testmatrix.dat'
+      #  tablefile=r'C:\PROJECTS\OFFSHORE_WIND\LCOE_COSTANALYSIS\testmatrixspec.dat'
+        casenostart=82  #UHREACT
+        casenoends=82
+        SNOPTflag=False
+        xlsfilename=r'D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\LCOE_ANALYSIS\outputs.xls'
+     #   xlsfilename=r'C:\PROJECTS\OFFSHORE_WIND\LCOE_COSTANALYSIS\outputs.xls'
 
-    ##SAMPLE CALL FROM OUTSIDE IDE
+        #guessfromoutfile='D:\\RRD_ENGINEERING\\PROJECTS\\NREL\\OFFSHOREWIND\\LCOE_ANALYSIS\\CASES_55_63_tobereplaced\\55_R2D0H0M0T0S0_out.dat'
+        #guessfromoutfile='D:\\RRD_ENGINEERING\\PROJECTS\\NREL\\OFFSHOREWIND\\LCOE_ANALYSIS\\CASES_10_18_tobereplaced\\10_R0D1H0M0T0S0_out.dat'
+        #guessfromoutfile=r'C:\PROJECTS\OFFSHORE_WIND\LCOE_COSTANALYSIS\COBYLA\08_R0D0H2M1T0S0_out.dat'
+
+
+#________________RUN NOW________________#
+    if not multi: # INDIVIDUAL FILE
+        myjckt,casename=JcktOpt(prmsfile,SNOPTflag=SNOPTflag)
+        sys.stdout.flush()  #This for peregrine
+
+    else: #MULTICASE TABLE FILE
+        f0epsilon=0.05 #upper f0 allowed
+        for caseno in range(casenostart,casenoends+1):
+            if caseno>27:
+                f0epsilon=0.35
+            print('#____________________________________________#\n')
+            print(('#JacketOpt_SNOPT NOW PROCESSING CASE No. {:d} #\n').format(caseno) )
+            print('#____________________________________________#\n')
+            myjckt,casename=JcktOpt(prmsfile,SNOPTflag=SNOPTflag,tablefile=tablefile, caseno=caseno,xlsfilename=xlsfilename,guessfromoutfile=guessfromoutfile, f0epsset=f0epsilon, DTRsdiffset=DTRsdiff_set,jcktDTRminset=jcktDTRmin_set)
+            guessfromoutfile=os.path.join(os.path.dirname(prmsfile),casename + '_out.dat')
+            sys.stdout.flush()  #This for peregrine
+
+
+
+##___________________________________________________________##
+    ##SAMPLE CALL FROM OUTSIDE IDE with 1 individual file
     ##python JacketOpt_PyOPT.py C:\RRD\PYTHON\WISDEM\JacketSE\src\jacketse\MyJacketInputs.py True
 
-
+    ##SAMPLE CALL FROM OUTSIDE ENVIRONMENT
+    ##python JacketOpt_Peregrine.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\LCOE_ANALYSIS\SetJacketInputsPeregrine.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\LCOE_ANALYSIS\testmatrix.dat 55 55 D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\LCOE_ANALYSIS\output.xls True D:\\RRD_ENGINEERING\\PROJECTS\\NREL\\OFFSHOREWIND\\LCOE_ANALYSIS\\CASES_55_63_tobereplaced\\55_R2D0H0M0T0S0_out.dat
+##___________________________________________________________##
 
 
 

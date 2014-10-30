@@ -17,7 +17,7 @@ jacketse Documentation
 
     intro
     installation
-    tutorial
     documentation
     theory
+    tutorial
 

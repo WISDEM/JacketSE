@@ -41,7 +41,7 @@ def main(myjckt,util=False,savefileroot=[]):
 
     #Plot utilization of Tower if requested
     if util:
-        RigidTop=(myjckt.RNAinputs.CMzoff != 0.) and myjckt.Tower.RigidTop
+        RigidTop=(myjckt.RNAinputs.CMoff[2] != 0.) and myjckt.Tower.RigidTop
         fig2=plt.figure();
         ax1 = fig2.add_subplot(111)
         twr_z=myjckt.Tower.Twrouts.nodes[2,0:myjckt.Tower.Twrouts.nNodes-RigidTop]-myjckt.Tower.Twrouts.nodes[2,0]

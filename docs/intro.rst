@@ -1,5 +1,6 @@
 Introduction
 ------------
+.. bibliography:: references.bib
 
 JacketSE is a module that allows for the analysis of preliminary designs of 3 and 4-legged jackets and towers.
 Coupled to an optimizer, it will render the design that achieves the objective, usually set as minimum overall mass, while satisfying both geometric, modal, and load criteria.
@@ -18,6 +19,6 @@ Within WISDEM, JacketSE allows for the full gamut of component investigations to
 
 JacketSE is based on a modular code framework and primarily consists of the following submodules: a geometry-definition module,
 a finite element model (a modified version of `Frame3DD <https://frame3dd.sourceforge.net/>`, a soil-pile-interaction module, a code checker module (based on API, GL, and Eurocode guidelines), and an optimization module.
-More details on the code can be found at `WISDEM <https://github.com/WISDEM/>`, and Damiani and Song (2013), and :ref:`theory`.
+More details on the code can be found at `WISDEM <https://github.com/WISDEM/>`, and :cite:`damiani13`, and :ref:`theory`.
 
 

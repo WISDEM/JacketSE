@@ -37,13 +37,15 @@ _sys_path_add([])
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.mathjax', 'sphinx.ext.viewcode',
-              'numpydoc', 'sphinx.ext.autosummary', 'sphinxcontrib.bibtex', 'exts.numfig',
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.mathjax', 'sphinx.ext.viewcode','sphinx.ext.ifconfig', 
+              'numpydoc', 'sphinx.ext.autosummary', 'sphinxcontrib.bibtex', 'sphinx.ext.numfig','exts.numfig',
               'sphinxcontrib.zopeext.autointerface', 'sphinx.ext.intersphinx']
 
 autosummary_generate = True  # generate the autosummary pages automatically
 numpydoc_show_class_members = False  # don't let numpydoc generate autosummary b/c it messes up toctree
-number_figures = True  # used by numfig to number the figures in html output
+# numfig:
+# numfig_number_figures = True
+# numfig_figure_caption_prefix = "Figure"s
 autoclass_content = 'init'  # include the init docstring rather than the class docstring
 rst_prolog = """
 .. role:: bib
