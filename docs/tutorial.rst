@@ -243,18 +243,21 @@ the Von Mises stress, global and shell buckling utilizations are shown along the
 ::
 
 >>>7 nodes in the constant-OD segment of the tower
->>>('>>>>>>>>>>  needed embedment Lp0=', 41.227393227538592)
->>>First two Freqs.= 0.2200 and 0.2212 Hz
->>>jacket+TP(structural+lumped) mass (no tower, no piles) [kg] = 1170273
->>>tower mass [kg] = 410096
->>>TP mass structural + lumped mass [kg] = 349641
->>>piles (all) mass (for assigned (not optimum) Lp [kg] =  98476
->>>frame3dd model mass (structural + TP lumped) [kg] = 1580369
->>>Tower Top Displacement in Global Coordinate System [m] =0.4196
->>>MAX member compression-bending utilization at joints = 0.5483
->>>MAX member tension utilization at joints = 0.6600
->>>MAX X-joint  utilization at joints = 0.2581
->>>MAX K-joint  utilization at joints = 0.3815
+>>>('>>>>>>>>>>  needed embedment Lp0=', 41.880993761055052)
+>>>First two Freqs.= 0.2143 and 0.2154 Hz
+>>>jacket+TP(structural+lumped) mass (no tower, no piles) [kg] = 1135683
+>>>tower mass [kg] = 396546
+>>>TP mass structural + lumped mass [kg] = 347611
+>>>piles (all) mass (for assigned (not optimum) Lp [kg] =  94910
+>>>frame3dd model mass (structural + TP lumped) [kg] = 1532229
+>>>Tower Top Displacement in Global Coordinate System [m] =0.4437
+>>>MAX member compression-bending utilization at joints = 0.5559
+>>>MAX member tension utilization at joints = 0.6590
+>>>MAX X-joint  utilization at joints = 0.2586
+>>>MAX K-joint  utilization at joints = 0.3807
+
+The total mass of the jacket, tower, and TP (both structural and lumped mass), and piles is 1,627,139 kg.
+Also note that the first natural frequencies do NOT match the requirement >0.22 Hz.
 
 .. _jacket_tower_tutOpt-fig:
 
@@ -291,14 +294,51 @@ We simply run a SNOPT optimization case by issuing: ::
 
 The run terminates with the following results:
 
+::
+
+>>>7 nodes in the constant-OD segment of the tower
+>>>('>>>>>>>>>>  needed embedment Lp0=', 27.634632160831377)
+>>>Jwrapper SOLUTION: bat= 9.48, Dpile= 2.45, tpile=0.025, Lp= 27.6 Dleg 1.14, tleg0.032
+>>>        dck_width =12.76,    Dbrc= 1.00, tbrc=0.025, Dmudbrc= 1.00, tmudbrc=0.025
+>>>from Jwrapper Db= 6.38, DTRb=139.88, Dt= 3.21, DTRt=139.88,H2twrfrac= 0.25, Dgir= 1.00,tgir=0.025, Twrmass=413487.941, PilesMass =187056.839, TPmass= 1.424e+05, Frame3DD+Piles Totmass=1477428.623
+
+::
+
+>>>Minimum mass Mjacket, MPiles, TPmass = 1290371.783880 187056.839229 142411.694364
+>>>Minimum mass Tower, Jacket(no tower no piles) = 413487.941068 876883.842813
+>>>Minimum found at Dpile=2.451534, tpile=0.025400  Lp=27.634661
+>>>Minimum found at Dbrc=1.000000, tbrc=0.025400
+>>>Minimum found at Dbrcmud=1.000000, tbrcmud=0.025400
+>>>Minimum found at batter=9.476407, dckwidth=12.758457, Dleg=1.138723, tleg=0.031565,
+>>>Minimum found at Dgir=1.000084, tgir=0.025400
+>>>Minimum found at Db=6.379229 DTRb=139.882073 Dt=3.208883 DTRt=139.882073 H2frac=0.250000
+>>>Minimum found at Freq 0.220003
+>>>Minimum found at GLutil=0.734957 EUutil=0.195177
+>>>Minimum found at Mudline Footprint=20.758694
+>>>Elapsed time:  4514.93799996 seconds
+>>>Execution count:  3422
+
+
+The total mass of the jacket, tower, and TP (both structural and lumped mass), and piles is  1,677,428 kg. 
+Note that in this case the frequency constraint is met.
+
+.. _jacket_ExtPySnopt-fig:
+
+.. figure:: /images/jacket_ExtPySnopt.*
+    :width: 6in
+    :align: center
+
+    Jacket-tower structure for the tutorial example after OpenMDAO driven optimization via SNOPT. 
+
     
-    .. _utilextopt-fig:
+.. _utilextopt-fig:
     
-    .. figure:: /images/util_ExtPySnopt_tut.*
-        :width: 6in
-        :align: center
-    
-        Utilization along tower height for: Von-Mises/yield; shell buckling; global buckling. Optimization obtained via pyOPT SNOPT.
+.. figure:: /images/util_ExtPySnopt.*
+    :width: 6in
+    :align: center
+
+    Utilization along tower height for: Von-Mises/yield; shell buckling; global buckling. Optimization obtained via pyOPT SNOPT.
+
 
 .. <!-- ________________________________________ !>
 
@@ -319,38 +359,44 @@ The run terminates with the following results:
 
 ::
 
->>>Minimum mass Mjacket, MPiles, TPmass = 1251631.941889 132121.306097 142330.589696
->>>Minimum mass Tower, Jacket(no tower no piles) = 364691.517594 886940.424295
->>>Minimum found at Dpile=1.000000, tpile=0.025400  Lp=48.589424
+>>>7 nodes in the constant-OD segment of the tower
+>>>('>>>>>>>>>>  needed embedment Lp0=', 46.965381137541016)
+>>>Jwrapper SOLUTION: bat=15.00, Dpile= 1.00, tpile=0.025, Lp= 47.0 Dleg 1.50, tleg 0.025
+>>>            dck_width =13.92, Dbrc= 1.00, tbrc=0.025, Dmudbrc= 1.00, tmudbrc=0.025
+>>>from Jwrapper Db= 6.96, DTRb=200.00, Dt= 3.62, DTRt=200.00,H2twrfrac= 0.25, Dgir= 1.00,tgir=0.025, Twrmass=349424.881, PilesMass =127705.311, TPmass= 1.353e+05, Frame3DD+Piles Totmass=1330334.683
+
+
+::
+
+>>>Minimum mass Mjacket, MPiles, TPmass = 1202629.371883 127705.310878 135269.829145
+>>>Minimum mass Tower, Jacket(no tower no piles) = 349424.880736 853204.491147
+>>>Minimum found at Dpile=1.000000, tpile=0.025400  Lp=46.965381
 >>>Minimum found at Dbrc=1.000000, tbrc=0.025400
 >>>Minimum found at Dbrcmud=1.000000, tbrcmud=0.025400
->>>Minimum found at batter=14.668193, dckwidth=14.000000, Dleg=1.735573, tleg=0.025400,
->>>Minimum found at Dgir=1.094296, tgir=0.025400
->>>Minimum found at Db=7.000000 DTRb=200.000000 Dt=3.941684 DTRt=200.000000 H2frac=0.250000
->>>Minimum found at Freq 0.230000
->>>Minimum found at GLutil=0.483653 EUutil=0.276818
->>>Minimum found at Mudline Footprint=17.668715 beta3D=54.489871
->>>Elapsed time:  684.977999926 seconds
->>>Execution count:  547
->>>7 nodes in the constant-OD segment of the tower
->>>('>>>>>>>>>>  needed embedment Lp0=', 48.589424211400853)
+>>>Minimum found at batter=15.000000, dckwidth=13.921647, Dleg=1.497250, tleg=0.025400,
+>>>Minimum found at Dgir=1.000000, tgir=0.025400
+>>>Minimum found at Db=6.960824 DTRb=200.000000 Dt=3.620849 DTRt=200.000000 H2frac=0.250000
+>>>Minimum found at Freq 0.220000
+>>>Minimum found at GLutil=0.679969 EUutil=0.291541
+>>>Minimum found at Mudline Footprint=17.809106 beta3D=54.979833
 
-The overall mass amounts to 1383753.248 kg, which is less than the optimum found in the previous optimizations.
+
+The overall mass (jacket, tower, TP (structural and lumped mass), and piles amounts to 1,530,334 kg, which is less than the optimum found in the previous optimizations.
 
 Cobyla seems to perform better than the other optimization options.
 
- .. _JacketOpt_CobyOptConfig-fig:
+.. _JacketOpt_CobyOptConfig-fig:
  
-    .. figure:: ./images/JacketOpt_CobyOptConfig.*
+  .. figure:: ./images/JacketOpt_CobyOptConfig.*
      :width: 6in
      :align: center
  
      Jacket-tower structure for the tutorial example after OpenMDAO driven optimization via SNOPT. 
 
  
- .. _util_tutCobyOpt-fig:
+.. _util_tutCobyOpt-fig:
     
-    .. figure:: /images/util_tutCobyOpt.*
+  .. figure:: /images/util_tutCobyOpt.*
      :width: 6in
      :align: center
  
