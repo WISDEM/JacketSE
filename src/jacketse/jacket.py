@@ -3170,6 +3170,10 @@ if __name__ == '__main__':
         myjckt.driver.add_constraint('Utilization.jacket_utilization.cb_util <=1.0')
         myjckt.driver.add_constraint('Utilization.jacket_utilization.KjntUtil <= 1.0')
         myjckt.driver.add_constraint('Utilization.jacket_utilization.XjntUtil <= 1.0')
+        myjckt.driver.add_constraint('wbase <= 30.')
+        myjckt.driver.add_constraint('leginputs.Dleg[0]/leginputs.tleg[0] >= 22.')
+        myjckt.driver.add_constraint('Xbrcinputs.Dbrc[0]/Xbrcinputs.tbrc[0] >= 22.')
+        myjckt.driver.add_constraint('Mbrcinputs.Dbrc_mud/Mbrcinputs.tbrc_mud >= 22.')
         # ----------------------
 
         # --- recorder ---
@@ -3187,8 +3191,9 @@ if __name__ == '__main__':
     print('jacket+TP(structural+lumped) mass (no tower, no piles) [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass-myjckt.Tower.Twrouts.mass))
     print('tower mass [kg] = {:6.0f}'.format(myjckt.Tower.Twrouts.mass))
     print('TP mass structural + lumped mass [kg] = {:6.0f}'.format(myjckt.TP.TPouts.mass+myjckt.TP.TPlumpinputs.mass))
-    print('piles (all) mass (for assigned (not optimum) Lp [kg] = {:6.0f}'.format(myjckt.Mpiles))
+    print('piles (all) mass (for assigned (not optimum, unless optimization is run) Lp [kg] = {:6.0f}'.format(myjckt.Mpiles))
     print('frame3dd model mass (structural + TP lumped) [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass))
+    print('frame3dd model mass (structural + TP lumped) + Pile Mass [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass+myjckt.Mpiles))
 
     #print tower top displacement
     print('Tower Top Displacement in Global Coordinate System [m] ={:5.4f}'.format(*myjckt.Frameouts.top_deflection))
