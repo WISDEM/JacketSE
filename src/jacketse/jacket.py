@@ -54,10 +54,10 @@ atan=np.arctan
 def Mat2Member(nmems,matins0):
     """This function takes a set of material properties, and a number of members
         and spits out an array of material objects, one per member.
-        INPUTS:
-         matins0:   VarTree(matInput(),iotype='in',desc='Material Data (name,E,nu,rho,fy,fyc')
-         nmems=Int(iotype='in',desc='Number of Members')
-        OUTPUTS:
+        INPUTS: \n
+         matins0:   VarTree(matInput(),iotype='in',desc='Material Data (name,E,nu,rho,fy,fyc') \n
+         nmems=Int(iotype='in',desc='Number of Members')                                       \n
+        OUTPUTS: \n
          matobs=Array(iotype='out',dtype=np.object,desc='Array of Material Objects')
     """
     matins=matins0.copy()
@@ -136,17 +136,9 @@ class JcktGeoInputs(VariableTree):
 
 class TPlumpMass(VariableTree):
     """Basic Inertial Properties of Optional TP lumped Mass"""
-    mass=Float(0.0, units='kg',      desc='TP lumped mass')    #TP mass
-    Ixx=Float(0.0,  units='kg*m**2', desc='TP lumped mass IXX')    #TP Ixx
-    Iyy=Float(0.0,  units='kg*m**2', desc='TP lumped mass IYY')    #TP Iyy
-    Izz=Float(0.0,  units='kg*m**2', desc='TP lumped mass IZZ')    #TP Izz
-    Ixy=Float(0.0,  units='kg*m**2', desc='TP lumped mass IXY')    #TP Ixy
-    Ixz=Float(0.0,  units='kg*m**2', desc='TP lumped mass IXZ')    #TP Ixz
-    Iyz=Float(0.0,  units='kg*m**2', desc='TP lumped mass IYZ')    #TP Iyz
-
-    CMxoff=Float(0.,     units='m', desc='TP CM x offset from TP Stem Bottom Joint Flange')       # TP CMxoff [m]
-    CMyoff=Float(0.,     units='m', desc='TP CM y offset from TP Stem Bottom Joint Flange')       # TP CMyoff [m]
-    CMzoff=Float(0.,     units='m', desc='TP CM z offset from TP Stem Bottom Joint Flange')       # TP CMzoff [m]
+    mass=Float(0.0, units='kg',      desc='TP lumped mass at intersection of diagonal braces, base of stem')    #TP mass
+    I   =Array(np.zeros(6), dtype=np.float, units='kg*m**2',desc='TP [IXX,IYY,IZZ,IXY,IXZ,IYZ] @ base of stem')
+    CMoff=Array(np.zeros(3), dtype=np.float,units='m', desc='TP lumped mass CM [x,y,z] offset from base of stem')       # TP lumped CMx,y,zoff [m]
 
 class Frame3DDaux(VariableTree):
     """General Frame3DD parameters"""
@@ -807,7 +799,7 @@ class TP(Component):
             #All Stumps mass
             stmp_mass=0. #Initialize
             if stumpndiv: #since we may not have stumps
-                stmp_mass=(self.TPouts.stmpObj.Area*(stmp_lgths/stumpndiv).repeat(stumpndiv)*stmpmatins.rho[0]).sum()*nlegs
+                stmp_mass=(self.TPouts.stmpObj.Area*(stmp_lgths/stumpndiv).repeat(stumpndiv)*self.TPouts.stmpObj.mat[0].rho).sum()*nlegs
                        #----------------#
 
             #---------Now I need to go to braces: perimeter girders + diagonals---------#
@@ -921,35 +913,41 @@ class TP(Component):
             pass  #to complete for other case with fortress box
 
         #Now store the TP concentrated mass for later in the assembling
-       TPlumpIxx=np.copy(self.TPlumpinputs.Ixx)
-       TPlumpIyy=np.copy(self.TPlumpinputs.Iyy)
-       TPlumpIzz=np.copy(self.TPlumpinputs.Izz)
-       if not(self.TPlumpinputs.Ixx) and self.TPlumpinputs.mass:
+       TPlumpIxx=np.copy(self.TPlumpinputs.I[0])
+       TPlumpIyy=np.copy(self.TPlumpinputs.I[1])
+       TPlumpIzz=np.copy(self.TPlumpinputs.I[2])
+       if not(self.TPlumpinputs.I[0]) and self.TPlumpinputs.mass:
             lonlegs=np.sqrt(((legjnts[0,:]-legjnts[1,:])**2).sum())/nlegs
             TPlumpIxx=self.TPlumpinputs.mass/16.*lonlegs**2  #This works for nlegs=4 not sure about nlegs=3 to check
             TPlumpIyy+=TPlumpIxx
             TPlumpIzz+=2.*TPlumpIxx
        self.TPouts.TPlumpedMass=np.array([self.TPlumpinputs.mass,TPlumpIxx,TPlumpIyy,TPlumpIzz,\
-                                          self.TPlumpinputs.Ixy,self.TPlumpinputs.Ixz,self.TPlumpinputs.Iyz, \
-                                          self.TPlumpinputs.CMxoff,self.TPlumpinputs.CMyoff,self.TPlumpinputs.CMzoff])
+                                          self.TPlumpinputs.I[3],self.TPlumpinputs.I[4],self.TPlumpinputs.I[5], \
+                                          self.TPlumpinputs.CMoff[0],self.TPlumpinputs.CMoff[1],self.TPlumpinputs.CMoff[2]])
 
 
 #_____________________________________________________#
 
 class TwrGeoInputs(VariableTree):
     """Basic Geometric Inputs needed to build Tower"""
-    Db = Float(      units='m', desc='Tower Base Diameter')
-    Dt = Float(      units='m', desc='Tower Top Diameter')
-    Htwr = Float(        units='m', desc='Tower Length')
+    Db =        Float(  units='m',  desc='Tower Base Diameter')
+    Dt =        Float(  units='m',  desc='Tower Top Diameter')
+    Htwr =      Float(  units='m',  desc='Tower Length')
     Htwr2frac = Float(  units=None, desc='Uniform X-section Tower Length as a fraction of tower height.')
 
-    DTRb = Float(120.,  units=None, desc='Diameter to thickness ration at the base and below Htwr2')
-    DTRt = Float(120.,  units=None, desc='Diameter to thickness ration at the top')
-    TwrSecH=Float(30.,  units='m', desc='Length of Buckling Section- it will be assumed that every submember is associated with this length')
-    Kbuck    = Float(1, units=None,desc='Tower Kbuckling Factor')   #Effective length factor
-    Twrmatins= VarTree(MatInputs(),        desc="Tower Material Data")
-    ndiv     = Array([10], units=None,desc='Array[1 or 2]: Number of FE elements per Tower member: two members max (uniform + tapered) ; CMzOFF Rigid Member is not included here. Note if ndiv is smaller than [2,10],it will be adjusted to a [2,10] value.')
-    DeltaZmax= Float(           units='m',desc='Maximum DeltaZ desired for the tower FE lengths. If input then ndiv will be adjusted to verify deltaz<=deltaZmax.')
+    DTRb     = Float(120.,         units=None, desc='Diameter to thickness ration at the base and below Htwr2')
+    DTRt     = Float(120.,         units=None, desc='Diameter to thickness ration at the top')
+    TwrSecH  = Float(30.,          units='m',  desc='Length of Buckling Section- it will be assumed that every submember is associated with this length')
+    Kbuck    = Float(1,            units=None, desc='Tower Kbuckling Factor')   #Effective length factor
+    Twrmatins= VarTree(MatInputs(),            desc="Tower Material Data")
+    ndiv     = Array([10],         units=None, desc='Array[1 or 2]: Number of FE elements per Tower member: two members max (uniform + tapered) ; CMzOFF Rigid Member is not included here. Note if ndiv is smaller than [2,10],it will be adjusted to a [2,10] value.')
+    DeltaZmax= Float(              units='m',  desc='Maximum DeltaZ desired for the tower FE lengths. If input then ndiv will be adjusted to verify deltaz<=deltaZmax.')
+
+    #Optional: these are used in case the user inputs stations
+    ztwr     = Array( dtype=np.float, units='m',    desc='Tower stations'' heights from base of tower')
+    Dtwr     = Array( dtype=np.float, units='m',    desc='Tower stations'' diameters')
+    ttwr     = Array( dtype=np.float, units='m',    desc='Tower stations'' wall thicknesses')
+    TwrlumpedMass = Array(np.zeros([1,11]),dtype=np.float, desc='Concentrated masses along tower: first column z''s from base of tower; 2nd through 11th column: mass and Ixx,Iyy,Izz,Ixy,Ixz,Iyz,,CMxoff,CMyoff,CMzoff values')
 
 # TwrGeoOutputs is in VarTrees.py
 ##class TwrGeoOutputs(VariableTree):
@@ -964,10 +962,14 @@ class TwrGeoInputs(VariableTree):
 ##    HH       = Float(            units='m', desc='Hub-Height')
 
 class Tower(Component):
-    """Tower model.  Assumes:
-    - Constant taper in both diameter and thickness
-    - A uniform section at the base is allowed
-    This component returns nodes and tube object. mass calculation MUST BE REVISED to allow for multiple materials
+    """Tower model.  Assumes: \n
+    EITHER  \n
+        - Constant taper in both diameter and thickness \n
+        - A uniform section at the base is allowed \n
+    OR \n
+        -z,D,t given by user at desired end nodes of elements. \n
+
+    This component returns nodes and tube object. mass calculation MUST BE REVISED to allow for multiple materials. \n
     """
     # inputs
     Twrins  =VarTree(TwrGeoInputs(), iotype='in', desc='Basic Input data for Tower')
@@ -997,6 +999,12 @@ class Tower(Component):
         Htwr=self.Twrins.Htwr
         Htwr2frac=self.Twrins.Htwr2frac
         DeltaZmax=self.Twrins.DeltaZmax
+        ztwr=self.Twrins.ztwr
+        Dtwr=self.Twrins.Dtwr
+        ttwr=self.Twrins.ttwr
+
+
+        usrstations=False  #Initialize
 
         if Htwr2frac>1. or Htwr2frac<0.:
             sys.exit('Error: Htwr2frac >1 or Htwr2frac <0: Not allowed!!!')
@@ -1005,6 +1013,8 @@ class Tower(Component):
         TwrSecH=self.Twrins.TwrSecH
         ndiv=self.Twrins.ndiv
         Twrmatins =self.Twrins.Twrmatins
+        Twrmats=Mat2Member(ndiv.size,Twrmatins)  #First create joint-to-joint member material
+
 
         RigidTop=(CMzoff != 0.) and self.RigidTop  #Add an extra joint and member only if rigid member requested and CMzoff<>0
 
@@ -1013,16 +1023,21 @@ class Tower(Component):
         #Calculate HH if not given as input, or Htwr in case
         self.Twrouts.HH=self.HH
 
+        nNodes=ztwr.size  #Initialize also to check whether stations have been assigned already
+
         if not Thzoff:  #INitialize this one if absent
             Thzoff=self.RNAinputs.CMoff[2]
 
-        if not(Htwr) and not(self.Twrouts.HH):  #Htwr not specified, HH is specified
+        if not(Htwr) and not(self.Twrouts.HH) and not(nNodes):  #Htwr not specified, HH is specified
             sys.exit('!!!You must specify either HH and Thzoff, or Htwr!!!')
+        elif nNodes: #Stations are given, thus HTwr is given, need to check HH
+            Htwr=ztwr[-1]-ztwr[0]
         elif not(Htwr):  #HH is specified
-            Htwr=self.Twrouts.HH-Thzoff-TwrBsZ+self.wdepth  #self.RNAinputs.CMzoff
+                Htwr=self.Twrouts.HH-Thzoff-TwrBsZ+self.wdepth  #self.RNAinputs.CMzoff
         elif not(self.Twrouts.HH):            #Htwr is specified
             self.Twrouts.HH=TwrBsZ+Htwr+Thzoff+self.wdepth  #+self.RNAinputs.CMzoff
-        elif (Htwr-self.Twrouts.HH-Thzoff-TwrBsZ+self.wdepth) !=0:  #BOth are specified but they do not jive -self.RNAinputs.CMzoff
+
+        if abs(Htwr-(self.Twrouts.HH-Thzoff-TwrBsZ+self.wdepth)) >0.00001:  #BOth are specified but they do not jive -self.RNAinputs.CMzoff
             sys.exit('HH and HTwr incompatible: HH=Thzoff+Htwr+TwrBsZ')
 
         Htwr2=Htwr2frac*Htwr
@@ -1031,67 +1046,104 @@ class Tower(Component):
         njs=2 +Htwr2Flg  +RigidTop  #Number of joints for Tower assumed at base, top, HTwr2 and CMzoff
 
 
-        #Node coordinates starting from deltazs
-        if Htwr2Flg:
-            Htwrtop=Htwr-Htwr2 #tapered length
-            if DeltaZmax: #if this is input <>0 make sure you do not exceed it, first at the bottom
-                ndiv=np.max([ndiv,np.ceil([Htwr2/DeltaZmax,Htwrtop/DeltaZmax])],0)
-            ndiv=np.max([ndiv,np.array([2,10])],0).astype(int)  #make sure we have at least 2 and 10 elements in the uniform and tapered sections
-            #Now make sure there is not too much difference between deltaz in Htwr2 and htwr (1:3 max)
-            dzbot=Htwr2/ndiv[0]
-            dzbot_min=0.33*Htwrtop/ndiv[1]
-            if  dzbot<dzbot_min:
-                ndiv[0]=np.ceil(Htwr2/dzbot_min)
-            deltaZs=np.hstack((np.array([Htwr2/ndiv[0]]).repeat(ndiv[0]), np.array([Htwrtop/ndiv[1]]).repeat(ndiv[1]))).flatten()
-        else:
-            #This is to bypass the issue where the user might have input ndiv(2), although it should be ndiv(1), so ndiv[1] rules
-            ndiv[0]=ndiv[-1]=np.max([ndiv[-1],np.ceil(Htwr/DeltaZmax)])
-            ndiv=np.max([ndiv,np.array([10]).repeat(ndiv.size)],0).astype(int)  #make sure we have at least 10 elements in the tapered section (only section), we still assume it is a 2-element array
-            deltaZs=np.array([Htwr/ndiv[-1]]).repeat(ndiv[-1]).flatten()
+        if nNodes:
+            usrstations=True
+            if nNodes==Dtwr.size and nNodes==ttwr.size:  #This means user has input tower geometry via stations already
 
-        deltaZcum=np.hstack((0.,deltaZs.cumsum()))
+                print 'User-input stations will be used: Db,Dt,DTRb,DTRt are trumped!'
 
-        self.Twrouts.nNodes= np.dot(ndiv,np.array([Htwr2Flg,1]))+1 +RigidTop   #This includes TP top point joint
-        self.Twrouts.nElems=self.Twrouts.nNodes - RigidTop -1  #Number of elements in the flexible portion of tower
-
-        #Initialize output
-        self.Twrouts.nodes=np.zeros([3,self.Twrouts.nNodes])
-
-        self.Twrouts.nodes[2,0:self.Twrouts.nNodes-RigidTop]=  TwrBsZ + deltaZcum#z coordinates
-        self.Twrouts.nodes[2,-1]=self.Twrouts.nodes[2,-RigidTop-1]+CMzoff   #In case put CMzoff at the top, if CMzoff=0 it does not change anything, good way to eliminate if
+                Dt=Dtwr[-1]
+                tt=ttwr[-1]
 
 
-        #Now create Tube objects: we are interpolating the real diameter between the node points, getting the average and live with it for each element
+                self.Twrouts.nNodes = ((nNodes-1)*ndiv[-1] +1) +RigidTop   #This includes TP top point joint
+                self.Twrouts.nodes = np.zeros([3,self.Twrouts.nNodes])   #Initialize
+                self.Twrouts.nodes[2,:] = TwrBsZ+ztwr
 
-        Ds=np.zeros(self.Twrouts.nElems)*np.NaN #diameters at the start of the actual non-rigid members Ni nodes
-        ts=Ds.copy() #thicknesses non-rigid members Ni nodes
+                self.Twrouts.nElems=self.Twrouts.nNodes - RigidTop -1  #Number of elements in the flexible portion of tower
 
-        idxtwr2=np.nonzero(deltaZcum <= Htwr2)[0] #indices of constant D tower portion .[0] to make it into an array
-        idx=range(idxtwr2[-1]+1,self.Twrouts.nElems) #indices above last section of tower with D=Db
+                self.Twrouts.nodes[2,-1]=self.Twrouts.nodes[2,-RigidTop-1]+CMzoff   #In case put CMzoff at the top, if CMzoff=0 it does not change anything, good way to eliminate if
 
-        Ds[idx]=Db-(Db-Dt)*(self.Twrouts.nodes[2,idx]-self.Twrouts.nodes[2,0]-Htwr2)/ \
-                    (Htwr-Htwr2)
-        Ds[idxtwr2]=Db
+                #Tube properties, lower node properties
+                Ds=Dtwr[:-1]
+                ts=ttwr[:-1] #thicknesses non-rigid members Ni nodes
 
-        ts[idx]=tb-(tb-tt)*(self.Twrouts.nodes[2,idx]-self.Twrouts.nodes[2,0]-Htwr2)/ \
-                    (Htwr-Htwr2)
-        ts[idxtwr2]=Db/self.Twrins.DTRb
+                #Now store the Joints separately, in this case they coincide with nodes
+                self.Twrouts.joints=np.copy(self.Twrouts.nodes)
+                njs=self.Twrouts.nNodes
+                            #materials
+                Twrmats2=Mat2Member(self.Twrouts.nElems,Twrmatins)  #First create joint-to-joint member material
 
-        print '{:d} nodes in the constant-OD segment of the tower'.format(idxtwr2.size)
+                #Now store concentrated masses
+                self.Twrouts.TwrlumpedMass =self.Twrins.TwrlumpedMass
+                self.Twrouts.TwrlumpedMass[:,0] += TwrBsZ
 
-        #Now store the Joints separately
-        self.Twrouts.joints=np.zeros([3,njs]) #Initialize
-        self.Twrouts.joints[2,1:njs]=TwrBsZ+ np.array([Htwr2,Htwr,RigidTop*(Htwr+CMzoff)]).T.nonzero()[0]  #joints
+            else:
+                sys.exit('Inconsistencies found in ztwr,Dtwr, and ttwr: revise tower stations !!')
 
-        #materials
-        Twrmats=Mat2Member(ndiv.size,Twrmatins)  #First create joint-to-joint member material
-        #then replicate equally the material objects
-        Twrmats2=np.empty(self.Twrouts.nElems,dtype=object)
+        else:                                      #______________This means user has input paramteric values_______________#
 
-        for ii in range(0,Htwr2Flg+1):
-            idx1=ndiv.cumsum()[ii]
-            idx0=idx1-ndiv[ii]
-            Twrmats2[idx0:idx1]=np.tile(Twrmats[ii],ndiv[ii])    #note the usual repeat as used in legs for instance, does not work here, since I have different ndiv per jnt2jnt member
+            #Node coordinates starting from deltazs
+            if Htwr2Flg:
+                Htwrtop=Htwr-Htwr2 #tapered length
+                if DeltaZmax: #if this is input <>0 make sure you do not exceed it, first at the bottom
+                    ndiv=np.max([ndiv,np.ceil([Htwr2/DeltaZmax,Htwrtop/DeltaZmax])],0)
+                ndiv=np.max([ndiv,np.array([2,10])],0).astype(int)  #make sure we have at least 2 and 10 elements in the uniform and tapered sections
+                #Now make sure there is not too much difference between deltaz in Htwr2 and htwr (1:3 max)
+                dzbot=Htwr2/ndiv[0]
+                dzbot_min=0.33*Htwrtop/ndiv[1]
+                if  dzbot<dzbot_min:
+                    ndiv[0]=np.ceil(Htwr2/dzbot_min)
+                deltaZs=np.hstack((np.array([Htwr2/ndiv[0]]).repeat(ndiv[0]), np.array([Htwrtop/ndiv[1]]).repeat(ndiv[1]))).flatten()
+            else:
+                #This is to bypass the issue where the user might have input ndiv(2), although it should be ndiv(1), so ndiv[1] rules
+                ndiv[0]=ndiv[-1]=np.max([ndiv[-1],np.ceil(Htwr/DeltaZmax)])
+                ndiv=np.max([ndiv,np.array([10]).repeat(ndiv.size)],0).astype(int)  #make sure we have at least 10 elements in the tapered section (only section), we still assume it is a 2-element array
+                deltaZs=np.array([Htwr/ndiv[-1]]).repeat(ndiv[-1]).flatten()
+
+            deltaZcum=np.hstack((0.,deltaZs.cumsum()))
+
+            self.Twrouts.nNodes= np.dot(ndiv,np.array([Htwr2Flg,1]))+1 +RigidTop   #This includes TP top point joint
+
+            self.Twrouts.nodes=np.zeros([3,self.Twrouts.nNodes])   #Initialize
+
+            self.Twrouts.nodes[2,0:self.Twrouts.nNodes-RigidTop]=  TwrBsZ + deltaZcum#z coordinates
+
+
+            self.Twrouts.nElems=self.Twrouts.nNodes - RigidTop -1  #Number of elements in the flexible portion of tower
+
+            self.Twrouts.nodes[2,-1]=self.Twrouts.nodes[2,-RigidTop-1]+CMzoff   #In case put CMzoff at the top, if CMzoff=0 it does not change anything, good way to eliminate if
+
+
+            #Now create Tube objects: we are interpolating the real diameter between the node points, getting the average and live with it for each element
+
+            Ds=np.zeros(self.Twrouts.nElems)*np.NaN #diameters at the start of the actual non-rigid members Ni nodes
+            ts=Ds.copy() #thicknesses non-rigid members Ni nodes
+
+            idxtwr2=np.nonzero(deltaZcum <= Htwr2)[0] #indices of constant D tower portion .[0] to make it into an array
+            idx=range(idxtwr2[-1]+1,self.Twrouts.nElems) #indices above last section of tower with D=Db
+
+            Ds[idx]=Db-(Db-Dt)*(self.Twrouts.nodes[2,idx]-self.Twrouts.nodes[2,0]-Htwr2)/ \
+                        (Htwr-Htwr2)
+            Ds[idxtwr2]=Db
+
+            ts[idx]=tb-(tb-tt)*(self.Twrouts.nodes[2,idx]-self.Twrouts.nodes[2,0]-Htwr2)/ \
+                        (Htwr-Htwr2)
+            ts[idxtwr2]=Db/self.Twrins.DTRb
+
+            print '{:d} nodes in the constant-OD segment of the tower'.format(idxtwr2.size)
+
+            #Now store the Joints separately
+            self.Twrouts.joints=np.zeros([3,njs]) #Initialize
+            self.Twrouts.joints[2,1:njs]=TwrBsZ+ np.array([Htwr2,Htwr,RigidTop*(Htwr+CMzoff)]).T.nonzero()[0]  #joints
+
+            #then replicate equally the material objects
+            Twrmats2=np.empty(self.Twrouts.nElems,dtype=object)
+
+            for ii in range(0,Htwr2Flg+1):
+                idx1=ndiv.cumsum()[ii]
+                idx0=idx1-ndiv[ii]
+                Twrmats2[idx0:idx1]=np.tile(Twrmats[ii],ndiv[ii])    #note the usual repeat as used in legs for instance, does not work here, since I have different ndiv per jnt2jnt member
 
         #Now need to get structural properties
         self.Twrouts.TwrObj=Tube(Ds,ts,np.array([TwrSecH]).repeat(self.Twrouts.nElems),self.Twrins.Kbuck,Twrmats2) #Initialize just like the parent class D,t, etc., then add a few more attributes
@@ -1141,6 +1193,14 @@ class Tower(Component):
         Vfrst = V0 - V01  #Frustum
         # mass
         self.Twrouts.mass = Twrmats[0].rho*Vunif + Twrmats[-1].rho*Vfrst
+
+        if usrstations:
+            deltaZs=(np.roll(ztwr,-1)-ztwr)[:-1]
+            V0s, CM0s  = frustum(Dtwr[:-1], Dtwr[1:], deltaZs)
+            V01s,CM01s = frustum( (Dtwr-2.*ttwr)[:-1], (Dtwr-2.*ttwr)[1:], deltaZs)
+            Vfrst = V0s - V01s  #Frustum
+            rhos=np.array([mat.rho for mat in self.Twrouts.TwrObj.mat])
+            self.Twrouts.mass = (rhos*Vfrst).sum()
 #_____________________________________________________#
 class SoilGeoInputs(VariableTree):
     """Basic Soil Properties needed to assess Soil and Embedment Length"""
@@ -1955,19 +2015,48 @@ class BuildGeometry(Component):
         TPjnt_inertia=self.TPouts.TPlumpedMass
         # RNA extra mass data
         RNAjnt_inertia=self.Twrouts.TopMass
-        #joint IDs for lumped masses
-        TP_jnt_in_no=out1[idxSm]*(TPjnt_inertia[0] !=0)
-        RNA_jnt_in_no=out1[-1]*(RNAjnt_inertia[0] !=0)
-        nj_int=int(TP_jnt_in_no !=0) + int(RNA_jnt_in_no !=0)
+        #Tower concentrated masses
+        Twrjnt_inertia=self.Twrouts.TwrlumpedMass  #(n,7)
 
-        junk=np.array([TP_jnt_in_no,RNA_jnt_in_no])
+        #joint IDs for lumped masses
+        TP_jnt_in_no  =out1[idxSm]*(TPjnt_inertia[0] !=0)
+        RNA_jnt_in_no =out1[-1]*(RNAjnt_inertia[0] !=0)
+
+        #For the tower I need to find the nearest nodes to teh assigned heights;
+        Twr_jnt_in_no =0 #initialize
+        nTwrmas=np.nonzero(Twrjnt_inertia[:,1])[-1]
+        if nTwrmas.size:
+            nTwrmas=nTwrmas[-1]+1 #+1 for python
+              #making sure the array is not all zeros
+            ztwr=self.JcktGeoOut.nodes[out1[idxtwr:]-1,2]  #-1 for python
+            Twr_jnt_in_no=np.zeros(nTwrmas)
+            for ii in range(0,nTwrmas):
+               Twr_jnt_in_no[ii]=out1[idxtwr+np.argmin(np.abs(ztwr-Twrjnt_inertia[ii,0]))]
+
+            #I now need to make sure I am not trumping the RNA lumped mass in case there is a yaw collar or concentrated mass up there
+            #This works as coded only if the last inertia
+            idx=np.in1d(Twr_jnt_in_no,RNA_jnt_in_no).nonzero()[0]
+            if idx.size:
+                #sum to RNA mass
+                RNAjnt_inertia += Twrjnt_inertia[idx[0],1:]
+                #Remove from twr mass list
+                nTwrmas -= 1
+                Twrjnt_inertia=np.delete(Twrjnt_inertia,idx[0],0)
+                Twr_jnt_in_no=np.delete(Twr_jnt_in_no,idx[0],0)
+        else:
+            nTwrmas=0
+
+
+        nj_int=int(TP_jnt_in_no !=0) + int(RNA_jnt_in_no !=0) + nTwrmas
+
+        junk=np.hstack(([TP_jnt_in_no,RNA_jnt_in_no],Twr_jnt_in_no))  #need to do it with hstack as Twr_jnt_in_no may be an array
         jnt_masses_no=junk[junk.nonzero()].reshape(-1,1)
-        inertias=np.vstack((TPjnt_inertia,RNAjnt_inertia))[junk.nonzero()[0],:]
+        inertias=np.vstack((TPjnt_inertia,RNAjnt_inertia,Twrjnt_inertia[:,1:]))[junk.nonzero()[0],:]
 
         self.JcktGeoOut.jnt_masses=np.hstack((jnt_masses_no,inertias)).reshape(-1,11)
         #Account for potential yaw
         RNAjnt_inertia2=self.Twrouts.TopMass_yaw
-        inertias2=np.vstack((TPjnt_inertia,RNAjnt_inertia2))[junk.nonzero()[0],:]
+        inertias2=np.vstack((TPjnt_inertia,RNAjnt_inertia2,Twrjnt_inertia[:,1:]))[junk.nonzero()[0],:]
         self.JcktGeoOut.jnt_masses_yaw=np.hstack((jnt_masses_no,inertias2)).reshape(-1,11)
 
 
@@ -2274,6 +2363,12 @@ class RunFrame3DDstatic(Component):
 
         self.Frameouts.Pileloads=np.array([Nhead,Thead,Mhead])
 
+        #Store mass for each element
+        DeltaX2=(frame.nx[elements.N2-1]-frame.nx[elements.N1-1])**2
+        DeltaY2=(frame.ny[elements.N2-1]-frame.ny[elements.N1-1])**2
+        DeltaZ2=(frame.nz[elements.N2-1]-frame.nz[elements.N1-1])**2
+        self.Frameouts.ElemL = np.sqrt( DeltaX2+DeltaY2+DeltaZ2)
+        self.Frameouts.ElemMass =elements[-1]* frame.eAx * self.Frameouts.ElemL
 #______________________________________________________________________________#
 #        Auxiliary Component to Calculate ABS
 class ABSaux(Component):
@@ -2896,11 +2991,11 @@ if __name__ == '__main__':
     #PyFile_WriteString
 
     optimize = False        #Set this one to True if you want a test on optimization
-    SNOPTflag= True
+    OPTswitch= 'Cobyla'     #'Cobyla', 'PyOptSNOPT', 'PyOPTCobyla'
 
     if len(sys.argv)>1 and len(sys.argv)<5: #This means individual case
         optimize=sys.argv[1]
-        SNOPTflag=sys.argv[2].lower() == 'true'
+        OPTswitch=sys.argv[2].lower() #== 'true'
 
 
     #--- Set Jacket Input Parameters ---#
@@ -3128,17 +3223,26 @@ if __name__ == '__main__':
         # ----------------------
 
         # --- Setup Optimizer ---
-        myjckt.replace('driver', pyOptDriver())
-        if SNOPTflag:
-            myjckt.driver.optimizer = 'SNOPT'
-            myjckt.driver.options = {'Major feasibility tolerance': 1e-3,
-                                 'Minor feasibility tolerance': 1e-3,
-                                 'Major optimality tolerance': 1e-3,
-                                 'Function precision': 1e-3}
-        else:
-            myjckt.driver.optimizer = 'COBYLA'
-            myjckt.driver.options = {'RHOEND':1.e-3,'MAXFUN':2000,'IPRINT':1}
+        if OPTswitch == 'cobyla':
+            myjckt.replace('driver', COBYLAdriver())
 
+            myjckt.driver.rhobeg=0.01
+            myjckt.driver.rhoend=1.e-3
+            myjckt.driver.maxfun=2000
+            myjckt.driver.iprint=1
+        else:
+            myjckt.replace('driver', pyOptDriver())
+            if  OPTswitch== 'pyoptsnopt':
+                myjckt.driver.optimizer = 'SNOPT'
+                myjckt.driver.options = {'Major feasibility tolerance': 1e-3,
+                                     'Minor feasibility tolerance': 1e-3,
+                                     'Major optimality tolerance': 1e-3,
+                                     'Function precision': 1e-3}
+            elif OPTswitch== 'pyoptcobyla':
+                myjckt.driver.optimizer = 'COBYLA'
+                myjckt.driver.options = {'RHOEND':1.e-2,'RHOEND':1.e-3,'MAXFUN':2000,'IPRINT':1}
+            else:
+                sys.exit('Error: OPTSwitch must be set to ''Cobyla'', ''pyoptsnopt'' or ''pyoptcobyla''!!!')
         # ----------------------
 
         # --- Objective ---
@@ -3191,7 +3295,7 @@ if __name__ == '__main__':
     print('jacket+TP(structural+lumped) mass (no tower, no piles) [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass-myjckt.Tower.Twrouts.mass))
     print('tower mass [kg] = {:6.0f}'.format(myjckt.Tower.Twrouts.mass))
     print('TP mass structural + lumped mass [kg] = {:6.0f}'.format(myjckt.TP.TPouts.mass+myjckt.TP.TPlumpinputs.mass))
-    print('piles (all) mass (for assigned (not optimum, unless optimization is run) Lp [kg] = {:6.0f}'.format(myjckt.Mpiles))
+    print('piles (all) mass for assigned (not optimum, unless optimization is run) Lp [kg] = {:6.0f}'.format(myjckt.Mpiles))
     print('frame3dd model mass (structural + TP lumped) [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass))
     print('frame3dd model mass (structural + TP lumped) + Pile Mass [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass+myjckt.Mpiles))
 
@@ -3255,5 +3359,5 @@ if __name__ == '__main__':
     plt.show()
 
 ##________________SAMPLE CALL from outside IDE________________##
-## python jacket.py True True
+## python jacket.py True PyOPTSnopt
 ##___________________________________________##

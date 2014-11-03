@@ -55,6 +55,8 @@ class TwrGeoOutputs(VariableTree):
     TopMass  = Array(np.zeros([10]),            dtype=np.float, desc='Tower Top mass, Ixx, Iyy, Izz,Ixy,Ixz,Iyz,CMxoff,CMyoff,CMzoff from RNA properties in input')
     TopMass_yaw  = Array(np.zeros([10]),        dtype=np.float, desc='Tower Top mass, Ixx, Iyy, Izz,Ixy,Ixz,Iyz,CMxoff,CMyoff,CMzoff from RNA properties in input including yaw angle w.r.t. Global XYZ')
 
+    TwrlumpedMass=Array(np.zeros([1,11]),dtype=np.float, desc='Concentrated masses along tower: first column z''s from base of tower; 2nd through 11th column: mass and Ixx,Iyy,Izz,Ixy,Ixz,Iyz,CMxoff,CMyoff,CMzoff values')
+
     HH       = Float(            units='m', desc='Hub-Height')
     Htwr     = Float(            units='m', desc='Tower Length')
     Htwr2     = Float(            units='m', desc='Tower at constant cross section Length')

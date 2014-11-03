@@ -168,6 +168,8 @@ the Von Mises stress, global and shell buckling utilizations are shown along the
 
 .. <!-- ________________________________________ !>
 
+.. _MDAOSNOPT-label:
+
 Jacket-Tower Optimization - OpenMDAO Internal Optimization Driver
 =================================================================
 
@@ -278,6 +280,7 @@ Also note that the first natural frequencies do NOT match the requirement >0.22 
         
         
 .. <!-- ________________________________________ !>
+.. _my-reference-label:
 
 Jacket-Tower Optimization - External Optimization via PyOPT
 ===========================================================
@@ -401,3 +404,66 @@ Cobyla seems to perform better than the other optimization options.
      :align: center
  
      Utilization along tower height for: Von-Mises/yield; shell buckling; global buckling. Optimization obtained via fmin_cobyla.
+
+.. <!-- ________________________________________ !>
+
+.. _MDAOcoby:
+Jacket-Tower Optimization - Optimization via OpenMDAOs Cobyla (non-PyOPT)
+=========================================================================
+
+.. currentmodule:: jacketse.jacket
+
+For this tutorial, we repeat what was done in Section :ref:`MDAOSNOPT-label` 
+and this time use the simple COBYLAdriver, not the PyOPTdriver. 
+The input file contains the same jacket input information as in the previous example.
+
+We start by simply running: ::
+
+    >>>python jacket.py True Cobyla 
+
+The run terminates with the following results:
+
+::
+
+>>>
+>>>   Return from subroutine COBYLA because the MAXFUN limit has been reached.
+>>>
+>>>   NFVALS =    2000   F = 1.450805E+00    MAXCV = 1.500592E-06
+>>>   X = 1.204965E+01   1.494575E+00   2.540000E-02   3.000000E+01   1.488532E+00
+>>>       2.540000E-02   1.000000E+00   2.540000E-02   1.000000E+00   2.540000E-02
+>>>       6.194941E+00   1.300558E+02   3.144349E+00   1.500515E+02   2.500000E-01
+>>>First two Freqs.= 0.2200 and 0.2211 Hz
+>>>jacket+TP(structural+lumped) mass (no tower, no piles) [kg] = 1130736
+>>>tower mass [kg] = 410342
+>>>TP mass structural + lumped mass [kg] = 346367
+>>>piles (all) mass (for assigned (not optimum, unless optimization is run) Lp [kg] = 109657
+>>>frame3dd model mass (structural + TP lumped) [kg] = 1541078
+>>>frame3dd model mass (structural + TP lumped) + Pile Mass [kg] = 1650735
+>>>Tower Top Displacement in Global Coordinate System [m] =0.4146
+>>>MAX member compression-bending utilization at joints = 0.5647
+>>>MAX member tension utilization at joints = 0.6596
+>>>MAX X-joint  utilization at joints = 0.2544
+>>>MAX K-joint  utilization at joints = 0.3807
+
+
+The overall mass (jacket, tower, TP (structural and lumped mass), and piles amounts to 1,650,735 kg, which is still greater than the optimum found with teh external Cobyla, however, the maximum number of iterations was reached in this case.
+
+Cobyla seems to perform better than the other optimization options.
+
+.. _JacketOpt_MDAOCobyConfig-fig:
+ 
+  .. figure:: ./images/JacketOpt_MDAOCobyConfig.*
+     :width: 6in
+     :align: center
+ 
+     Jacket-tower structure for the tutorial example after OpenMDAO driven optimization via COBYLA driver. 
+
+ 
+.. _util_tutMDAOCoby-fig:
+    
+  .. figure:: /images/util_tutMDAOCoby.*
+     :width: 6in
+     :align: center
+ 
+     Utilization along tower height for: Von-Mises/yield; shell buckling; global buckling. Optimization obtained via MDAO COBYLA driver.
+
