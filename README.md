@@ -1,7 +1,7 @@
 JacketSE
 ========
 
-JacketSE is a systems engineering model for 3 and 4-legged lattice structures (jackets) supporint tubular steel towers for offshore wind turbines.  The analysis uses beam finite element theory, cylinder drag data, linear wave theory, 
+JacketSE is a systems engineering model for 3 and 4-legged lattice structures (jackets) supporting tubular steel towers for offshore wind turbines.  The analysis uses beam finite element theory, cylinder drag data, linear wave theory, 
 shell and global buckling methods, and API RP-2A standard code checks.  The module is developed as an OpenMDAO assembly.
 
 Author: [RRD](mailto:nrel.wisdem+jacketse@gmail.com)
