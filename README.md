@@ -24,7 +24,6 @@ Wind Plant Framework: [FUSED-Wind](http://fusedwind.org) (Framework for Unified 
 
 Sub-Models: CommonSE, PyFrame3DD
 
-WHAT ARE THESE?
 Supporting python packages: Pandas, Algopy, Zope.interface, Sphinx, Xlrd, PyOpt, py2exe, Pyzmq, Sphinxcontrib-bibtex, Sphinxcontrib-zopeext, Numpydoc, Ipython
 
 ## Installation
