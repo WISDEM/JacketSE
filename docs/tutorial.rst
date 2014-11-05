@@ -40,7 +40,7 @@ Then assign water and wind environmental parameters:
 .. literalinclude:: ../src/jacketse/jacket.py
     :language: python
     :start-after: #Water and wind inputs
-    :end-before: #Pile data
+    :end-before: ## if turbine_jacket
 
 Now it is time to assign properties for the various member classes of the structure.
 
@@ -93,28 +93,28 @@ Then the tower geometry is assigned:
 .. literalinclude:: ../src/jacketse/jacket.py
     :language: python
     :start-after: #Tower data
-    :end-before: #RNA data
+    :end-before: ## if turbine_jacket
 
 Then the RNA mass properties are specified:
 
 .. literalinclude:: ../src/jacketse/jacket.py
     :language: python
     :start-after: #RNA loads
-    :end-before: #Frame3DD
+    :end-before: ## if turbine_jacket
 
 Then assign the RNA aerodynamic loads:
 
 .. literalinclude:: ../src/jacketse/jacket.py
     :language: python
     :start-after: #RNA loads
-    :end-before: #Frame3DD
+    :end-before: ## if turbine_jacket
 
 Finally auxiliary parameters for the Frame3DD solver may be assigned:
 
 .. literalinclude:: ../src/jacketse/jacket.py
     :language: python
     :start-after: #Frame3DD
-    :end-before: #-----Launch the assembly-----#
+    :end-before: ## if turbine_jacket
 
 It is then time to launch the assembly and pass all the inputs to it; note that the assembly is called with parameters depending on the selected inputs:
 

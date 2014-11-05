@@ -2990,6 +2990,12 @@ if __name__ == '__main__':
     #PyObject *f = PySys_GetObject("stdout")
     #PyFile_WriteString
 
+    """This 'main' function runs an example of jacket. It can also carry out an optimization, \n
+       all you need to do is reviewing input parameters, design variables and constraints.\n
+       Main keywords are set at the top (first 2 lines below):\n
+        optimize  -boolean, if True it will perform an optimization with a method to be set by OPTswitch
+        OPTswitch -string, ['Cobyla'/ 'PyOptSNOPT'/ 'PyOPTCobyla'] for python Cobyla, or PyOPT SNOPT, or PyOPT Cobyla."""
+
     optimize = False        #Set this one to True if you want a test on optimization
     OPTswitch= 'Cobyla'     #'Cobyla', 'PyOptSNOPT', 'PyOPTCobyla'
 
@@ -2997,6 +3003,11 @@ if __name__ == '__main__':
         optimize=sys.argv[1]
         OPTswitch=sys.argv[2].lower() #== 'true'
 
+
+    #--- Example Input Parameters ---#
+
+    #Note: in the following input lines, certain inputs can be sawpped for those following lines " ## if turbine_jacket "
+    #       to test the turbineSE inputs as passed to jacket.
 
     #--- Set Jacket Input Parameters ---#
     Jcktins=JcktGeoInputs()
@@ -3034,13 +3045,13 @@ if __name__ == '__main__':
     Windinputs=WindInputs()
     Windinputs.Cdj=4.  #Drag Coefficient for jacket members, enhanced to account for TP drag not calculated otherwise
     Windinputs.Cdt=2  #Drag Coefficient for tower, enhanced to account for TP drag not calculated otherwise
-    #Windinputs.HH=100. #CHECK HOW THIS COMPLIES....
-    #Windinputs.U50HH=30. #assumed gust speed
-    # if turbine_jacket
-    Windinputs.HH=90. #CHECK HOW THIS COMPLIES....
-    Windinputs.U50HH=11.7373200354 # using rated loads
-    Windinputs.rho = 1.225
-    Windinputs.mu = 1.81206e-05
+    Windinputs.HH=100. #CHECK HOW THIS COMPLIES....
+    Windinputs.U50HH=30. #assumed gust speed
+    ## if turbine_jacket
+    ##Windinputs.HH=90. #CHECK HOW THIS COMPLIES....
+    ##Windinputs.U50HH=11.7373200354 # using rated loads
+    ##Windinputs.rho = 1.225
+    ##Windinputs.mu = 1.81206e-05
 
     #Pile data
     Pilematin=MatInputs()
@@ -3158,32 +3169,32 @@ if __name__ == '__main__':
     Twrinputs.Db=5.6
     Twrinputs.DTRb=130.
     Twrinputs.DTRt=150.
-    #Twrinputs.Dt=0.55*Twrinputs.Db
-    # if turbine_jacket
-    Twrinputs.Dt = 3.87
+    Twrinputs.Dt=0.55*Twrinputs.Db
+    ## if turbine_jacket
+    ##Twrinputs.Dt = 3.87
 
     TwrRigidTop=True #False       #False=Account for RNA via math rather than a physical rigidmember
 
     #RNA data
     RNAins=RNAprops()
-    '''RNAins.mass=3*350.e3
+    RNAins.mass=3*350.e3
     RNAins.I[0]=86.579E+6
     RNAins.I[1]=53.530E+6
     RNAins.I[2]=58.112E+6
     RNAins.CMoff[2]=2.34
     RNAins.yawangle=45.  #angle with respect to global X, CCW looking from above, wind from left
-    RNAins.rna_weightM=True'''
-    # if turbine_jacket
-    RNAins.mass=285598.806453
-    RNAins.I = np.array([1.14930678e8, 2.20354030e7, 1.87597425e7, 0.0, 5.03710467e5, 0.0])
-    RNAins.CMoff = np.array([-1.13197635, 0.0, 0.50875268])
-    RNAins.yawangle=0.0  #angle with respect to global X, CCW looking from above, wind from left
     RNAins.rna_weightM=True
+    ## if turbine_jacket
+    ##RNAins.mass=285598.806453
+    ##RNAins.I = np.array([1.14930678e8, 2.20354030e7, 1.87597425e7, 0.0, 5.03710467e5, 0.0])
+    ##RNAins.CMoff = np.array([-1.13197635, 0.0, 0.50875268])
+    ##RNAins.yawangle=0.0  #angle with respect to global X, CCW looking from above, wind from left
+    #RNAins.rna_weightM=True
 
     #RNA loads              Fx-z,         Mxx-zz
-    #RNA_F=np.array([1000.e3,0.,0.,0.,0.,0.])
-    # if turbine_jacket
-    RNA_F=np.array([1284744.19620519,0.,-2914124.84400512,3963732.76208099,-2275104.79420872,-346781.68192839])
+    RNA_F=np.array([1000.e3,0.,0.,0.,0.,0.])
+    ## if turbine_jacket
+    ##RNA_F=np.array([1284744.19620519,0.,-2914124.84400512,3963732.76208099,-2275104.79420872,-346781.68192839])
 
     #Frame3DD parameters
     FrameAuxIns=Frame3DDaux()
@@ -3195,9 +3206,9 @@ if __name__ == '__main__':
     FrameAuxIns.lump = 0               # 0: consistent mass ... 1: lumped mass matrix
     FrameAuxIns.tol = 1e-9             # mode shape tolerance
     FrameAuxIns.shift = 0.0            # shift value ... for unrestrained structures
-    #FrameAuxIns.gvector=np.array([0.,0.,-9.8065])    #GRAVITY
-    # if turbine_jacket
-    FrameAuxIns.gvector=np.array([0.,0.,-9.81])    #GRAVITY
+    FrameAuxIns.gvector=np.array([0.,0.,-9.8065])    #GRAVITY
+    ## if turbine_jacket
+    ##FrameAuxIns.gvector=np.array([0.,0.,-9.81])    #GRAVITY
 
     #-----Launch the assembly-----#
 
