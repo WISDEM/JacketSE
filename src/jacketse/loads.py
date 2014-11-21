@@ -224,7 +224,7 @@ class JcktLoadPost(Component):
         al_bat3D=self.al_bat3D
         VPFlag=self.VPFlag
 
-        TwrRigidTop=self.TwrRigidTop
+        TwrRigidTop=(self.RNAinputs.CMoff[2] != 0.) and self.TwrRigidTop  #This makes sure we do not have TwrRigidTop=True with CMzoff=0., no length segment that is.
 
         pilendIDs=self.pilendIDs
         legndIDs=self.legndIDs

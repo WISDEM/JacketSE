@@ -1048,7 +1048,7 @@ class Tower(Component):
         Htwr2=Htwr2frac*Htwr
         Htwr2Flg=(Htwr2 != 0.)
 
-        njs=2 +Htwr2Flg  +RigidTop  #Number of joints for Tower assumed at base, top, HTwr2 and CMzoff
+        njs=2 +Htwr2Flg  +int(RigidTop)  #Number of joints for Tower assumed at base, top, HTwr2 and CMzoff
 
 
         if nNodes:
@@ -1061,13 +1061,13 @@ class Tower(Component):
                 tt=ttwr[-1]
 
 
-                self.Twrouts.nNodes = ((nNodes-1)*ndiv[-1] +1) +RigidTop   #This includes TP top point joint
+                self.Twrouts.nNodes = ((nNodes-1)*ndiv[-1] +1) +int(RigidTop)   #This includes TP top point joint
                 self.Twrouts.nodes = np.zeros([3,self.Twrouts.nNodes])   #Initialize
                 self.Twrouts.nodes[2,:] = TwrBsZ+ztwr
 
-                self.Twrouts.nElems=self.Twrouts.nNodes - RigidTop -1  #Number of elements in the flexible portion of tower
+                self.Twrouts.nElems=self.Twrouts.nNodes - int(RigidTop) -1  #Number of elements in the flexible portion of tower
 
-                self.Twrouts.nodes[2,-1]=self.Twrouts.nodes[2,-RigidTop-1]+CMzoff   #In case put CMzoff at the top, if CMzoff=0 it does not change anything, good way to eliminate if
+                self.Twrouts.nodes[2,-1]=self.Twrouts.nodes[2,-int(RigidTop)-1]+CMzoff   #In case put CMzoff at the top, if CMzoff=0 it does not change anything, good way to eliminate if
 
                 #Tube properties, lower node properties
                 Ds=Dtwr[:-1]
@@ -1108,16 +1108,16 @@ class Tower(Component):
 
             deltaZcum=np.hstack((0.,deltaZs.cumsum()))
 
-            self.Twrouts.nNodes= np.dot(ndiv,np.array([Htwr2Flg,1]))+1 +RigidTop   #This includes TP top point joint
+            self.Twrouts.nNodes= np.dot(ndiv,np.array([Htwr2Flg,1]))+1 +int(RigidTop)   #This includes TP top point joint
 
             self.Twrouts.nodes=np.zeros([3,self.Twrouts.nNodes])   #Initialize
 
-            self.Twrouts.nodes[2,0:self.Twrouts.nNodes-RigidTop]=  TwrBsZ + deltaZcum#z coordinates
+            self.Twrouts.nodes[2,0:self.Twrouts.nNodes-int(RigidTop)]=  TwrBsZ + deltaZcum#z coordinates
 
 
-            self.Twrouts.nElems=self.Twrouts.nNodes - RigidTop -1  #Number of elements in the flexible portion of tower
+            self.Twrouts.nElems=self.Twrouts.nNodes - int(RigidTop) -1  #Number of elements in the flexible portion of tower
 
-            self.Twrouts.nodes[2,-1]=self.Twrouts.nodes[2,-RigidTop-1]+CMzoff   #In case put CMzoff at the top, if CMzoff=0 it does not change anything, good way to eliminate if
+            self.Twrouts.nodes[2,-1]=self.Twrouts.nodes[2,-int(RigidTop)-1]+CMzoff   #In case put CMzoff at the top, if CMzoff=0 it does not change anything, good way to eliminate if
 
 
             #Now create Tube objects: we are interpolating the real diameter between the node points, getting the average and live with it for each element
@@ -3363,7 +3363,7 @@ if __name__ == '__main__':
     plt.show()
 
    #Plot tower utilization
-    twr_zs=myjckt.Tower.Twrouts.nodes[2, :-myjckt.TwrRigidTop]
+    twr_zs=myjckt.Tower.Twrouts.nodes[2, :-int(myjckt.TwrRigidTop)]
     twr_ds=np.hstack((myjckt.Tower.Twrouts.TwrObj.D,myjckt.Tower.Dt))
 
     fig2= plt.figure(2,figsize=(6.0, 3.5))
