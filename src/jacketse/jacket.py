@@ -936,11 +936,12 @@ class TwrGeoInputs(VariableTree):
     Htwr =      Float(  units='m',  desc='Tower Length')
     Htwr2frac = Float(  units=None, desc='Uniform X-section Tower Length as a fraction of tower height.')
 
-    DTRb     = Float(120.,         units=None, desc='Diameter to thickness ration at the base and below Htwr2')
-    DTRt     = Float(120.,         units=None, desc='Diameter to thickness ration at the top')
-    TwrSecH  = Float(30.,          units='m',  desc='Length of Buckling Section- it will be assumed that every submember is associated with this length')
-    Kbuck    = Float(1,            units=None, desc='Tower Kbuckling Factor')   #Effective length factor
-    Twrmatins= VarTree(MatInputs(),            desc="Tower Material Data")
+    DTRb     = Float(              units=None, desc='Diameter to thickness ration at the base and below Htwr2.')
+    DTRt     = Float(              units=None, desc='Diameter to thickness ration at the top.')
+    DTRsdiff = Bool(True,          units=None, desc='Flag to set DTRt=DTRb, mainly used to reduce optimization design variables. Note if set to False, it will trump user-set DTRt value.')
+    TwrSecH  = Float(30.,          units='m',  desc='Length of Buckling Section- it will be assumed that every submember is associated with this length.')
+    Kbuck    = Float(1,            units=None, desc='Tower Kbuckling Factor.')   #Effective length factor
+    Twrmatins= VarTree(MatInputs(),            desc='Tower Material Data.')
     ndiv     = Array([10],         units=None, desc='Array[1 or 2]: Number of FE elements per Tower member: two members max (uniform + tapered) ; CMzOFF Rigid Member is not included here. Note if ndiv is smaller than [2,10],it will be adjusted to a [2,10] value.')
     DeltaZmax= Float(              units='m',  desc='Maximum DeltaZ desired for the tower FE lengths. If input then ndiv will be adjusted to verify deltaz<=deltaZmax.')
 
@@ -996,6 +997,9 @@ class Tower(Component):
         Db=self.Twrins.Db
         Dt=self.Twrins.Dt
         tb = Db/self.Twrins.DTRb
+        if not(self.Twrins.DTRsdiff):
+            self.Twrins.DTRt=self.Twrins.DTRb
+
         tt = Dt/self.Twrins.DTRt
         Htwr=self.Twrins.Htwr
         Htwr2frac=self.Twrins.Htwr2frac
@@ -1457,7 +1461,7 @@ class PreJcktBuild(Component):
     bay_hs    =Array(dtype=np.float, iotype='out',units='m',  desc='Bay Lenghts')
     bay_bs    =Array(dtype=np.float, iotype='out',units='m',  desc='Bay Base Widths')
     JcktH     =Float(       iotype='out',units='m',  desc='Jacket height from leg bottom to leg top')
-    wbase0    =Float(       iotype='out',units='m',  desc='Jacket width at bottom of first bay')
+    wbas0     =Float(       iotype='out',units='m',  desc='Jacket width at bottom of first bay')
     wbase     =Float(       iotype='out',units='m',  desc='Jacket virtual width at mudline')
 
     def execute(self):
@@ -2219,7 +2223,7 @@ class BrcCriteria(Component):
 
         #Criteria #2: Dbrc/Dleg>=0.3
         self.XBrcCriteria.brc_crit02=(XBrcObj.D[Xidx]/Dleg)-0.3  #Non-Dimensional
-        self.MudBrcCriteria.brc_crit02=np.asarray([(MudBrcObj.D[0]/Dleg)-0.3])  #Non-Dimensional
+        self.MudBrcCriteria.brc_crit02=np.asarray([(MudBrcObj.D[0]/Dleg[0])-0.3])  #Non-Dimensional
 
         #Criteria #3: Dbrc/tbrc>=31.
         self.XBrcCriteria.brc_crit03=(XBrcObj.D[Xidx]/XBrcObj.t[Xidx])-31.  #Non-Dimensional
@@ -3302,7 +3306,7 @@ if __name__ == '__main__':
         myjckt.driver.add_constraint('Utilization.jacket_utilization.cb_util <=1.0')
         myjckt.driver.add_constraint('Utilization.jacket_utilization.KjntUtil <= 1.0')
         myjckt.driver.add_constraint('Utilization.jacket_utilization.XjntUtil <= 1.0')
-        myjckt.driver.add_constraint('wbase <= 30.')
+        myjckt.driver.add_constraint('PreBuild.wbase <= 30.')
         myjckt.driver.add_constraint('leginputs.Dleg[0]/leginputs.tleg[0] >= 22.')
         myjckt.driver.add_constraint('Xbrcinputs.Dbrc[0]/Xbrcinputs.tbrc[0] >= 22.')
         myjckt.driver.add_constraint('Mbrcinputs.Dbrc_mud/Mbrcinputs.tbrc_mud >= 22.')
