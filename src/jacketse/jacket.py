@@ -123,15 +123,16 @@ class JcktGeoInputs(VariableTree):
     """Basic Geometric Inputs need to build a Jacket Model"""
 
     # inputs
-    nlegs =    Int(4,     units=None, desc='Number of Legs [3 or 4]??')
-    nbays =    Int(4,     units=None, desc='Number of Bays')
-    batter=    Float(8.,  units=None, desc='2D batter [e.g., 10]')
-    dck_botz = Float(16., units='m',  desc='Deck Underside Elevation MSL')
-    dck_width= Float(     units='m',  desc='Deck Width')   #This needs to be checked. How can I take this value as a default coming from the Tower Db?  2*Db TO DO
-    weld2D   = Float(0.2, units=None, desc='Weldment allowance in fraction of Leg OD')
-    VPFlag=    Bool(False,units=None, desc='Vertical Pile Flag [Y/N]: If True the Mudbrace is put at the expected joint with Piles, i.e. at the bottom of leg.')
-    clamped=   Bool(True, units=None, desc='Bottom of structure clamped or connected through springs: Note if AFflag=True in piles, then clamped will be reset to True.')
-    AFflag   = Bool(False,units=None, desc='Apparent Fixity Flag: if True AF is activated. Note if AFflag=True in piles, then clamped will be reset to True.')
+    nlegs    =    Int(4,     units=None, desc='Number of Legs [3 or 4]??')
+    nbays    =    Int(4,     units=None, desc='Number of Bays')
+    batter   =    Float(8.,  units=None, desc='2D batter [e.g., 10]')
+    dck_botz =    Float(16., units='m',  desc='Deck Underside Elevation MSL')
+    dck_width=    Float(     units='m',  desc='Deck Width')   #This needs to be checked. How can I take this value as a default coming from the Tower Db?  2*Db TO DO
+    dck_widthfrac= Float(2.,  units=None,  desc='Deck Width Factor in fraction of Tower Db. Careful: If dck_width given, this is ignored.')
+    weld2D   =    Float(0.2, units=None, desc='Weldment allowance in fraction of Leg OD')
+    VPFlag   =    Bool(False,units=None, desc='Vertical Pile Flag [Y/N]: If True the Mudbrace is put at the expected joint with Piles, i.e. at the bottom of leg.')
+    clamped  =    Bool(True, units=None, desc='Bottom of structure clamped or connected through springs: Note if AFflag=True in piles, then clamped will be reset to True.')
+    AFflag   =    Bool(False,units=None, desc='Apparent Fixity Flag: if True AF is activated. Note if AFflag=True in piles, then clamped will be reset to True.')
     PreBuildTPLvl=Int(0,  units=None, iotype='in', desc='Level of Prebuild [1-5], see TPPreBuild component')
 
 class TPlumpMass(VariableTree):
@@ -1471,9 +1472,9 @@ class PreJcktBuild(Component):
         if (self.LegbD) and not(self.legbot_stmphin):   #User can never select =0, since it is forbidden
             self.legbot_stmph=1.5 * self.LegbD
 
-        #Deck width set here if we have tower data and the user did not put a different value
-        if (self.TwrDb) and not(self.JcktGeoIn.dck_width):
-            self.dck_width = 2. *  self.TwrDb
+        #Deck width set here if we have tower data and the user did not put a different fixed value for the deck, but a value function of Db
+        if (self.TwrDb) and not(self.JcktGeoIn.dck_width) and self.JcktGeoIn.dck_widthfrac:
+            self.dck_width = self.JcktGeoIn.dck_widthfrac * self.TwrDb
         else:
             self.dck_width = self.JcktGeoIn.dck_width
 
@@ -2281,6 +2282,8 @@ class Frame3DDOutputs(VariableTree):
     reactions= Array(dtype=np.float,desc='Reaction Forces and Moments')
     top_deflection = Array(dtype=np.float,units='m', desc='Deflection of tower top in Global Coordinate System')
     Pileloads= Array(np.array([0.,0.,0.]),dtype=np.float,desc='(highest axial load-)Pile head (bottom of analyzed structure) Axial Force, Shear, and Bending. In the future this will be revised to account for correct geoemtry and orientation, or now it works with vertical pile')
+    ElemL    = Array(                     dtype=np.float,desc='Lengths of all elements in the Frame3DD model.')
+    ElemMass = Array(                     dtype=np.float,desc='Masses of all elements in the Frame3DD model.')
 
 class RunFrame3DDstatic(Component):
     """This component runs Frame3DD for the jacket-tower assembly in static and dynamic modes. The modal analysis may be redone with stiffness constants at the base.

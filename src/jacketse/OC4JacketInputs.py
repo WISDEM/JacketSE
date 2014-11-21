@@ -97,7 +97,6 @@ def main(): #\
     Pileinputs.ndiv=1 #3			   ###----USER INPUT----###
     Pileinputs.Dpile=2.082
     Pileinputs.tpile=0.491
-    Pileinputs.AFflag=False			   ###----USER INPUT----###
     Pileinputs.Lp=0. #[m] Embedment length
     #______________________________________________#
 
