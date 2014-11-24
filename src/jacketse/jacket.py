@@ -35,7 +35,7 @@ from commonse.utilities import sind, cosd
 from frame3dd import Frame, NodeData, ReactionData, ElementData, Options, \
     StaticLoadCase
 
-from VarTrees import JcktGeoOutputs,TwrGeoOutputs,RNAprops
+from VarTrees import JcktGeoOutputs,TwrGeoOutputs,RNAprops, Frame3DDaux
 from loads import JcktLoad,LoadOutputs, WaterInputs, WindInputs
 from Utilization import UtilAssembly, IEC_PSFS
 
@@ -141,22 +141,6 @@ class TPlumpMass(VariableTree):
     I   =Array(np.zeros(6), dtype=np.float, units='kg*m**2',desc='TP [IXX,IYY,IZZ,IXY,IXZ,IYZ] @ base of stem')
     CMoff=Array(np.zeros(3), dtype=np.float,units='m', desc='TP lumped mass CM [x,y,z] offset from base of stem')       # TP lumped CMx,y,zoff [m]
 
-class Frame3DDaux(VariableTree):
-    """General Frame3DD parameters"""
-    sh_fg  = Int(1,  units=None, desc='Shear Deformation Flag: 1=Yes, 0=No.')
-    geo_fg = Int(0,  units=None, desc='Shear Deformation Flag: 1=Yes, 0=No.')
-    exagg  = Int(1,  units=None, desc='Shear Deformation Flag: 1=Yes, 0=No.')
-    deltaz =Float(10.,units='m',  desc='member z-axis increment for internal forces calc')
-    gvector=Array(np.array([0.,0,-9.8065]), units='m/s**2', desc='Inertial Frame Acceleration. For Gravity acceleration gz must be <0.')
-    nModes= Int(5,  units=None, desc='Number of desired dynamic modes (nModes)')
-    nModesAn=Int(6, units=None, desc='Number of desired dynamic modes to animate(nModesAn)')
-    Mmethod=Int(1,  units=None, desc='Dynamic Eigenvalue Method: 1= Subspace-Nacobi iteration, 2= Stodola (matrix iteration) method')
-    lump=   Int(0,  units=None, desc='Flag: 0= consistent mass matrix, 1= lumped mass matrix0')
-    tol= Float(1e-6,units=None, desc='Frequency convergence tolerance')
-    shift= Float(0.,  units=None,  desc='frequency shift-factor for rigid body modes, make 0 for pos.def. [K]')
-    exagg_modal=Float(10.,units=None, desc='Exaggeration factor for modal mesh deformations plotting')
-    pan=Float(2,units=None,desc='animation pan rate 0=no panning')
-    Redux=Int(2,units=None,desc='matrix condensation method ...  0=none, 1=static, 2=Guyan, 3=dynamic')
 
 # -----------------
 #  Components

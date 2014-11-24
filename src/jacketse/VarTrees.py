@@ -63,6 +63,23 @@ class TwrGeoOutputs(VariableTree):
     Thoff_yaw= Array(np.zeros([3]),units='m',  dtype=np.float, desc='Tower-top to Hub-center vector in yawed coordinate system (TO BE MOVED SOMEWHERE ELSE at one point)')
     rna_yawedcm  = Array(np.zeros([3]),        dtype=np.float, desc='Tower Top mass CMxoff,CMyoff,CMzoff in yawed coordinate system(TO BE MOVED SOMEWHERE ELSE at one point)')
 
+class Frame3DDaux(VariableTree):
+    """General Frame3DD parameters"""
+    sh_fg  = Int(1,  units=None, desc='Shear Deformation Flag: 1=Yes, 0=No.')
+    geo_fg = Int(0,  units=None, desc='Shear Deformation Flag: 1=Yes, 0=No.')
+    exagg  = Int(1,  units=None, desc='Shear Deformation Flag: 1=Yes, 0=No.')
+    deltaz =Float(10.,units='m',  desc='member z-axis increment for internal forces calc')
+    gvector=Array(np.array([0.,0,-9.8065]), units='m/s**2', desc='Inertial Frame Acceleration. For Gravity acceleration gz must be <0.')
+    nModes= Int(6,  units=None, desc='Number of desired dynamic modes (nModes)')
+    nModesAn=Int(6, units=None, desc='Number of desired dynamic modes to animate(nModesAn)')
+    Mmethod=Int(1,  units=None, desc='Dynamic Eigenvalue Method: 1= Subspace-Nacobi iteration, 2= Stodola (matrix iteration) method')
+    lump=   Int(0,  units=None, desc='Flag: 0= consistent mass matrix, 1= lumped mass matrix0')
+    tol= Float(1e-9,units=None, desc='Frequency convergence tolerance')
+    shift= Float(0.,  units=None,  desc='frequency shift-factor for rigid body modes, make 0 for pos.def. [K]')
+    exagg_modal=Float(10.,units=None, desc='Exaggeration factor for modal mesh deformations plotting')
+    pan=Float(2,units=None,desc='animation pan rate 0=no panning')
+    Redux=Int(2,units=None,desc='matrix condensation method ...  0=none, 1=static, 2=Guyan, 3=dynamic')
+
 def main():
     pass
 

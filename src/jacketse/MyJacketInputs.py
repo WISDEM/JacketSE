@@ -4,7 +4,7 @@
 #              THIS IS JUST A TEMPLATE:
 #              in order to modify this: 1. Copy this file and rename as 'yourinputfile.py'
 #                                       2. Edit all the jacket inputs till the line that prohibits to further edit
-#                                       3. Launch JacketOpt_PyOPT pointing to 'yourinputfile.py'
+#                                       3. Launch JacketOpt_Py&MDAOopt.py pointing to 'yourinputfile.py'
 # Author:      rdamiani
 #
 # Created:     11/04/2014
@@ -23,7 +23,7 @@ def main(): #\
     """Function to Instantiate a JacketSE Assembly: \n
        INPUTS \n
              All hardwired, so edit the quantities below all the way to the line "#________________ DO NOT MODIFY THE FOLLOWING ________________#" \n
-             -See JacketOpt_PyOPT for more information. \n
+             -See JacketOpt_Py&MDAOopt.py for more information. \n
        OUTPUTS \n
              myjckt -jacket assembly instance \n\n
 
@@ -37,7 +37,7 @@ def main(): #\
              bounds      -Float(n,2), bounds for all design variables check out DesVar class. \n\n
              SAMPLE CALLS: \n
              1.OPTIMIZATION: python JacketOpt_ExtCobyla.py C:\RRD\PYTHON\WISDEM\JacketSE\src\jacketse\MyJacketInputs.py \n
-             2.OPTIMIZATION: python JacketOpt_PyOPT.py C:\RRD\PYTHON\WISDEM\JacketSE\src\jacketse\MyJacketInputs.py True \n
+             2.OPTIMIZATION: python JacketOpt_Py&MDAOopt.py C:\RRD\PYTHON\WISDEM\JacketSE\src\jacketse\MyJacketInputs.py True \n
              3.BUILD JACKET: python >>> myjacket=C:\RRD\PYTHON\WISDEM\JacketSE\src\jacketse\MyJacketInputs.py \n
         """
 
