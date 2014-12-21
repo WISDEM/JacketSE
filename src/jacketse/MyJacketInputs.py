@@ -107,8 +107,8 @@ def main(): #\
     leginputs.legZbot   = 1.0		 ###----USER INPUT----###
     leginputs.ndiv=1     			 ###----USER INPUT----###
     leginputs.legmatins=legmatin
-    leginputs.Dleg=Dleg
-    leginputs.tleg=tleg
+    leginputs.Dleg0=Dleg[0]   #For optimization we just pass 1st value
+    leginputs.tleg0=tleg[0]   #For optimization we just pass 1st value
 
 
     #The following is a passthrough variables
@@ -122,8 +122,8 @@ def main(): #\
     tbrc=np.asarray([0.0254]).repeat(Jcktins.nbays)
 
     Xbrcinputs=XBrcGeoInputs()
-    Xbrcinputs.Dbrc=Dbrc
-    Xbrcinputs.tbrc=tbrc
+    Xbrcinputs.Dbrc0=Dbrc[0]  #For optimization we just pass 1st value
+    Xbrcinputs.tbrc0=tbrc[0]  #For optimization we just pass 1st value
     Xbrcinputs.ndiv=1				 ###----USER INPUT----###
     Xbrcinputs.Xbrcmatins=Xbrcmatin
     Xbrcinputs.precalc=False   #This can be set to true if we want Xbraces to be precalculated in D and t, in which case the above set Dbrc and tbrc would be overwritten
@@ -335,17 +335,22 @@ if __name__ == '__main__':
 
     #_____________________________________#
     #Now show results of modal analysis
-    print('First two Freqs.= {:5.4f} and {:5.4f} Hz'.format(*myjckt.Frameouts.Freqs))
+    print('First two Freqs.= {:5.4f} and {:5.4f} Hz'.format(*myjckt.FrameOut.Frameouts_outs.Freqs))
     #print component masses
-    print('jacket+TP(structural+lumped) mass (no tower, no piles) [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass-myjckt.Tower.Twrouts.mass))
+    print('jacket+TP(structural+lumped) mass (no tower, no piles) [kg] = {:6.0f}'.format(myjckt.FrameOut.Frameouts_outs.mass[0]+myjckt.TP.TPlumpinputs.mass-myjckt.Tower.Twrouts.mass))
     print('tower mass [kg] = {:6.0f}'.format(myjckt.Tower.Twrouts.mass))
     print('TP mass structural + lumped mass [kg] = {:6.0f}'.format(myjckt.TP.TPouts.mass+myjckt.TP.TPlumpinputs.mass))
     print('piles (all) mass (for assigned (not optimum, unless optimization is run) Lp [kg] = {:6.0f}'.format(myjckt.Mpiles))
-    print('frame3dd model mass (structural + TP lumped) [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass))
-    print('frame3dd model mass (structural + TP lumped) + Pile Mass [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass+myjckt.Mpiles))
-    print('frame3dd model mass (structural only) no piles no tower [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]-myjckt.Tower.Twrouts.mass))
+    print('frame3dd model mass (structural + TP lumped) [kg] = {:6.0f}'.format(myjckt.FrameOut.Frameouts_outs.mass[0]+myjckt.TP.TPlumpinputs.mass))
+    print('frame3dd model mass (structural + TP lumped) + Pile Mass [kg] = {:6.0f}'.format(myjckt.FrameOut.Frameouts_outs.mass[0]+myjckt.TP.TPlumpinputs.mass+myjckt.Mpiles))
+    print('frame3dd model mass (structural only) no piles no tower [kg] = {:6.0f}'.format(myjckt.FrameOut.Frameouts_outs.mass[0]-myjckt.Tower.Twrouts.mass))
     #print tower top displacement
-    print('Tower Top Displacement in Global Coordinate System [m] ={:5.4f}'.format(*myjckt.Frameouts.top_deflection))
+    print('Tower Top Displacement in Global Coordinate System [m] ={:5.4f}'.format(*myjckt.FrameOut.Frameouts_outs.top_deflection))
+    print "\n"
+    #print GL EU utilizations
+    print "Tower GLutil=%f EUutil=%f"  % (np.nanmax(myjckt.tower_utilization.GLUtil),np.nanmax(myjckt.tower_utilization.EUshUtil))
+    print "Mudline Footprint=%f"  % (myjckt.wbase)
+
     #print max API code checks
     print('MAX member compression-bending utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.cb_util)))
     print('MAX member tension utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.t_util)))

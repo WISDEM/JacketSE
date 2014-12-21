@@ -152,6 +152,9 @@ class LegGeoInputs(VariableTree):
 
     Dleg     = Array(np.array([Dleg_def]).repeat([JcktGeoInputs().nbays+1]), units='m', dtype=np.float, desc='Leg OD')
     tleg     = Array(np.array([tleg_def]).repeat([JcktGeoInputs().nbays+1]), units='m', dtype=np.float, desc='Leg Wall Thickness')
+    Dleg0    = Float( units='m',  desc='Leg OD that will be replicated for all the leg stations. Optional in place of Dleg. If set it will trump and replace Dleg with a constant value.')
+    tleg0    = Float( units='m',  desc='Leg Wall Thickness that will be replicated for all the leg stations. Optional in place of tleg. If set it will trump and replace tleg with a constant value.')
+
     legZbot  = Float(0.,        units='m', desc='Bottom Elevation of Leg from Sea-Floor')
     Kbuck    = Float(1,         units=None, desc='Leg Kbuckling Factor')   #Effective length factor
     legmatins= VarTree(MatInputs(),        desc="Leg Material Data")
@@ -164,6 +167,34 @@ class LegGeoOutputs(VariableTree):
     nNodesLeg= Int(  units=None, desc='Number of (1) Leg Nodes')
     njs=       Int(  units=None, desc='Number of Leg Joints')
     joints   = Array(units='m', dtype=np.float, desc='Leg Joints Coordinates') #shape=(3,nlegs,nbays+2),
+#_____________________________________________________#
+
+class PreLegBuild(Component):
+    """This component adjusts the Dleg,tleg arrays if Dleg0, tleg0 are given."""
+    #inputs
+    JcktPrms=VarTree(JcktGeoInputs(), iotype='in',  desc='Some Jacket Parameters used to build Legs')
+    leginputs =VarTree(LegGeoInputs(),iotype='in',  desc="Leg Input Data")
+
+    #outputs
+    prelegouts =VarTree(LegGeoInputs(),iotype='out',  desc="Updated Leg Input Data")
+
+    def execute(self):
+        #Simplify nomenclature
+        nbays     =self.JcktPrms.nbays
+
+        self.prelegouts=self.leginputs #initialize
+
+        #Next two useful in case Dleg0 is the only optimization variable in optimization problems
+        if self.leginputs.Dleg0:
+           self.prelegouts.Dleg=np.array([self.leginputs.Dleg0]*(nbays+1))
+        if self.leginputs.tleg0:
+           self.prelegouts.tleg=np.array([self.leginputs.tleg0]*(nbays+1))
+
+        if any(self.prelegouts.Dleg == 0.) :
+            self.prelegouts.Dleg=self.prelegouts.Dleg[0].repeat(self.prelegouts.Dleg.size)
+        if any(self.prelegouts.tleg == 0.) :
+            self.prelegouts.tleg=self.prelegouts.tleg[0].repeat(self.prelegouts.tleg.size)
+
 #_____________________________________________________#
 
 class legs(Component):
@@ -200,10 +231,6 @@ class legs(Component):
         dck_width=self.dck_width
         Dleg=self.leginputs.Dleg
         tleg=self.leginputs.tleg
-        if any(Dleg == 0.) :
-            Dleg=Dleg[0].repeat(Dleg.size)
-        if any(tleg == 0.) :
-            tleg=tleg[0].repeat(tleg.size)
 
         ndiv=self.leginputs.ndiv
         legmatins =self.leginputs.legmatins
@@ -277,6 +304,9 @@ class XBrcGeoInputs(VariableTree):
     tbrc_def = 0.0254  #default value for tbrc
     Dbrc     = Array(np.array([Dbrc_def]).repeat([JcktGeoInputs().nbays]),    units='m', dtype=np.float,    desc='X-Brace OD')
     tbrc     = Array(np.array([tbrc_def]).repeat([JcktGeoInputs().nbays]),    units='m', dtype=np.float,      desc='X-Brace Wall Thickness')
+    Dbrc0     = Float(  units='m', dtype=np.float,    desc='X-Brace OD. Optional in place of Dbrc. If set it will trump and replace Dbrc with a constant value.')
+    tbrc0     = Float(  units='m', dtype=np.float,    desc='X-Brace Wall Thickness. Optional in place of tbrc. If set it will trump and replace tbrc with a constant value.')
+
     Kbuck    = Float(0.8,      units=None, desc='XBrc Kbuckling Factor')   #Effective length factor
     Xbrcmatins=VarTree(MatInputs(),        desc="Xbrc Material Input Data")
     ndiv     = Int(1,          units=None, desc='Number of FE elements per Xbrace member')
@@ -317,15 +347,22 @@ class Xbraces(Component):
         #Simplify nomenclature
         Dbrc=self.Xbrcinputs.Dbrc
         tbrc=self.Xbrcinputs.tbrc
+        nbays=self.nbays
+        ndiv=self.Xbrcinputs.ndiv
+        nlegs=self.legjnts.shape[1]
+        Xbrcmatins=self.Xbrcinputs.Xbrcmatins
+
+        #Next two useful in case Dbrc0 is the only optimization variable in optimization problems
+        if self.Xbrcinputs.Dbrc0:
+           Dbrc=np.array([self.Xbrcinputs.Dbrc0]*nbays)
+        if self.Xbrcinputs.tbrc0:
+           tbrc=np.array([self.Xbrcinputs.tbrc0]*nbays)
+
         if any(Dbrc == 0.) :
             Dbrc=Dbrc[0].repeat(Dbrc.size)
         if any(tbrc == 0.) :
             tbrc=tbrc[0].repeat(tbrc.size)
 
-        nbays=self.nbays
-        ndiv=self.Xbrcinputs.ndiv
-        nlegs=self.legjnts.shape[1]
-        Xbrcmatins=self.Xbrcinputs.Xbrcmatins
 
         # Now let us take care of brace intersection nodes, X-braces
         junk=np.arange(1,nbays+1) #A1 points (LL), leg joints counters
@@ -2434,6 +2471,7 @@ class JacketSE(Assembly):
     def configure(self):
 
         #self.add('Pileinputs', VarTree(PileGeoInputs(),iotype='in', desc="Pile Input Data"))
+        self.add('PreLeg', PreLegBuild())
         self.add('PreBuild', PreJcktBuild())
         self.add('Soil', Soil())
         self.add('Legs', legs())
@@ -2459,7 +2497,7 @@ class JacketSE(Assembly):
         self.add('FrameOut',FrameOutsaux()) #auxiliary component
 
         # BUILD UP THE DRIVER
-        self.driver.workflow.add(['Soil','PreBuild', 'Legs', 'Piles', 'Xbraces', 'Mudbraces', 'Hbraces'])
+        self.driver.workflow.add(['Soil','PreLeg','PreBuild', 'Legs', 'Piles', 'Xbraces', 'Mudbraces', 'Hbraces'])
 
         if self.PrebuildTP:
             self.driver.workflow.add(['PreBuildTP'])
@@ -2479,8 +2517,11 @@ class JacketSE(Assembly):
         #Soil
         self.connect('Soilinputs',   'Soil.SoilIns' )
 
+        # prelegs
+        self.connect('leginputs',             'PreLeg.leginputs' )
+
         # legs
-        self.connect('leginputs',             'Legs.leginputs' )
+        self.connect('PreLeg.prelegouts',     'Legs.leginputs' )
         self.connect('JcktGeoIn',             'Legs.JcktPrms')
         self.connect('PreBuild.bay_hs',       'Legs.bay_hs' )
         self.connect('PreBuild.JcktH',        'Legs.JcktH' )
@@ -2492,10 +2533,10 @@ class JacketSE(Assembly):
         self.create_passthrough('PreBuild.legbot_stmphin')
 
         self.connect('JcktGeoIn',          'PreBuild.JcktGeoIn')
-        self.connect('leginputs.legZbot',  'PreBuild.legZbot')
-        self.connect('leginputs.Dleg[0]' , 'PreBuild.LegbD')
-        self.connect('leginputs.Dleg[-1]', 'PreBuild.LegtD')
-        self.connect('leginputs.Dleg[-1]', 'PreBuild.Dstump')
+        self.connect('PreLeg.prelegouts.legZbot',  'PreBuild.legZbot')
+        self.connect('PreLeg.prelegouts.Dleg[0]' , 'PreBuild.LegbD')
+        self.connect('PreLeg.prelegouts.Dleg[-1]', 'PreBuild.LegtD')
+        self.connect('PreLeg.prelegouts.Dleg[-1]', 'PreBuild.Dstump')
         self.connect('Twrinputs.Db'      , 'PreBuild.TwrDb')
         self.connect('Waterinputs.wdepth', 'PreBuild.wdepth')
 
@@ -2542,13 +2583,13 @@ class JacketSE(Assembly):
             self.connect('TPinputs',                'TP.TPinputs' )
 
         # Piles
-        self.connect('Pileinputs',         'Piles.Pileinputs' )
-        self.connect('JcktGeoIn.AFflag',   'Piles.AFflag')
-        self.connect('Legs.legouts.joints','Piles.legjnts')
-        self.connect('leginputs.Dleg[0]',  'Piles.LegbD')
-        self.connect('leginputs.tleg[0]',  'Piles.Legbt')
-        self.connect('JcktGeoIn.VPFlag',   'Piles.VPFlag')
-        self.connect('JcktGeoIn.nlegs' ,   'Piles.nlegs')
+        self.connect('Pileinputs',                 'Piles.Pileinputs' )
+        self.connect('JcktGeoIn.AFflag',           'Piles.AFflag')
+        self.connect('Legs.legouts.joints',        'Piles.legjnts')
+        self.connect('PreLeg.prelegouts.Dleg[0]',  'Piles.LegbD')
+        self.connect('PreLeg.prelegouts.tleg[0]',  'Piles.Legbt')
+        self.connect('JcktGeoIn.VPFlag',           'Piles.VPFlag')
+        self.connect('JcktGeoIn.nlegs' ,           'Piles.nlegs')
 
         # Tower
         self.connect('TwrRigidTop',        'Tower.RigidTop')
@@ -2611,7 +2652,7 @@ class JacketSE(Assembly):
             self.connect('Pileinputs.Lp',                  'SPIstiffness.Lp')
             self.connect('Piles.PileObjout',               'SPIstiffness.PileObjout')
             self.connect('PreBuild.innr_ang',              'SPIstiffness.innr_ang')
-            self.connect('leginputs.legZbot',              'SPIstiffness.loadZ')
+            self.connect('PreLeg.prelegouts.legZbot',              'SPIstiffness.loadZ')
             self.connect('Frame3DD.Frameouts.Pileloads[1]','SPIstiffness.H')
             self.connect('Frame3DD.Frameouts.Pileloads[2]','SPIstiffness.M')
 
@@ -3069,8 +3110,8 @@ if __name__ == '__main__':
     leginputs.legZbot   = 1.0
     leginputs.ndiv=1
     leginputs.legmatins=legmatin
-    leginputs.Dleg=Dleg
-    leginputs.tleg=tleg
+    leginputs.Dleg0=Dleg[0]
+    leginputs.tleg0=tleg[0]
 
     legbot_stmphin =1.5  #Distance from bottom of leg to second joint along z; must be>0
 
@@ -3082,8 +3123,8 @@ if __name__ == '__main__':
     tbrc=np.array([1.,1.,1.0,1.0,1.0])*0.0254
 
     Xbrcinputs=XBrcGeoInputs()
-    Xbrcinputs.Dbrc=Dbrc
-    Xbrcinputs.tbrc=tbrc
+    Xbrcinputs.Dbrc0=Dbrc[0]
+    Xbrcinputs.tbrc0=tbrc[0]
     Xbrcinputs.ndiv=2#2
     Xbrcinputs.Xbrcmatins=Xbrcmatin
     Xbrcinputs.precalc=False #True   #This can be set to true if we want Xbraces to be precalculated in D and t, in which case the above set Dbrc and tbrc would be overwritten
@@ -3270,10 +3311,10 @@ if __name__ == '__main__':
         myjckt.driver.add_parameter('Pileinputs.Dpile',   low=MnCnst[1],  high=MxCnst[1])
         myjckt.driver.add_parameter('Pileinputs.tpile',   low=MnCnst[2],  high=MxCnst[2])
         myjckt.driver.add_parameter('Pileinputs.Lp',      low=MnCnst[3],  high=MxCnst[3])
-        myjckt.driver.add_parameter('leginputs.Dleg[0]',     low=MnCnst[4],  high=MxCnst[4])
-        myjckt.driver.add_parameter('leginputs.tleg[0]',     low=MnCnst[5],  high=MxCnst[5])
-        myjckt.driver.add_parameter('Xbrcinputs.Dbrc[0]',    low=MnCnst[6],  high=MxCnst[6])
-        myjckt.driver.add_parameter('Xbrcinputs.tbrc[0]',    low=MnCnst[7],  high=MxCnst[7])
+        myjckt.driver.add_parameter('leginputs.Dleg0',    low=MnCnst[4],  high=MxCnst[4])
+        myjckt.driver.add_parameter('leginputs.tleg0',    low=MnCnst[5],  high=MxCnst[5])
+        myjckt.driver.add_parameter('Xbrcinputs.Dbrc0',   low=MnCnst[6],  high=MxCnst[6])
+        myjckt.driver.add_parameter('Xbrcinputs.tbrc0',   low=MnCnst[7],  high=MxCnst[7])
         myjckt.driver.add_parameter('Mbrcinputs.Dbrc_mud',low=MnCnst[8],  high=MxCnst[8])
         myjckt.driver.add_parameter('Mbrcinputs.tbrc_mud',low=MnCnst[9],  high=MxCnst[9])
         myjckt.driver.add_parameter('Twrinputs.Db',       low=MnCnst[10], high=MxCnst[10])
@@ -3291,9 +3332,10 @@ if __name__ == '__main__':
         myjckt.driver.add_constraint('Utilization.jacket_utilization.KjntUtil <= 1.0')
         myjckt.driver.add_constraint('Utilization.jacket_utilization.XjntUtil <= 1.0')
         myjckt.driver.add_constraint('PreBuild.wbase <= 30.')
-        myjckt.driver.add_constraint('leginputs.Dleg[0]/leginputs.tleg[0] >= 22.')
-        myjckt.driver.add_constraint('Xbrcinputs.Dbrc[0]/Xbrcinputs.tbrc[0] >= 22.')
+        myjckt.driver.add_constraint('leginputs.Dleg0/leginputs.tleg0 >= 22.')
+        myjckt.driver.add_constraint('Xbrcinputs.Dbrc0/Xbrcinputs.tbrc0 >= 22.')
         myjckt.driver.add_constraint('Mbrcinputs.Dbrc_mud/Mbrcinputs.tbrc_mud >= 22.')
+        myjckt.driver.add_constraint('Embedment.Lp0rat >= 0.')
         # ----------------------
 
         # --- recorder ---
