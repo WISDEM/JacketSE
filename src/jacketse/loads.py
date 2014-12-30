@@ -24,7 +24,7 @@ class WaterInputs(VariableTree):
     wlevel = Float(units='m', desc='Water Level: Distance from bottom of structure (including buried pile) to water surface')
     T = Float(units='s', desc='50-yr wave period (single wave here, not peak spectral period)')
     HW = Float(units='m', desc='50-yr wave height PEAK-to-PEAK!!!  (it used to be half-amplitude of sinusoid, changed since)')
-    psi = Float(units='deg', desc='Wave direction angle relative to downwind')
+    psi = Float(45., units='deg', desc='Wave direction angle relative to global CS.')
     rho = Float(1027., units='kg*m**-3', desc='Water Density')
     Cm = Float(2.0, units=None, desc='Added mass coefficient')
     Cd =Float(iotype='in', units=None, desc='User input drag coefficient, if left blank it will be automatically calculated based on Cylinder Re')
@@ -37,7 +37,7 @@ class WindInputs(VariableTree):
     """Basic Wind Inputs needed to calculate Jacket Loads"""
     # inputs
     al_shear = Float(0.14, units=None, desc='power law exponent wind from IEC 61400-3')
-    psi = Float(45.,units='deg', desc='Wind angle relative to downwind. positive according to RHR with positive z direction')
+    psi = Float(45.,units='deg', desc='Wind angle relative global CS. Positive according to RHR with positive z direction.')
     rho = Float(1.225, units='kg*m**-3', desc='Air Density. Set to 0 if no tower wind load is included (thrust from rotor still on)')
     U50HH = Float(70., units='m/s', desc='50-yr return 3-s gust [m/s] :From IEC Class I-III or whatever gust to be associated with DLC under consideration (e.g. 30 m/s for DLC 1.6 under max thrust)')
     HH = Float(units='m', desc='Hub-height above MSL')
@@ -269,19 +269,29 @@ class JcktLoadPost(Component):
             else:
                 deltaz[idx_bw]=deltaz[idx_bw]/2.
 
-            wDrag0=np.sqrt(Px0**2.+Py0**2.)*deltaz0  #In case add this one to the original wDrag, or alternatively do awhat I do below, increasing Deltaz
+            waDrag0=np.sqrt(Px0**2.+Py0**2.)*deltaz0  #In case add this one to the original wDrag, or alternatively do awhat I do below, increasing Deltaz
 
-            wDrag=np.sqrt(self.pileLegWaveLoads.Px**2.+self.pileLegWaveLoads.Py**2.)*deltaz #[N] forces from waves
-            wDrag[idx_bw] += wDrag0
+            waDrag=np.sqrt(self.pileLegWaveLoads.Px**2.+self.pileLegWaveLoads.Py**2.)*deltaz #[N] forces from waves, considered normal to the sloping 1 leg.
+            waDrag[idx_bw] += waDrag0
 
-            wDrag=wDrag+np.sqrt(self.pileLegWindLoads.Px**2.+self.pileLegWindLoads.Py**2.)*deltaz #[N] forces from wind
+            wiDrag=np.sqrt(self.pileLegWindLoads.Px**2.+self.pileLegWindLoads.Py**2.)*deltaz * (np.cos(al_bat3D))**2 #[N] forces from wind normal to the sloping 1 leg. Wind is horizontal, that's why cos^2
+
+            #Forces on legs 1 (and 3 though sign of Fz reversed)
+            junk=np.zeros(waDrag.size)
+            waDrag1_3=  (np.dot(DIRCOSwave , np.vstack((waDrag*np.cos(al_bat3D),junk,waDrag*np.sin(al_bat3D))))).T   #[n,3] [N]
+            wiDrag1_3=  (np.dot(DIRCOSwind , np.vstack((wiDrag*np.cos(al_bat3D),junk,wiDrag*np.sin(al_bat3D))))).T   #[n,3] [N]
+
+            #Forces on legs 2 (and 4), it is as if they were vertical
+            waDrag2_4=  (np.dot(DIRCOSwave ,np.vstack((waDrag,junk, waDrag*0.)))).T #[n,3]  [N]
+            wiDrag2_4=  (np.dot(DIRCOSwind ,np.vstack((wiDrag,junk, wiDrag*0.)))).T #[n,3]  [N]
+
+            #Add them together
+            wDrag1_3=waDrag1_3+wiDrag1_3 #[N]
+            wDrag2_4=waDrag2_4+wiDrag2_4 #[N]
+            wDrag=waDrag+wiDrag #[N]
 
             wl_idx=np.nonzero(wDrag)[0] #indices of the pile-leg nodes where loading is applied--
 
-            #Forces on legs 1 (and 3 though sign of Fz reversed)
-            wDrag1_3=  (np.dot(DIRCOSwave , np.array([wDrag*np.cos(al_bat3D),wDrag*np.cos(al_bat3D),wDrag*np.sin(al_bat3D)]))).T   #[n,3]
-            #Forces on legs 2 (and 4), it is as if they were vertical
-            wDrag2_4=  (np.dot(DIRCOSwave ,np.array([wDrag,wDrag, wDrag*0.]))).T #[n,3]
             if VPFlag and pileidx:  #Need to account for the cos
                #Forces on legs 1 (and 3 though sign of Fz reversed)
                 wDrag1_3[pileidx]=wDrag2_4[pileidx]
