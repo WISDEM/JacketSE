@@ -1478,6 +1478,7 @@ class PreJcktBuild(Component):
     al_bat2D  =Float(    iotype='out', units='rad',desc='Batter Angle in 2D, angle between vertical and leg in projection (2D) [rad]')
     al_bat3D  =Float(    iotype='out', units='rad',desc='Batter Angle in 3D, used later for loading')
     beta3D    =Float(    iotype='out', units='rad',desc='3D angle between leg and xbrace to compare to NORSOK, in rad')
+    beta2D    =Float(    iotype='out', units='rad',desc='2D angle (projection) between leg and xbrace, in rad')
     innr_ang  =Float(pi/4., iotype='out',units='rad',desc='Angle between radial direction and base side, in rad')
     bay_hs    =Array(dtype=np.float, iotype='out',units='m',  desc='Bay Lenghts')
     bay_bs    =Array(dtype=np.float, iotype='out',units='m',  desc='Bay Base Widths')
@@ -1531,8 +1532,8 @@ class PreJcktBuild(Component):
         self.wbas0=self.wbase-2*np.tan(self.al_bat2D)*(legZbot+self.legbot_stmph) #width at 1st horiz. brace  joint
 
          #Calculate bay width, height, brace angle, and angle between X-braces (larger of the two)
-        self.bay_bs,self.bay_hs,beta2D=FindBrcAng(Hbays,nbays,self.wbas0,self.al_bat2D)
-        self.beta3D, al_Xbrc=FindBeta3D(beta2D, self.al_bat2D, self.al_bat3D, self.innr_ang, self.wbas0) #[rad],[rad]
+        self.bay_bs,self.bay_hs,self.beta2D=FindBrcAng(Hbays,nbays,self.wbas0,self.al_bat2D)
+        self.beta3D, al_Xbrc=FindBeta3D(self.beta2D, self.al_bat2D, self.al_bat3D, self.innr_ang, self.wbas0) #[rad],[rad]
 
 #______________________________________________________________________________#
 #JcktGeoOutputs is in VarTrees.py
@@ -2532,6 +2533,7 @@ class JacketSE(Assembly):
         # PreJckBuild
         self.create_passthrough('PreBuild.legbot_stmphin')
 
+
         self.connect('JcktGeoIn',          'PreBuild.JcktGeoIn')
         self.connect('PreLeg.prelegouts.legZbot',  'PreBuild.legZbot')
         self.connect('PreLeg.prelegouts.Dleg[0]' , 'PreBuild.LegbD')
@@ -2744,6 +2746,7 @@ class JacketSE(Assembly):
         self.create_passthrough('Embedment.Mpiles') #Mass of all piles with given Lp
         self.create_passthrough('BrcCriteria.MudBrcCriteria') #MudBrace constraints
         self.create_passthrough('BrcCriteria.XBrcCriteria') #XBrace constraints
+        self.create_passthrough('PreBuild.beta2D')#used by ANSYS
 
         self.connect('Tower.Twrouts','Twrouts')
         self.connect('Legs.legouts','Legouts')
