@@ -172,7 +172,7 @@ class LegGeoOutputs(VariableTree):
 class PreLegBuild(Component):
     """This component adjusts the Dleg,tleg arrays if Dleg0, tleg0 are given."""
     #inputs
-    JcktPrms=VarTree(JcktGeoInputs(), iotype='in',  desc='Some Jacket Parameters used to build Legs')
+    nbays     =Int(iotype='in', units=None, desc='Number of Bays')
     leginputs =VarTree(LegGeoInputs(),iotype='in',  desc="Leg Input Data")
 
     #outputs
@@ -180,7 +180,7 @@ class PreLegBuild(Component):
 
     def execute(self):
         #Simplify nomenclature
-        nbays     =self.JcktPrms.nbays
+        nbays     =self.nbays
 
         self.prelegouts=self.leginputs #initialize
 
@@ -2519,6 +2519,7 @@ class JacketSE(Assembly):
         self.connect('Soilinputs',   'Soil.SoilIns' )
 
         # prelegs
+        self.connect('JcktGeoIn.nbays',           'PreLeg.nbays' )
         self.connect('leginputs',             'PreLeg.leginputs' )
 
         # legs
