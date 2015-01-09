@@ -211,6 +211,14 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
     #_____________________________________#
            #  THEN PYOPT CASES   #
     #_____________________________________#
+        if towerfix:
+            junk=int(not DTRsdiff)
+            guess=np.hstack((guess[0:-6+junk],guess[-1]))
+            desvarmeans=np.hstack((desvarmeans[0:-6+junk],desvarmeans[-1]))
+            desvarbds=np.vstack((desvarbds[0:-6+junk,:],desvarbds[-1,:]))
+            varlist2=(varlist[0:-6+junk])
+            varlist2.append(varlist[-1])
+            varlist=varlist2
 
         opt_prob=pyOpt.Optimization('Jacket Optimization via External PyOPT with {!r:^} '.format(MDAOswitch), objfunc)
         if caseno:
@@ -464,13 +472,13 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         xlsfilename=ntpath.join(outdir,'singleoutput.xlsx')
         filename=casename+'.optidat'
 
-        SaveOpt1Line(outdir,caseno,casename,desvars,xstr,myjckt,xlsfilename,Desprms)
+        #SaveOpt1Line(outdir,caseno,casename,desvars,xstr,myjckt,xlsfilename,Desprms)
         #fp=open(filename,'w')
 
        # myjckt.recorders = [DumpCaseRecorder(filename)]
        # myjckt.run()  # just to write case
         #fp.close()
-
+        import pickle
         filename=filename+'.pik'  #E.g.: "C:\PROJECTS\OFFSHORE_WIND\UH_REACT\PYTHON_OPT\JCKdataNewCd.txt" #filename="D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\UH_REACT\JCKdataNoMass.p"
         with open(filename,'w') as fp:
             pickle.dump([xstr,myjckt.FrameOut.Frameouts_outs.mass,myjckt.Mpiles,myjckt.Tower.Twrouts.mass,myjckt.Piles.Pileinputs.Dpile,myjckt.Piles.Pileinputs.tpile,myjckt.Piles.Pileinputs.Lp,\
