@@ -11,6 +11,7 @@ ALSO lENGTH OF LEGS may not be right.
 """
 
 import math
+import copy
 import numpy as np
 import warnings
 from openmdao.main.api import VariableTree,  Component, Assembly, set_as_top
@@ -2430,28 +2431,218 @@ class FrameOutsaux(Component):
 #______________________________________________________________________________#
 #                                 Assembly
 #______________________________________________________________________________#
+class LoadFrameOuts(Assembly):
+    """This assembly wraps the components that are needed to carry out static and modal \n
+        analyses and returns needed outputs. It is created so that 2 instances can be used \n
+        for 2 separate DLCs."""
+    from Utilization import JacketUtilOutputs,TowerUtilOutputs
+    #ins
+    Waterinputs  = VarTree(WaterInputs(),  iotype='in', desc='Water Data')
+    Windinputs   = VarTree(WindInputs(),   iotype='in', desc='Wind Data')
 
+    RNA_F       = Array(np.zeros(6), iotype='in', desc='DLC 1.6: Unfactored Rotor Forces and Moments, excluding weight. Array(6).')
+    RNAinputs   = VarTree(RNAprops(),iotype='in', desc='Basic Inertial Properties of RNA.')
+    VPFlag      = Bool(units=None,   iotype='in', desc='Vertical Pile Flag [T/F].')
+
+    nlegs       = Int(  iotype='in', units=None, desc='Number of Legs.')  # comes from JcktGeoIn.nlegs
+    nodes       = Array(iotype='in',             desc='Node coordinates.')  # comes from JcktGeoOut.nodes
+
+    al_bat3D    = Float(iotype='in', units='rad',desc='Batter Angle in 3D.')
+    TwrRigidTop = Bool( iotype='in', units=None, desc='Rigid Member used in tower top or not.')
+
+    pillegDs    = Array(iotype='in',dtype=np.float, units='m',  desc='ODs of pile and leg #1.')
+    twrDs       = Array(iotype='in',                units='m',  desc='ODs of Tower.')
+
+    Twrmems  = Array(dtype=int,  iotype='in', desc='Connectivity Array for all members of the tower portion only (including rigid member at the top if requested).')
+    Legmems  = Array(dtype=int,  iotype='in', desc='Connectivity Array for all members of the Leg 1 portion only.')
+    Pilemems = Array(dtype=int,  iotype='in', desc='Connectivity Array for all members of the Pile 1 portion only. ')
+    TPmems   = Array(dtype=int,  iotype='in', desc='Connectivity Array for all members of the TP portion only.')
+    XjntIDs  = Array(dtype=int,  iotype='in', desc='X-Joint IDs, as for Frame3DD, used to do checks later.')
+    KjntIDs  = Array(dtype=int,  iotype='in', desc='K-Joint IDs, as for Frame3DD, used to do checks later.')
+
+    gravity  = Float(units='m/s**2', iotype='in',desc='Gravity Acceleration (ABSOLUTE VALUE!).')
+
+    FrameAuxIns= VarTree(Frame3DDaux(),    iotype='in', desc='Auxiliary Data for Frame3DD.')
+
+    JcktGeoOut = VarTree(JcktGeoOutputs(), iotype='in', desc='Geometry of the Jacket -Node Coordinates and Member Connectivity.')
+    SoilObj    = Instance(Klass=SoilC,     iotype='in', desc='Object of Class Soil.')
+    batter     = Float(units=None,         iotype='in', desc='2D batter [e.g., 10] for jacket legs hence piles.')
+    Lp         = Float(units='m',          iotype='in', desc='Pile embedment length.')
+
+    PileObjout = Instance(Klass=Tube, iotype='in', desc='Object of Class Tube for Non-AF portion of Pile, valid also when ndiv=0.')
+
+    innr_ang   = Float(units='rad',   iotype='in',desc='Angle between radial direction and base side, in rad.')
+
+    loadZ     = Float(0.,units='m',      iotype='in',desc='Load level about mudline in meters. Default=0.=mudline.')
+
+    Twr_data     = VarTree(TwrGeoOutputs(), iotype='in', desc='Tower Node data.')
+    Dt           = Float( units='m',        iotype='in', desc='TowerTop OD from Tower.')
+    tt           = Float( units='m',        iotype='in', desc='TowerTop wall thickness from Tower.')
+    L_reinforced = Float( units='m',        iotype='in', desc='reinforcement length.')
+
+    IECpsfIns = VarTree(IEC_PSFS(),      iotype='in', desc='Basic IEC psfs.')
+
+    #outs
+    Frameouts = VarTree(Frame3DDOutputs(),           iotype='out', desc='Basic output data from Frame3DD.')
+    SPI_Kmat  = Array(np.array([]), dtype=np.float,  iotype='out', desc='Soil-pile Equivalent Stiffness Matrix at mudline (1pile).')
+    Lp0rat    = Float(units=None,                    iotype='out', desc='(Lp-Lp0)/Lp0 Normalized difference between current and needed embedment length.')  #necessary to sustain load
+    Mpiles  =   Float(units='kg',                    iotype='out', desc='Embedded Pile Mass (all piles) with the given Lp, not necessarily = to needed embedment length.')
+    tower_utilization  = VarTree(TowerUtilOutputs(), iotype='out', desc='Tower Utilization Basic Outputs.')
+    jacket_utilization = VarTree(JacketUtilOutputs(),iotype='out', desc='Jacket Utilization Basic Outputs.')
+
+    def __init__(self, clamped):
+
+        self.clamped = clamped
+        super(LoadFrameOuts,self).__init__()
+
+    def configure(self):
+
+        self.add('Loads', JcktLoad())
+        self.add('Frame3DD', RunFrame3DDstatic())
+        self.add('SPIstiffness', SPIstiffness())
+        self.add('Frame3DD2', RunFrame3DDstatic())  #same component as before, we just use it again in case we have to account for non-clamped conditions
+        self.add('Utilization', UtilAssembly())
+        self.add('Embedment', PileEmbdL())
+
+        self.driver.workflow.add(['Loads','Frame3DD'])
+
+        if not (self.clamped):
+            self.driver.workflow.add(['SPIstiffness','Frame3DD2'])
+
+        self.driver.workflow.add(['Utilization','Embedment'])
+
+        # Loads
+        self.connect('Waterinputs',                'Loads.waterIns')
+        self.connect('Windinputs',                 'Loads.windIns')
+        self.connect('RNA_F',                      'Loads.RNA_F')
+        self.connect('RNAinputs',                  'Loads.RNAinputs' )
+
+        self.connect('VPFlag',                     'Loads.VPFlag')
+        self.connect('pillegDs',                   'Loads.pillegDs')
+        self.connect('twrDs',                      'Loads.twrDs')
+        self.connect('Pilemems',                   'Loads.Pilemems')
+        self.connect('Legmems',                    'Loads.Legmems')
+        self.connect('Twrmems',                    'Loads.Twrmems')
+
+        self.connect('al_bat3D',                   'Loads.al_bat3D')
+        self.connect('nlegs' ,                     'Loads.nlegs')
+        self.connect('nodes',                      'Loads.nodes')
+
+        self.connect('gravity',                    'Loads.gravity')
+
+        self.connect('TwrRigidTop',                'Loads.TwrRigidTop')
+
+        # Run Frame3DD (Clamped)
+        self.connect('FrameAuxIns',          'Frame3DD.FrameAuxIn')
+        self.connect('JcktGeoOut',           'Frame3DD.JcktGeoOut')
+        self.connect('Loads.Loadouts',       'Frame3DD.Loadins')
+
+        # Calculate Pile Stiffness if SPI is activated
+        if not self.clamped:
+            self.connect('SoilObj',                        'SPIstiffness.SoilObj')
+            self.connect('VPFlag',                         'SPIstiffness.VPFlag')
+            self.connect('batter',                         'SPIstiffness.batter')
+            self.connect('Lp',                             'SPIstiffness.Lp')
+            self.connect('PileObjout',                     'SPIstiffness.PileObjout')
+            self.connect('innr_ang',                       'SPIstiffness.innr_ang')
+            self.connect('loadZ',                          'SPIstiffness.loadZ')
+            self.connect('Frame3DD.Frameouts.Pileloads[1]','SPIstiffness.H')
+            self.connect('Frame3DD.Frameouts.Pileloads[2]','SPIstiffness.M')
+
+            #Run Frame3DD 2
+            self.connect('FrameAuxIns',          'Frame3DD2.FrameAuxIn')
+            self.connect('JcktGeoOut',           'Frame3DD2.JcktGeoOut')
+            self.connect('Loads.Loadouts',       'Frame3DD2.Loadins')
+            self.connect('SPIstiffness.SPI_Kmat','Frame3DD2.SPI_Kmat')
+
+        # Utilization
+            #jacket
+        self.connect('Pilemems',  'Utilization.Pilemems')
+        self.connect('Legmems',   'Utilization.Legmems')
+        self.connect('Twrmems',   'Utilization.Twrmems')
+        self.connect('TPmems',    'Utilization.TPmems')
+        self.connect('nlegs',     'Utilization.nlegs')
+        self.connect('JcktGeoOut','Utilization.JcktGeoOut')
+
+        self.connect('XjntIDs',                    'Utilization.XjntIDs')
+        self.connect('KjntIDs',                    'Utilization.KjntIDs')
+
+        self.connect('RNA_F[0:3]',                 'Utilization.RNA_F')
+        self.connect('RNA_F[3:6]',                 'Utilization.RNA_M')
+        self.connect('RNAinputs.rna_weightM',      'Utilization.rna_weightM')
+        self.connect('gravity',                    'Utilization.g')
+
+        self.connect('Loads.windLoads',            'Utilization.towerWindLoads')
+        self.connect('Loads.waveLoads',            'Utilization.towerWaveLoads')
+
+        self.connect('Twr_data',                   'Utilization.Twr_data')
+        self.connect('Dt',                         'Utilization.Dt')
+        self.connect('tt',                         'Utilization.tt')
+        self.connect('L_reinforced',               'Utilization.L_reinforced' )
+
+        self.connect('IECpsfIns',                  'Utilization.IECpsfIns')
+        #self.connect('Tower.Twrouts.rna_yawedcm','Utilization.r_cm')  #Yawed coordinated of CM
+        self.connect('RNAinputs.CMoff',            'Utilization.r_cm')
+        self.connect('RNAinputs.Thoff',            'Utilization.r_hub')
+        #self.connect('Tower.Twrouts.Thoff_yaw','Utilization.r_hub')
+        self.Utilization.tilt = 0.0
+
+        # Embedment calculation
+        self.connect('PileObjout',              'Embedment.PileObjout')
+        self.connect('SoilObj',                 'Embedment.SoilObj')
+        self.connect('JcktGeoOut',              'Embedment.JcktGeoOut')
+
+        if self.clamped:
+            self.connect('Frame3DD.Frameouts.forces','Utilization.MbrFrcs')
+            self.connect('Frame3DD.Frameouts.forces', 'Embedment.MbrFrcs')
+            #output
+            self.connect('Frame3DD.Frameouts','Frameouts')
+        else:
+            self.connect('Frame3DD2.Frameouts.forces','Utilization.MbrFrcs')
+            self.connect('Frame3DD2.Frameouts.forces','Embedment.MbrFrcs')
+            #output
+            self.connect('Frame3DD2.Frameouts','Frameouts')
+            self.connect('SPIstiffness.SPI_Kmat','SPI_Kmat')
+
+
+        self.connect('gravity',            'Embedment.gravity')  #Need absolute value here, Embedment takes care of it anyway, but somehow this abs does not trigger errors in optimzer as opposed to others
+        self.connect('Lp',                 'Embedment.Lp')
+
+
+        #more outputs
+        self.connect('Utilization.tower_utilization','tower_utilization')
+        self.connect('Utilization.jacket_utilization','jacket_utilization')
+        self.connect('Embedment.Mpiles','Mpiles')
+        self.connect('Embedment.Lp0rat','Lp0rat')
 
 class JacketSE(Assembly):
 
     #ins
-    JcktGeoIn=   VarTree(JcktGeoInputs(),iotype='in', desc='Jacket Geometry Basic Inputs')
-    leginputs=   VarTree(LegGeoInputs(), iotype='in', desc="Leg Input Data")
-    Xbrcinputs=  VarTree(XBrcGeoInputs(),iotype='in', desc="Xbrace Input Data")
+    JcktGeoIn=   VarTree(JcktGeoInputs(),  iotype='in', desc='Jacket Geometry Basic Inputs')
+    leginputs=   VarTree(LegGeoInputs(),   iotype='in', desc="Leg Input Data")
+    Xbrcinputs=  VarTree(XBrcGeoInputs(),  iotype='in', desc="Xbrace Input Data")
     Mbrcinputs=  VarTree(MudBrcGeoInputs(),iotype='in',desc="Mud Brace Input Data")
-    Hbrcinputs=  VarTree(HBrcGeoInputs(),iotype='in', desc="Top H-Brace Input Data")
-    Pileinputs=  VarTree(PileGeoInputs(),iotype='in', desc="Pile Input Data")
-    TPinputs=    VarTree(TPGeoInputs(),  iotype='in', desc='Basic input data for Transition Piece')
-    FrameAuxIns= VarTree(Frame3DDaux(),  iotype='in', desc='Auxiliary Data for Frame3DD')
+    Hbrcinputs=  VarTree(HBrcGeoInputs(),  iotype='in', desc="Top H-Brace Input Data")
+    Pileinputs=  VarTree(PileGeoInputs(),  iotype='in', desc="Pile Input Data")
+    TPinputs=    VarTree(TPGeoInputs(),    iotype='in', desc='Basic input data for Transition Piece')
+    FrameAuxIns= VarTree(Frame3DDaux(),    iotype='in', desc='Auxiliary Data for Frame3DD')
 
     Twrinputs  =   VarTree(TwrGeoInputs(), iotype='in', desc='Basic Input data for Tower')
-    RNAinputs=     VarTree(RNAprops(),     iotype='in', desc='Basic Inertial Properties of RNA')
     TPlumpinputs=  VarTree(TPlumpMass(),   iotype='in', desc='Basic Inertial Properties of TP Lumped Mass')
-    Waterinputs  = VarTree(WaterInputs(),  iotype='in', desc='Water Data')
-    Windinputs   = VarTree(WindInputs(),   iotype='in', desc='Wind Data')
-    Soilinputs   = VarTree(SoilGeoInputs(),iotype='in', desc='Soil Data')
 
-    RNA_F       =Array(np.zeros(6), iotype='in', desc='Unfactored Rotor Forces and Moments, excluding weight. Array(6)')
+    RNAinputs=     VarTree(RNAprops(),     iotype='in', desc='Basic Inertial Properties of RNA, in case modified for DLC 1.6')
+    RNAinputs2=    VarTree(RNAprops(),     iotype='in', desc='Basic Inertial Properties of RNA, in case modified for DLC 6.1')
+
+    Waterinputs  = VarTree(WaterInputs(),  iotype='in', desc='Water Data for DLC 1.6.')
+    Windinputs   = VarTree(WindInputs(),   iotype='in', desc='Wind Data for DLC 1.6.')
+    Soilinputs   = VarTree(SoilGeoInputs(),iotype='in', desc='Soil Data for DLC 1.6.')
+    Waterinputs2  = VarTree(WaterInputs(),  iotype='in', desc='Water Data for DLC 6.1.')
+    Windinputs2   = VarTree(WindInputs(),   iotype='in', desc='Wind Data for DLC 6.1.')
+    Soilinputs2   = VarTree(SoilGeoInputs(),iotype='in', desc='Soil Data for DLC 6.1.')
+
+    RNA_F       =Array(np.zeros(6), iotype='in', desc='DLC 1.6: Unfactored Rotor Forces and Moments, excluding weight. Array(6)')
+    RNA_F2      =Array(np.zeros(6), iotype='in', desc='DLC 6.1: Unfactored Rotor Forces and Moments, excluding weight. Array(6)')
+
     IECpsfIns = VarTree(IEC_PSFS(), iotype='in', desc='Basic IEC psfs')
 
     TwrRigidTop =Bool( units=None,iotype='in',desc='Rigid Member used in tower top or not')
@@ -2461,13 +2652,16 @@ class JacketSE(Assembly):
     Twrouts  = VarTree(TwrGeoOutputs(), iotype='out', desc='Basic Output data for Tower')
     Legouts  = VarTree(LegGeoOutputs(), iotype='out', desc='Leg Geometry Output')
 
-    def __init__(self, clamped=False, AFflag=False, PrebuildTP=True):
+    def __init__(self, clamped=True, AFflag=False, PrebuildTP=True):
 
-        self.clamped = clamped
+        self.clamped = clamped  #initialize to true
         self.AFflag = AFflag
         self.PrebuildTP = PrebuildTP
         #PrebuildTP=  Bool(True, iotype='in', desc='If TRUE then the TP will have dimensions connected to those of legs and braces, and some TP inputs will be overwritten.')
         super(JacketSE,self).__init__()
+
+        if not (self.clamped or self.AFflag):
+            self.clamped=False #use this boolean to reduce checks below
 
     def configure(self):
 
@@ -2484,12 +2678,8 @@ class JacketSE(Assembly):
         self.add('PreBuildTP', PreBuildTP())
         self.add('Tower', Tower())
         self.add('Build', BuildGeometry())
-        self.add('Loads', JcktLoad())
-        self.add('Frame3DD', RunFrame3DDstatic())
-        self.add('SPIstiffness', SPIstiffness())
-        self.add('Frame3DD2', RunFrame3DDstatic())  #same component as before, we just use it again in case we have to account for non-clamped conditions
-        self.add('Utilization', UtilAssembly())
-        self.add('Embedment', PileEmbdL())
+        self.add('LoadFrameOuts', LoadFrameOuts(self.clamped))
+        self.add('LoadFrameOuts2', LoadFrameOuts(self.clamped))
         self.add('TotMass',ComponentMass())
         self.add('BrcCriteria',BrcCriteria())
 
@@ -2503,14 +2693,9 @@ class JacketSE(Assembly):
         if self.PrebuildTP:
             self.driver.workflow.add(['PreBuildTP'])
 
-        self.driver.workflow.add(['TP','Tower','Build','ABS1','Loads','Frame3DD'])
+        self.driver.workflow.add(['TP','Tower','Build','ABS1','LoadFrameOuts','LoadFrameOuts2','FrameOut'])
 
-        clamped=True #initialize
-        if not (self.clamped or self.AFflag):
-            clamped=False #use this boolean to reduce checks below
-            self.driver.workflow.add(['SPIstiffness','Frame3DD2'])
-
-        self.driver.workflow.add(['FrameOut','ABS2','Utilization','Embedment','BrcCriteria','TotMass' ])
+        self.driver.workflow.add(['BrcCriteria','TotMass' ])
         #________________________#
 
 
@@ -2619,104 +2804,54 @@ class JacketSE(Assembly):
         self.connect('Xbraces.Xbrcouts.LLURObj', 'BrcCriteria.XBrcObj')
         self.connect('Waterinputs.wdepth',       'BrcCriteria.wdepth')
 
-        # Loads
-        #self.connect('Build.pillegZs','Loads.pillegZs')
-        self.connect('RNA_F',                      'Loads.RNA_F')
-        self.connect('RNAinputs',                  'Loads.RNAinputs' )
-        self.connect('JcktGeoIn.VPFlag',           'Loads.VPFlag')
-        self.connect('Build.pillegDs',             'Loads.pillegDs')
-        self.connect('Build.twrDs',                'Loads.twrDs')
-        self.connect('Build.Pilemems',             'Loads.Pilemems')
-        self.connect('Build.Legmems',              'Loads.Legmems')
-        self.connect('Build.Twrmems',              'Loads.Twrmems')
-        self.connect('Waterinputs',                'Loads.waterIns')
-        self.connect('Windinputs',                 'Loads.windIns')
-        self.connect('PreBuild.al_bat3D',          'Loads.al_bat3D')
-        self.connect('JcktGeoIn.nlegs' ,           'Loads.nlegs')
-        self.connect('Build.JcktGeoOut.nodes',     'Loads.nodes')
-        #self.connect('abs(FrameAuxIns.gvector[2])','Loads.gravity')  #Need absolute value here.
+        # LoadFrameOuts and LoadFrameOuts2
+        self.connect('RNA_F',                      'LoadFrameOuts.RNA_F')
+        self.connect('RNAinputs',                  'LoadFrameOuts.RNAinputs' )
+        self.connect('Waterinputs',                'LoadFrameOuts.Waterinputs')
+        self.connect('Windinputs',                 'LoadFrameOuts.Windinputs')
+
+        self.connect('JcktGeoIn.VPFlag',           ['LoadFrameOuts.VPFlag'      ,    'LoadFrameOuts2.VPFlag'])
+        self.connect('Build.pillegDs',             ['LoadFrameOuts.pillegDs'    ,    'LoadFrameOuts2.pillegDs'])
+        self.connect('Build.twrDs',                ['LoadFrameOuts.twrDs'       ,    'LoadFrameOuts2.twrDs'])
+        self.connect('Build.Pilemems',             ['LoadFrameOuts.Pilemems'    ,    'LoadFrameOuts2.Pilemems'])
+        self.connect('Build.Legmems',              ['LoadFrameOuts.Legmems'     ,    'LoadFrameOuts2.Legmems'])
+        self.connect('Build.Twrmems',              ['LoadFrameOuts.Twrmems'     ,    'LoadFrameOuts2.Twrmems'])
+        self.connect('Build.TPmems',               ['LoadFrameOuts.TPmems'      ,    'LoadFrameOuts2.TPmems'])
+        self.connect('PreBuild.al_bat3D',          ['LoadFrameOuts.al_bat3D'    ,    'LoadFrameOuts2.al_bat3D'])
+        self.connect('JcktGeoIn.nlegs' ,           ['LoadFrameOuts.nlegs'       ,    'LoadFrameOuts2.nlegs'])
+        self.connect('Build.JcktGeoOut.nodes',     ['LoadFrameOuts.nodes'       ,    'LoadFrameOuts2.nodes'])
+        self.connect('Build.JcktGeoOut',           ['LoadFrameOuts.JcktGeoOut'  ,    'LoadFrameOuts2.JcktGeoOut'])
+        self.connect('TwrRigidTop',                ['LoadFrameOuts.TwrRigidTop' ,    'LoadFrameOuts2.TwrRigidTop'])
+        self.connect('Build.XjntIDs',              ['LoadFrameOuts.XjntIDs'     ,    'LoadFrameOuts2.XjntIDs'])
+        self.connect('Build.KjntIDs',              ['LoadFrameOuts.KjntIDs'     ,    'LoadFrameOuts2.KjntIDs'])
+        self.connect('Tower.Twrouts',              ['LoadFrameOuts.Twr_data'    ,    'LoadFrameOuts2.Twr_data'])
+        self.connect('Tower.Dt',                   ['LoadFrameOuts.Dt'          ,    'LoadFrameOuts2.Dt'])
+        self.connect('Tower.tt',                   ['LoadFrameOuts.tt'          ,    'LoadFrameOuts2.tt'])
+        self.connect('Twrinputs.TwrSecH',          ['LoadFrameOuts.L_reinforced',    'LoadFrameOuts2.L_reinforced'])
+
+        self.connect('IECpsfIns',                  ['LoadFrameOuts.IECpsfIns'   ,    'LoadFrameOuts2.IECpsfIns'])
+        self.connect('FrameAuxIns',                ['LoadFrameOuts.FrameAuxIns' ,    'LoadFrameOuts2.FrameAuxIns'])
+
         self.connect('FrameAuxIns.gvector[2]','ABS1.varin')
-        self.connect('ABS1.varout','Loads.gravity')
+        self.connect('ABS1.varout',                ['LoadFrameOuts.gravity'     ,    'LoadFrameOuts2.gravity'])
 
-
-        #self.connect('Tower.Twrouts.TopMass[-1]','Loads.CMzoff')
-        self.connect('TwrRigidTop',                'Loads.TwrRigidTop')
-
-        # Run Frame3DD (Clamped)
-        self.connect('FrameAuxIns',          'Frame3DD.FrameAuxIn')
-        self.connect('Build.JcktGeoOut',     'Frame3DD.JcktGeoOut')
-        self.connect('Loads.Loadouts',       'Frame3DD.Loadins')
-
+        self.connect('Pileinputs.Lp',                  ['LoadFrameOuts.Lp'        ,  'LoadFrameOuts2.Lp' ])
+        self.connect('Piles.PileObjout',               ['LoadFrameOuts.PileObjout',  'LoadFrameOuts2.PileObjout'])
         # Calculate Pile Stiffness if SPI is activated
-        if not clamped:
-            self.connect('Soil.SoilObj',                   'SPIstiffness.SoilObj')
-            self.connect('JcktGeoIn.VPFlag',               'SPIstiffness.VPFlag')
-            self.connect('JcktGeoIn.batter',               'SPIstiffness.batter')
-            self.connect('Pileinputs.Lp',                  'SPIstiffness.Lp')
-            self.connect('Piles.PileObjout',               'SPIstiffness.PileObjout')
-            self.connect('PreBuild.innr_ang',              'SPIstiffness.innr_ang')
-            self.connect('PreLeg.prelegouts.legZbot',              'SPIstiffness.loadZ')
-            self.connect('Frame3DD.Frameouts.Pileloads[1]','SPIstiffness.H')
-            self.connect('Frame3DD.Frameouts.Pileloads[2]','SPIstiffness.M')
+        if not self.clamped:
+            self.connect('Soil.SoilObj',                   ['LoadFrameOuts.SoilObj' ,'LoadFrameOuts2.SoilObj'])
+            self.connect('JcktGeoIn.batter',               ['LoadFrameOuts.batter'  ,'LoadFrameOuts2.batter'])
+            self.connect('PreBuild.innr_ang',              ['LoadFrameOuts.innr_ang','LoadFrameOuts2.innr_ang'])
+            self.connect('PreLeg.prelegouts.legZbot',      ['LoadFrameOuts.loadZ'   ,'LoadFrameOuts2.loadZ'])
 
-            #Run Frame3DD 2
-            self.connect('FrameAuxIns',          'Frame3DD2.FrameAuxIn')
-            self.connect('Build.JcktGeoOut',     'Frame3DD2.JcktGeoOut')
-            self.connect('Loads.Loadouts',       'Frame3DD2.Loadins')
-            self.connect('SPIstiffness.SPI_Kmat','Frame3DD2.SPI_Kmat')
-
-        # Utilization
-            #jacket
-        self.connect('Build.Pilemems',  'Utilization.Pilemems')
-        self.connect('Build.Legmems',   'Utilization.Legmems')
-        self.connect('Build.Twrmems',   'Utilization.Twrmems')
-        self.connect('Build.TPmems',    'Utilization.TPmems')
-        self.connect('JcktGeoIn.nlegs', 'Utilization.nlegs')
-        self.connect('Build.JcktGeoOut','Utilization.JcktGeoOut')
-
-        if clamped:
-            self.connect('Frame3DD.Frameouts.forces','Utilization.MbrFrcs')
-        else:
-            self.connect('Frame3DD2.Frameouts.forces','Utilization.MbrFrcs')
+        # LoadFrameOuts2
+        self.connect('RNA_F2',                     'LoadFrameOuts2.RNA_F')
+        self.connect('RNAinputs2',                 'LoadFrameOuts2.RNAinputs' )
+        self.connect('Waterinputs2',               'LoadFrameOuts2.Waterinputs')
+        self.connect('Windinputs2',                'LoadFrameOuts2.Windinputs')
 
 
-        self.connect('Build.XjntIDs',              'Utilization.XjntIDs')
-        self.connect('Build.KjntIDs',              'Utilization.KjntIDs')
-            #tower
-        #self.connect('Loads.Loadouts.RNAload', 'Utilization.RNA_FM')  #yawed forces and moments
-        self.connect('RNA_F[0:3]',                 'Utilization.RNA_F')
-        self.connect('RNA_F[3:6]',                 'Utilization.RNA_M')
-        self.connect('RNAinputs.rna_weightM',      'Utilization.rna_weightM')
 
-        self.connect('Loads.windLoads',            'Utilization.towerWindLoads')
-        self.connect('Loads.waveLoads',            'Utilization.towerWaveLoads')
-        self.connect('Tower.Twrouts',              'Utilization.Twr_data')
-        self.connect('Tower.Dt',                   'Utilization.Dt')
-        self.connect('Tower.tt',                   'Utilization.tt')
-        self.connect('Twrinputs.TwrSecH',          'Utilization.L_reinforced' )
-        #self.connect('abs(FrameAuxIns.gvector[2])','Utilization.g') #Need absolute value here
-        self.connect('FrameAuxIns.gvector[2]',     'ABS2.varin')
-        self.connect('ABS2.varout',                'Utilization.g')
-
-        self.connect('IECpsfIns',                  'Utilization.IECpsfIns')
-        #self.connect('Tower.Twrouts.rna_yawedcm','Utilization.r_cm')  #Yawed coordinated of CM
-        self.connect('RNAinputs.CMoff',            'Utilization.r_cm')
-        self.connect('RNAinputs.Thoff',            'Utilization.r_hub')
-        #self.connect('Tower.Twrouts.Thoff_yaw','Utilization.r_hub')
-        self.Utilization.tilt = 0.0
-
-
-        # Embedment calculation
-        self.connect('Piles.PileObjout',              'Embedment.PileObjout')
-        self.connect('Soil.SoilObj',                  'Embedment.SoilObj')
-        self.connect('Build.JcktGeoOut',              'Embedment.JcktGeoOut')
-        if clamped:
-            self.connect('Frame3DD.Frameouts.forces', 'Embedment.MbrFrcs')
-        else:
-            self.connect('Frame3DD2.Frameouts.forces','Embedment.MbrFrcs')
-
-        self.connect('abs(FrameAuxIns.gvector[2])',   'Embedment.gravity')  #Need absolute value here, Embedment takes care of it anyway, but somehow this abs does not trigger errors in optimzer as opposed to others
-        self.connect('Pileinputs.Lp',                 'Embedment.Lp')
 
         #Total Mass
         self.connect('JcktGeoIn.nlegs',          'TotMass.nlegs')
@@ -2731,20 +2866,18 @@ class JacketSE(Assembly):
         self.create_passthrough('PreBuild.bay_hs')
         self.create_passthrough('PreBuild.dck_width')
 
-        if clamped:
-            self.create_passthrough('Frame3DD.Frameouts')
-            self.connect('Frame3DD.Frameouts','FrameOut.Frameouts_ins')  #Needed to please the optimizer in OPENmdao
-        else:
-            self.create_passthrough('Frame3DD2.Frameouts')
-            self.create_passthrough('SPIstiffness.SPI_Kmat')
-            self.connect('Frame3DD2.Frameouts','FrameOut.Frameouts_ins')
 
-        self.create_passthrough('Embedment.Lp0rat')
+
+        self.connect('LoadFrameOuts.Frameouts','FrameOut.Frameouts_ins')  #Needed to please the optimizer in OPENmdao
+
+        if not self.clamped:
+            self.create_passthrough('LoadFrameOuts.SPI_Kmat')
+
+
         self.create_passthrough('TotMass.ToTMass')
-        self.create_passthrough('Utilization.tower_utilization')
-        self.create_passthrough('Utilization.jacket_utilization')
+
         self.create_passthrough('PreBuild.wbase')  #Widht at the mudline send it as output
-        self.create_passthrough('Embedment.Mpiles') #Mass of all piles with given Lp
+        self.create_passthrough('LoadFrameOuts.Mpiles') #Mass of all piles with given Lp
         self.create_passthrough('BrcCriteria.MudBrcCriteria') #MudBrace constraints
         self.create_passthrough('BrcCriteria.XBrcCriteria') #XBrace constraints
         self.create_passthrough('PreBuild.beta2D')#used by ANSYS
@@ -3069,6 +3202,8 @@ if __name__ == '__main__':
     Soilinputs.PenderSwtch   =False #True
     Soilinputs.SoilSF   =1.
 
+    Soilinputs2=copy.copy(Soilinputs) #Parked case. We assume same stiffness although this may not be the case under a different load
+
     #Water and wind inputs
     Waterinputs=WaterInputs()
     Waterinputs.wdepth   =30.
@@ -3078,16 +3213,24 @@ if __name__ == '__main__':
     Waterinputs.Cd=3.  #Drag Coefficient, enhanced to account for marine growth and other members not calculated
     Waterinputs.Cm=8.#2.  #ADded mass Coefficient
 
+    Waterinputs2=copy.copy(Waterinputs)  #PARKED CONDITIONS - still max wave here
+    Waterinputs.T=8.  #Wave Period
+    Waterinputs.HW=4. #Wave Height
+
     Windinputs=WindInputs()
     Windinputs.Cdj=4.  #Drag Coefficient for jacket members, enhanced to account for TP drag not calculated otherwise
     Windinputs.Cdt=2  #Drag Coefficient for tower, enhanced to account for TP drag not calculated otherwise
     Windinputs.HH=100. #CHECK HOW THIS COMPLIES....
     Windinputs.U50HH=30. #assumed gust speed
+
     ## if turbine_jacket
     ##Windinputs.HH=90. #CHECK HOW THIS COMPLIES....
     ##Windinputs.U50HH=11.7373200354 # using rated loads
     ##Windinputs.rho = 1.225
     ##Windinputs.mu = 1.81206e-05
+
+    Windinputs2=copy.copy(Windinputs)
+    Windinputs2.U50HH=70. #assumed gust speed
 
     #Pile data
     Pilematin=MatInputs()
@@ -3227,8 +3370,11 @@ if __name__ == '__main__':
     ##RNAins.yawangle=0.0  #angle with respect to global X, CCW looking from above, wind from left
     #RNAins.rna_weightM=True
 
+    RNAins2=copy.copy(RNAins)  #PARKED CASE, for now assume the same
+
     #RNA loads              Fx-z,         Mxx-zz
-    RNA_F=np.array([1000.e3,0.,0.,0.,0.,0.])
+    RNA_F=np.array([1000.e3,0.,0.,0.,0.,0.])    #operational
+    RNA_F2=np.array([800.e3,0.,0.,0.,0.,0.])    #Parked
     ## if turbine_jacket
     ##RNA_F=np.array([1284744.19620519,0.,-2914124.84400512,3963732.76208099,-2275104.79420872,-346781.68192839])
 
@@ -3252,10 +3398,17 @@ if __name__ == '__main__':
 
     #Pass all inputs to assembly
     myjckt.JcktGeoIn=Jcktins
+
     myjckt.Soilinputs=Soilinputs
+    myjckt.Soilinputs2=Soilinputs2   #Parked conditions
+
     myjckt.Waterinputs=Waterinputs
     myjckt.Windinputs=Windinputs
     myjckt.RNA_F=RNA_F
+    myjckt.Waterinputs2=Waterinputs2 #Parked conditions
+    myjckt.Windinputs2=Windinputs2   #Parked conditions
+    myjckt.RNA_F2=RNA_F2            #Parked conditions
+
     myjckt.Pileinputs=Pileinputs
     myjckt.leginputs=leginputs
     myjckt.legbot_stmphin =legbot_stmphin
@@ -3265,6 +3418,7 @@ if __name__ == '__main__':
     myjckt.TPlumpinputs=TPlumpinputs
     myjckt.TPinputs=TPinputs
     myjckt.RNAinputs=RNAins
+    myjckt.RNAinputs2=RNAins2
     myjckt.Twrinputs=Twrinputs
     myjckt.TwrRigidTop=TwrRigidTop
     myjckt.FrameAuxIns=FrameAuxIns
@@ -3307,7 +3461,7 @@ if __name__ == '__main__':
         # ----------------------
 
         # --- Objective ---
-        myjckt.driver.add_objective('(FrameOut.Frameouts_outs.mass[0]+Embedment.Mpiles)/1.e6')
+        myjckt.driver.add_objective('(LoadFrameOuts.Frameouts.mass[0]+LoadFrameOuts.Mpiles)/1.e6')
         # ----------------------
 
         # --- Design Variables ---
@@ -3328,18 +3482,28 @@ if __name__ == '__main__':
         myjckt.driver.add_parameter('Twrinputs.Htwr2frac',low=MnCnst[14], high=MxCnst[14])
 
        #--- Constraints ---#
-        myjckt.driver.add_constraint('FrameOut.Frameouts_outs.Freqs[0] >=0.22')
-        myjckt.driver.add_constraint('max(Utilization.tower_utilization.GLUtil) <=1.0')
-        myjckt.driver.add_constraint('max(Utilization.tower_utilization.EUshUtil) <=1.0')
-        myjckt.driver.add_constraint('Utilization.jacket_utilization.t_util <=1.0')
-        myjckt.driver.add_constraint('Utilization.jacket_utilization.cb_util <=1.0')
-        myjckt.driver.add_constraint('Utilization.jacket_utilization.KjntUtil <= 1.0')
-        myjckt.driver.add_constraint('Utilization.jacket_utilization.XjntUtil <= 1.0')
+        myjckt.driver.add_constraint('LoadFrameOuts.Frameouts.Freqs[0] >=0.22')
+        myjckt.driver.add_constraint('max(LoadFrameOuts.tower_utilization.GLUtil) <=1.0')
+        myjckt.driver.add_constraint('max(LoadFrameOuts.tower_utilization.EUshUtil) <=1.0')
+        myjckt.driver.add_constraint('max(LoadFrameOuts2.tower_utilization.GLUtil) <=1.0')
+        myjckt.driver.add_constraint('max(LoadFrameOuts2.tower_utilization.EUshUtil) <=1.0')
+
+        myjckt.driver.add_constraint('LoadFrameOuts.jacket_utilization.t_util <=1.0')
+        myjckt.driver.add_constraint('LoadFrameOuts.jacket_utilization.cb_util <=1.0')
+        myjckt.driver.add_constraint('LoadFrameOuts.jacket_utilization.KjntUtil <= 1.0')
+        myjckt.driver.add_constraint('LoadFrameOuts.jacket_utilization.XjntUtil <= 1.0')
+        myjckt.driver.add_constraint('LoadFrameOuts2.jacket_utilization.t_util <=1.0')
+        myjckt.driver.add_constraint('LoadFrameOuts2.jacket_utilization.cb_util <=1.0')
+        myjckt.driver.add_constraint('LoadFrameOuts2.jacket_utilization.KjntUtil <= 1.0')
+        myjckt.driver.add_constraint('LoadFrameOuts2.jacket_utilization.XjntUtil <= 1.0')
+
         myjckt.driver.add_constraint('PreBuild.wbase <= 30.')
         myjckt.driver.add_constraint('leginputs.Dleg0/leginputs.tleg0 >= 22.')
         myjckt.driver.add_constraint('Xbrcinputs.Dbrc0/Xbrcinputs.tbrc0 >= 22.')
         myjckt.driver.add_constraint('Mbrcinputs.Dbrc_mud/Mbrcinputs.tbrc_mud >= 22.')
-        myjckt.driver.add_constraint('Embedment.Lp0rat >= 0.')
+
+        myjckt.driver.add_constraint('LoadFrameOuts.Lp0rat >= 0.')
+        myjckt.driver.add_constraint('LoadFrameOuts2.Lp0rat >= 0.')
         # ----------------------
 
         # --- recorder ---
@@ -3351,23 +3515,49 @@ if __name__ == '__main__':
     # ---------------
 
     #_____________________________________#
-    #Now show results of modal analysis
-    print('First two Freqs.= {:5.4f} and {:5.4f} Hz'.format(*myjckt.Frameouts.Freqs))
+    #Now show results
+    print "Dpile=%f, tpile=%f  Lp=%f " % (myjckt.Piles.Pileinputs.Dpile,myjckt.Piles.Pileinputs.tpile,myjckt.Piles.Pileinputs.Lp)
+    print "Dbrc=%f, tbrc=%f, beta2D=%f  " % (myjckt.Xbraces.Xbrcouts.LLURObj.D[0],myjckt.Xbraces.Xbrcouts.LLURObj.t[0],myjckt.beta2D)
+    print "Dbrcmud=%f, tbrcmud=%f  " % (myjckt.Mudbraces.Mbrcouts.brcObj.D[0],myjckt.Mudbraces.Mbrcouts.brcObj.t[0])
+    print "batter=%f, dckwidth=%f, footprint=%f, Dleg=%f, tleg=%f,  " % (myjckt.JcktGeoIn.batter,myjckt.dck_width, myjckt.PreBuild.wbase, myjckt.leginputs.Dleg[0],myjckt.leginputs.tleg[0])
+    print "Dgir=%f, tgir=%f " % (myjckt.TPinputs.Dgir,myjckt.TPinputs.tgir)
+    print "Db=%f DTRb=%f Dt=%f DTRt=%f H2frac=%f " % (myjckt.Tower.Twrins.Db,myjckt.Tower.Twrins.DTRb,myjckt.Tower.Twrins.Dt,myjckt.Tower.Twrins.DTRt,myjckt.Tower.Twrins.Htwr2frac)
+    print "\n"
+    # print component masses
     #print component masses
-    print('jacket+TP(structural+lumped) mass (no tower, no piles) [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass-myjckt.Tower.Twrouts.mass))
+    print('jacket+TP(structural+lumped) mass (no tower, no piles) [kg] = {:6.0f}'.format(myjckt.LoadFrameOuts.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass-myjckt.Tower.Twrouts.mass))
     print('tower mass [kg] = {:6.0f}'.format(myjckt.Tower.Twrouts.mass))
     print('TP mass structural + lumped mass [kg] = {:6.0f}'.format(myjckt.TP.TPouts.mass+myjckt.TP.TPlumpinputs.mass))
-    print('piles (all) mass for assigned (not optimum, unless optimization is run) Lp [kg] = {:6.0f}'.format(myjckt.Mpiles))
-    print('frame3dd model mass (structural + TP lumped) [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass))
-    print('frame3dd model mass (structural + TP lumped) + Pile Mass [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass+myjckt.Mpiles))
-
+    print('piles (all) mass for assigned (not optimum, unless optimization is run) Lp [kg] = {:6.0f}'.format(myjckt.LoadFrameOuts.Mpiles))
+    print('frame3dd model mass (structural + TP lumped) [kg] = {:6.0f}'.format(myjckt.LoadFrameOuts.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass))
+    print('frame3dd model mass (structural + TP lumped) + Pile Mass [kg] = {:6.0f}'.format(myjckt.LoadFrameOuts.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass+myjckt.Mpiles))
+    print "\n"
+    # modal analysis
+    print('First two Freqs.= {:5.4f} and {:5.4f} Hz \n'.format(*myjckt.LoadFrameOuts.Frameouts.Freqs))
     #print tower top displacement
-    print('Tower Top Displacement in Global Coordinate System [m] ={:5.4f}'.format(*myjckt.Frameouts.top_deflection))
+    print('Tower Top Displacement in Global Coordinate System DLC1.6 [m] ={:5.4f}'.format(*myjckt.LoadFrameOuts.Frameouts.top_deflection))
+    print('Tower Top Displacement in Global Coordinate System DLC6.1 [m] ={:5.4f}'.format(*myjckt.LoadFrameOuts2.Frameouts.top_deflection))
+
+    print "\n"
+    #print GL EU utilizations
+    print "Minimum found at GLutil=%f EUutil=%f DLC1.6"  % (np.nanmax(myjckt.LoadFrameOuts.tower_utilization.GLUtil),np.nanmax(myjckt.LoadFrameOuts.tower_utilization.EUshUtil))
+    print "Minimum found at GLutil=%f EUutil=%f DLC6.1"  % (np.nanmax(myjckt.LoadFrameOuts2.tower_utilization.GLUtil),np.nanmax(myjckt.LoadFrameOuts2.tower_utilization.EUshUtil))
+    print "Minimum found at Mudline Footprint=%f"  % (myjckt.PreBuild.wbase)
     #print max API code checks
-    print('MAX member compression-bending utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.cb_util)))
-    print('MAX member tension utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.t_util)))
-    print('MAX X-joint  utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.XjntUtil)))
-    print('MAX K-joint  utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.KjntUtil)))
+    print('MAX member compression-bending utilization at joints DLC1.6 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts.jacket_utilization.cb_util)))
+    print('MAX member compression-bending utilization at joints DLC6.1 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts2.jacket_utilization.cb_util)))
+    print('MAX member tension utilization at joints DLC1.6 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts.jacket_utilization.t_util)))
+    print('MAX member tension utilization at joints DLC6.1 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts2.jacket_utilization.t_util)))
+    print('MAX X-joint  utilization at joints DLC1.6 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts.jacket_utilization.XjntUtil)))
+    print('MAX X-joint  utilization at joints DLC6.1 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts2.jacket_utilization.XjntUtil)))
+    print('MAX K-joint  utilization at joints DLC1.6 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts.jacket_utilization.KjntUtil)))
+    print('MAX K-joint  utilization at joints DLC6.1 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts2.jacket_utilization.KjntUtil)))
+
+
+
+
+
+
 
     #Plot geometry
     import matplotlib.pyplot as plt
@@ -3400,9 +3590,12 @@ if __name__ == '__main__':
 
     ax1=plt.subplot2grid((3, 3), (0, 0), colspan=2, rowspan=3)
 
-    ax1.plot(myjckt.tower_utilization.StressUtil,twr_zs , label='VonMises Util')
-    ax1.plot(myjckt.tower_utilization.GLUtil,twr_zs, label='GL Util')
-    ax1.plot(myjckt.tower_utilization.EUshUtil, twr_zs, label='EUsh Util')
+    ax1.plot(myjckt.LoadFrameOuts.tower_utilization.StressUtil,twr_zs , label='VonMises Util')
+    ax1.plot(myjckt.LoadFrameOuts.tower_utilization.GLUtil,twr_zs, label='GL Util')
+    ax1.plot(myjckt.LoadFrameOuts.tower_utilization.EUshUtil, twr_zs, label='EUsh Util')
+    ax1.plot(myjckt.LoadFrameOuts2.tower_utilization.StressUtil,twr_zs , label='VonMises Util2')
+    ax1.plot(myjckt.LoadFrameOuts2.tower_utilization.GLUtil,twr_zs, label='GL Util2')
+    ax1.plot(myjckt.LoadFrameOuts2.tower_utilization.EUshUtil, twr_zs, label='EUsh Util2')
 
     ax1.legend(bbox_to_anchor=(1.05, 1.0), loc=2)
 
