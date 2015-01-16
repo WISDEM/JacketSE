@@ -54,10 +54,10 @@ class JcktUtilization(Component):
     """
 
     #inputs
-    Pilemems    =Array(dtype=int,     iotype='in',desc='Connectivity Array for all members of the Pile 1 portion only ') # TO DO just need the size of these 4 arrays
-    Legmems     =Array(dtype=int,     iotype='in',desc='Connectivity Array for all members of the Leg 1 portion only')
-    Twrmems     =Array(dtype=int,     iotype='in',desc='Connectivity Array for all members of the tower portion only (including rigid member at the top if requested)')
-    TPmems      =Array(dtype=int,     iotype='in',desc='Connectivity Array for all members of the TP portion only')
+    Pilemems    =Array(dtype=int,     iotype='in',desc='Connectivity Array for all members of the Pile 1 portion only.') # TO DO just need the size of these 4 arrays
+    Legmems     =Array(dtype=int,     iotype='in',desc='Connectivity Array for all members of the Leg 1 portion only.')
+    Twrmems     =Array(dtype=int,     iotype='in',desc='Connectivity Array for all members of the tower portion only (including rigid member at the top if requested).')
+    TPmems      =Array(dtype=int,     iotype='in',desc='Connectivity Array for all members of the TP portion only.')
 
 
     MbrFrcs   =   Array(dtype=np.float,    iotype='in', desc='Forces and Moments at Element Nodes from Frame3DD')
@@ -142,16 +142,16 @@ class IEC_PSFS(VariableTree):
 class TwrUtilization(Component):
     "THIS UNTILIZATION WORKS WITH WIND AND MAIN THRUST LOADS ALONG GLOBAL X ONLY"
     #inputs
-    towerWindLoads = VarTree(AeroLoads(), iotype='in', desc='Aero loads in inertial coordinate system')
-    towerWaveLoads = VarTree(AeroLoads(), iotype='in', desc='Hydro loads in inertial coordinate system')
+    towerWindLoads = VarTree(AeroLoads(), iotype='in', desc='Aero loads in inertial coordinate system.')
+    towerWaveLoads = VarTree(AeroLoads(), iotype='in', desc='Hydro loads in inertial coordinate system.')
     top_F = Array(iotype='in')
     top_M = Array(iotype='in')
-    Dt = Float(iotype='in', units='m', desc='TowerTop OD from Tower')
-    tt = Float(iotype='in', units='m', desc='TowerTop wall thickness from Tower')
-    Twr_data = VarTree(TwrGeoOutputs(), iotype='in', desc='Tower Node data')  # From Tower
-    L_reinforced = Float(30.0, iotype='in', desc='reinforcement length')
-    IECpsfIns= VarTree(IEC_PSFS(), iotype='in', desc='Basic IEC psfs')
-    g = Float(9.81, iotype='in', units='m/s**2', desc='Gravity Acceleration (ABSOLUTE VALUE!)')
+    Dt = Float(iotype='in', units='m', desc='TowerTop OD from Tower.')
+    tt = Float(iotype='in', units='m', desc='TowerTop wall thickness from Tower.')
+    Twr_data = VarTree(TwrGeoOutputs(), iotype='in', desc='Tower Node data.')  # From Tower
+    L_reinforced = Float(30.0, iotype='in', desc='reinforcement length.')
+    IECpsfIns= VarTree(IEC_PSFS(), iotype='in', desc='Basic IEC psfs.')
+    g = Float(9.81, iotype='in', units='m/s**2', desc='Gravity Acceleration (ABSOLUTE VALUE!).')
 
     #outputs
     utilization = VarTree(TowerUtilOutputs(), iotype='out')

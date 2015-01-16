@@ -177,30 +177,30 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         if towerfix:
                tt = time.time()
                res1=scipy.optimize.fmin_cobyla(mass,guess,[f0Cnstrt1,f0Cnstrt2,batCnsrt1, batCnsrt2, \
-                   cbCnstrt,tCnstrt,KjntCnstrt,XjntCnstrt, \
+                   cbCnstrt,cbCnstrt2,tCnstrt,tCnstrt2,KjntCnstrt,KjntCnstrt2,XjntCnstrt,XjntCnstrt2,\
                    girDCnsrt1,girDCnsrt2,girtCnsrt1,girtCnsrt2,\
                    XbCrit01,XbCrit02,XbCrit03,XbCrit04,XbCrit05,MbCrit01,MbCrit02,MbCrit03,MbCrit04,MbCrit05,\
-                   LpCnstrt,LpCnstrt2, Dleg2BrcCnstrt,Dleg2MudCnstrt, DlegCnstrt,tlegCnstrt,tlegCnstrt2,Dleg2tlegCnstrt,DpCnstrt,tpCnstrt,\
+                   LpCnstrt,LpCnstrt2,LpCnstrt3, Dleg2BrcCnstrt,Dleg2MudCnstrt, DlegCnstrt,tlegCnstrt,tlegCnstrt2,Dleg2tlegCnstrt,DpCnstrt,tpCnstrt,\
                    DbrcCnstrt,tbrcCnstrt,tbrcCnstrt2,Dbrc2tbrcCnstrt,DmudCnstrt,tmudCnstrt,tmudCnstrt2,Dmud2mudCnstrt,\
                    dckwidthCnstrt1,dckwidthCnstrt2,ftprintCnstrt,NorsokCnstrt],args=[myjckt,desvarmeans,desvarbds],consargs=None,rhobeg=0.01,maxfun=3000,disp=1)
         elif not(DTRsdiff):
                tt = time.time()
                res1=scipy.optimize.fmin_cobyla(mass,guess,[f0Cnstrt1,f0Cnstrt2,batCnsrt1, batCnsrt2, \
-                   cbCnstrt,tCnstrt,KjntCnstrt,XjntCnstrt, GLCnstrt,EUCnstrt,\
+                   cbCnstrt,cbCnstrt2,tCnstrt,tCnstrt2,KjntCnstrt,KjntCnstrt2,XjntCnstrt,XjntCnstrt2, GLCnstrt,GLCnstrt2,EUCnstrt,EUCnstrt2,\
                    girDCnsrt1,girDCnsrt2,girtCnsrt1,girtCnsrt2,\
                    TwrCnstrt01,TwrCnstrt02,TwrCnstrt03,TwrCnstrt04,TwrCnstrt05,TwrCnstrt08,TwrCnstrt09,\
                    XbCrit01,XbCrit02,XbCrit03,XbCrit04,XbCrit05,MbCrit01,MbCrit02,MbCrit03,MbCrit04,MbCrit05,\
-                   LpCnstrt,LpCnstrt2, Dleg2BrcCnstrt,Dleg2MudCnstrt, DlegCnstrt,tlegCnstrt,tlegCnstrt2,Dleg2tlegCnstrt,DpCnstrt,tpCnstrt,\
+                   LpCnstrt,LpCnstrt2,LpCnstrt3, Dleg2BrcCnstrt,Dleg2MudCnstrt, DlegCnstrt,tlegCnstrt,tlegCnstrt2,Dleg2tlegCnstrt,DpCnstrt,tpCnstrt,\
                    DbrcCnstrt,tbrcCnstrt,tbrcCnstrt2,Dbrc2tbrcCnstrt,DmudCnstrt,tmudCnstrt,tmudCnstrt2,Dmud2mudCnstrt,\
                    dckwidthCnstrt1,dckwidthCnstrt2,ftprintCnstrt,NorsokCnstrt],args=[myjckt,desvarmeans,desvarbds],consargs=None,rhobeg=0.01,maxfun=3000,disp=1)
         else:  #DTRt variable
                tt = time.time()
                res1=scipy.optimize.fmin_cobyla(mass,guess,[f0Cnstrt1,f0Cnstrt2,batCnsrt1, batCnsrt2, \
-                   cbCnstrt,tCnstrt,KjntCnstrt,XjntCnstrt, GLCnstrt,EUCnstrt,\
+                   cbCnstrt,cbCnstrt2,tCnstrt,tCnstrt2,KjntCnstrt,KjntCnstrt2,XjntCnstrt,XjntCnstrt2, GLCnstrt,GLCnstrt2,EUCnstrt,EUCnstrt2,\
                    girDCnsrt1,girDCnsrt2,girtCnsrt1,girtCnsrt2,\
                    TwrCnstrt01,TwrCnstrt02,TwrCnstrt03,TwrCnstrt04,TwrCnstrt05,TwrCnstrt06,TwrCnstrt07,TwrCnstrt08,TwrCnstrt09,\
                    XbCrit01,XbCrit02,XbCrit03,XbCrit04,XbCrit05,MbCrit01,MbCrit02,MbCrit03,MbCrit04,MbCrit05,\
-                   LpCnstrt,LpCnstrt2, Dleg2BrcCnstrt,Dleg2MudCnstrt, DlegCnstrt,tlegCnstrt,tlegCnstrt2,Dleg2tlegCnstrt,DpCnstrt,tpCnstrt,\
+                   LpCnstrt,LpCnstrt2,LpCnstrt3, Dleg2BrcCnstrt,Dleg2MudCnstrt, DlegCnstrt,tlegCnstrt,tlegCnstrt2,Dleg2tlegCnstrt,DpCnstrt,tpCnstrt,\
                    DbrcCnstrt,tbrcCnstrt,tbrcCnstrt2,Dbrc2tbrcCnstrt,DmudCnstrt,tmudCnstrt,tmudCnstrt2,Dmud2mudCnstrt,\
                    dckwidthCnstrt1,dckwidthCnstrt2,ftprintCnstrt,NorsokCnstrt],args=[myjckt,desvarmeans,desvarbds],consargs=None,rhobeg=0.01,maxfun=3000,disp=1)
 
@@ -229,9 +229,9 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
             opt_prob.addVar(key,'c',lower=desvarbds[ii,0],upper=desvarbds[ii,1],value=guess[ii])
 
         if not(towerfix):
-            opt_prob.addConGroup('cnstrts',26,type='i')
+            opt_prob.addConGroup('cnstrts',32,type='i')
         else:
-            opt_prob.addConGroup('cnstrts',24,type='i')
+            opt_prob.addConGroup('cnstrts',29,type='i')
         print opt_prob
 
         #Finally call the optimizer
@@ -330,7 +330,7 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         # ----------------------
 
         # --- Objective ---
-        myjckt.driver.add_objective('(FrameOut.Frameouts_outs.mass[0]+Embedment.Mpiles)/1.e6')
+        myjckt.driver.add_objective('(LoadFrameOuts.Frameouts.mass[0]+LoadFrameOuts.Mpiles)/1.e6')
         # ----------------------
 
         # --- Design Variables ---
@@ -368,17 +368,24 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         myjckt.driver.add_parameter('JcktGeoIn.dck_widthfrac',low=desvarbds[varcnt+int(DTRsdiff),0], high=desvarbds[varcnt+int(DTRsdiff),1])
 
         #--- Constraints ---#
-        myjckt.driver.add_constraint('FrameOut.Frameouts_outs.Freqs[0] >= {:f}'.format(f0))
-        myjckt.driver.add_constraint('FrameOut.Frameouts_outs.Freqs[0] <= {:f}'.format(f0*(1+f0eps)))
+        myjckt.driver.add_constraint('LoadFrameOuts.Frameouts.Freqs[0] >= {:f}'.format(f0))
+        myjckt.driver.add_constraint('LoadFrameOuts.Frameouts.Freqs[0] <= {:f}'.format(f0*(1+f0eps)))
 
         if not(towerfix):
-            myjckt.driver.add_constraint('max(Utilization.tower_utilization.GLUtil) <=1.0')
-            myjckt.driver.add_constraint('max(Utilization.tower_utilization.EUshUtil) <=1.0')
+            myjckt.driver.add_constraint('max(LoadFrameOuts.tower_utilization.GLUtil) <=1.0')
+            myjckt.driver.add_constraint('max(LoadFrameOuts.tower_utilization.EUshUtil) <=1.0')
+            myjckt.driver.add_constraint('max(LoadFrameOuts2.tower_utilization.GLUtil) <=1.0')
+            myjckt.driver.add_constraint('max(LoadFrameOuts2.tower_utilization.EUshUtil) <=1.0')
 
-        myjckt.driver.add_constraint('Utilization.jacket_utilization.t_util <=1.0')
-        myjckt.driver.add_constraint('Utilization.jacket_utilization.cb_util <=1.0')
-        myjckt.driver.add_constraint('Utilization.jacket_utilization.KjntUtil <= 1.0')
-        myjckt.driver.add_constraint('Utilization.jacket_utilization.XjntUtil <= 1.0')
+        myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts.jacket_utilization.t_util) <=1.0')
+        myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts.jacket_utilization.cb_util) <=1.0')
+        myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts.jacket_utilization.KjntUtil) <= 1.0')
+        myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts.jacket_utilization.XjntUtil) <= 1.0')
+        myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts2.jacket_utilization.t_util) <=1.0')
+        myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts2.jacket_utilization.cb_util) <=1.0')
+        myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts2.jacket_utilization.KjntUtil) <= 1.0')
+        myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts2.jacket_utilization.XjntUtil) <= 1.0')
+
         myjckt.driver.add_constraint('PreBuild.wbase <= {:f}'.format(mxftprint))
 
         myjckt.driver.add_constraint('leginputs.Dleg0 >= Mbrcinputs.Dbrc_mud')
@@ -402,7 +409,8 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         NorsokMin=30.*np.pi/180
         myjckt.driver.add_constraint('PreBuild.beta3D >= {:f}'.format(NorsokMin))
 
-        myjckt.driver.add_constraint('Embedment.Lp0rat >= 0.')
+        myjckt.driver.add_constraint('LoadFrameOuts.Lp0rat >= 0.')
+        myjckt.driver.add_constraint('LoadFrameOuts2.Lp0rat >= 0.')
         # ----------------------
 
         # --- recorder ---
@@ -433,27 +441,32 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
     print "Db=%f DTRb=%f Dt=%f DTRt=%f H2frac=%f " % (myjckt.Tower.Twrins.Db,myjckt.Tower.Twrins.DTRb,myjckt.Tower.Twrins.Dt,myjckt.Tower.Twrins.DTRt,myjckt.Tower.Twrins.Htwr2frac)
     print "\n"
     # print component masses
-    print('jacket+TP(structural+lumped) mass (no tower, no piles) [kg] = {:6.0f}'.format(myjckt.FrameOut.Frameouts_outs.mass[0]+myjckt.TP.TPlumpinputs.mass-myjckt.Tower.Twrouts.mass))
+    print('jacket+TP(structural+lumped) mass (no tower, no piles) [kg] = {:6.0f}'.format(myjckt.LoadFrameOuts.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass-myjckt.Tower.Twrouts.mass))
     print('tower mass [kg] = {:6.0f}'.format(myjckt.Tower.Twrouts.mass))
     print('TP mass structural + lumped mass [kg] = {:6.0f}'.format(myjckt.TP.TPouts.mass+myjckt.TP.TPlumpinputs.mass))
-    print('piles (all) mass for assigned (not optimum, unless optimization is run) Lp [kg] = {:6.0f}'.format(myjckt.Mpiles))
-    print('frame3dd model mass (structural + TP lumped) [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass))
-    print('frame3dd model mass (structural + TP lumped) + Pile Mass [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass+myjckt.Mpiles))
+    print('piles (all) mass for assigned (not optimum, unless optimization is run) Lp [kg] = {:6.0f}'.format(myjckt.LoadFrameOuts.Mpiles))
+    print('frame3dd model mass (structural + TP lumped) [kg] = {:6.0f}'.format(myjckt.LoadFrameOuts.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass))
+    print('frame3dd model mass (structural + TP lumped) + Pile Mass [kg] = {:6.0f}'.format(myjckt.LoadFrameOuts.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass+myjckt.Mpiles))
     print "\n"
-    # modal analysis
-    print('First two Freqs.= {:5.4f} and {:5.4f} Hz'.format(*myjckt.FrameOut.Frameouts_outs.Freqs))
+        # modal analysis
+    print('First two Freqs.= {:5.4f} and {:5.4f} Hz \n'.format(*myjckt.LoadFrameOuts.Frameouts.Freqs))
     #print tower top displacement
-    print('Tower Top Displacement in Global Coordinate System [m] ={:5.4f}'.format(*myjckt.FrameOut.Frameouts_outs.top_deflection))
-
+    print('Tower Top Displacement in Global Coordinate System DLC1.6 [m] ={:5.4f}'.format(*myjckt.LoadFrameOuts.Frameouts.top_deflection))
+    print('Tower Top Displacement in Global Coordinate System DLC6.1 [m] ={:5.4f}'.format(*myjckt.LoadFrameOuts2.Frameouts.top_deflection))
     print "\n"
     #print GL EU utilizations
-    print "Minimum found at GLutil=%f EUutil=%f"  % (np.nanmax(myjckt.tower_utilization.GLUtil),np.nanmax(myjckt.tower_utilization.EUshUtil))
+    print "Minimum found at GLutil=%f EUutil=%f DLC1.6"  % (np.nanmax(myjckt.LoadFrameOuts.tower_utilization.GLUtil),np.nanmax(myjckt.LoadFrameOuts.tower_utilization.EUshUtil))
+    print "Minimum found at GLutil=%f EUutil=%f DLC6.1"  % (np.nanmax(myjckt.LoadFrameOuts2.tower_utilization.GLUtil),np.nanmax(myjckt.LoadFrameOuts2.tower_utilization.EUshUtil))
     print "Minimum found at Mudline Footprint=%f"  % (myjckt.PreBuild.wbase)
     #print max API code checks
-    print('MAX member compression-bending utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.cb_util)))
-    print('MAX member tension utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.t_util)))
-    print('MAX X-joint  utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.XjntUtil)))
-    print('MAX K-joint  utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.KjntUtil)))
+    print('MAX member compression-bending utilization at joints DLC1.6 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts.jacket_utilization.cb_util)))
+    print('MAX member compression-bending utilization at joints DLC6.1 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts2.jacket_utilization.cb_util)))
+    print('MAX member tension utilization at joints DLC1.6 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts.jacket_utilization.t_util)))
+    print('MAX member tension utilization at joints DLC6.1 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts2.jacket_utilization.t_util)))
+    print('MAX X-joint  utilization at joints DLC1.6 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts.jacket_utilization.XjntUtil)))
+    print('MAX X-joint  utilization at joints DLC6.1 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts2.jacket_utilization.XjntUtil)))
+    print('MAX K-joint  utilization at joints DLC1.6 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts.jacket_utilization.KjntUtil)))
+    print('MAX K-joint  utilization at joints DLC6.1 = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts2.jacket_utilization.KjntUtil)))
 
 
     #STORE RESULTS
@@ -481,11 +494,13 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         import pickle
         filename=filename+'.pik'  #E.g.: "C:\PROJECTS\OFFSHORE_WIND\UH_REACT\PYTHON_OPT\JCKdataNewCd.txt" #filename="D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\UH_REACT\JCKdataNoMass.p"
         with open(filename,'w') as fp:
-            pickle.dump([xstr,myjckt.FrameOut.Frameouts_outs.mass,myjckt.Mpiles,myjckt.Tower.Twrouts.mass,myjckt.Piles.Pileinputs.Dpile,myjckt.Piles.Pileinputs.tpile,myjckt.Piles.Pileinputs.Lp,\
+            pickle.dump([xstr,myjckt.LoadFrameOuts.Frameouts.mass,myjckt.Mpiles,myjckt.Tower.Twrouts.mass,myjckt.Piles.Pileinputs.Dpile,myjckt.Piles.Pileinputs.tpile,myjckt.Piles.Pileinputs.Lp,\
                         myjckt.Xbraces.Xbrcouts.LLURObj.D,myjckt.Xbraces.Xbrcouts.LLURObj.t,myjckt.Mudbraces.Mbrcouts.brcObj.D,myjckt.Mudbraces.Mbrcouts.brcObj,\
                         myjckt.JcktGeoIn.batter,myjckt.leginputs.Dleg,myjckt.leginputs.tleg,myjckt.TPinputs.Dgir,myjckt.TPinputs.tgir,myjckt.TP.TPouts.TPlumpedMass,\
                         myjckt.Tower.Twrins.Db,myjckt.Tower.Twrins.DTRb,myjckt.Tower.Twrins.Dt,myjckt.Tower.Twrins.DTRt,myjckt.Tower.Twrins.Htwr2frac,\
-                        myjckt.FrameOut.Frameouts_outs.Freqs,myjckt.tower_utilization.GLUtil,myjckt.tower_utilization.EUshUtil,myjckt.PreBuild.wbase,myjckt.Xbraces.bay_hs,myjckt.Xbraces.bay_bs],\
+                        myjckt.LoadFrameOuts.Frameouts.Freqs,myjckt.LoadFrameOuts.tower_utilization.GLUtil,myjckt.LoadFrameOuts.tower_utilization.EUshUtil,\
+                        myjckt.LoadFrameOuts2.tower_utilization.GLUtil,myjckt.LoadFrameOuts2.tower_utilization.EUshUtil,\
+                        myjckt.PreBuild.wbase,myjckt.Xbraces.bay_hs,myjckt.Xbraces.bay_bs],\
                         fp)
 
     #Plot
@@ -561,25 +576,31 @@ def JcktWrapper(x,myjckt,desvarmeans,desvarbds):
     myjckt.run()
 
     #Get Frame3dd mass
-    mass=myjckt.FrameOut.Frameouts_outs.mass[0] +myjckt.Mpiles  #Total structural mass
+    mass=myjckt.LoadFrameOuts.Frameouts.mass[0] +myjckt.LoadFrameOuts.Mpiles  #Total structural mass
     #Get Frame3dd-calculated 1st natural frequency
-    f1=myjckt.FrameOut.Frameouts_outs.Freqs[0]
+    f1=myjckt.LoadFrameOuts.Frameouts.Freqs[0]
 
     #Get Model calculated TP mass
     TPmass=myjckt.TP.TPouts.mass
 
     #Get Utilizations
-    max_GLUtil=np.nanmax(myjckt.tower_utilization.GLUtil)
+    max_GLUtil=np.nanmax(myjckt.LoadFrameOuts.tower_utilization.GLUtil)
+    max_GLUtil2=np.nanmax(myjckt.LoadFrameOuts2tower_utilization.GLUtil)
     #max_GLUtil=myjckt.tower_utilization.GLUtil
-    max_EUUtil=np.nanmax(myjckt.tower_utilization.EUshUtil)
-
+    max_EUUtil=np.nanmax(myjckt.LoadFrameOuts.tower_utilization.EUshUtil)
+    max_EUUtil2=np.nanmax(myjckt.LoadFrameOuts.tower_utilization.EUshUtil)
     #Member checks
-    max_tutil=np.nanmax(myjckt.jacket_utilization.t_util)
-    max_cbutil=np.nanmax(myjckt.jacket_utilization.cb_util)
+    max_tutil=np.nanmax(myjckt.LoadFrameOuts.jacket_utilization.t_util)
+    max_cbutil=np.nanmax(myjckt.LoadFrameOuts.jacket_utilization.cb_util)
+    max_tutil2=np.nanmax(myjckt.LoadFrameOuts2.jacket_utilization.t_util)
+    max_cbutil2=np.nanmax(myjckt.LoadFrameOuts2.jacket_utilization.cb_util)
 
     #Joint checks
-    max_XjntUtil=np.nanmax(myjckt.jacket_utilization.XjntUtil)
-    max_KjntUtil=np.nanmax(myjckt.jacket_utilization.KjntUtil)
+    max_XjntUtil=np.nanmax(myjckt.LoadFrameOuts.jacket_utilization.XjntUtil)
+    max_KjntUtil=np.nanmax(myjckt.LoadFrameOuts.jacket_utilization.KjntUtil)
+    max_XjntUtil2=np.nanmax(myjckt.LoadFrameOuts2.jacket_utilization.XjntUtil)
+    max_KjntUtil2=np.nanmax(myjckt.LoadFrameOuts2.jacket_utilization.KjntUtil)
+
     #t_util[t_util<0]=np.NaN
     #cb_util[cb_util<0]=np.NaN
 
@@ -596,7 +617,8 @@ def JcktWrapper(x,myjckt,desvarmeans,desvarbds):
     XBrcCrit05=np.nanmax(myjckt.XBrcCriteria.brc_crit05)
 
     #Pile Embedment Criteria
-    Lp0rat=myjckt.Lp0rat
+    Lp0rat1=myjckt.LoadFrameOuts.Lp0rat
+    Lp0rat2=myjckt.LoadFrameOuts2.Lp0rat
     #__________________________________________#
 
     #calc width at seabed proportional to stiffness
@@ -615,7 +637,7 @@ def JcktWrapper(x,myjckt,desvarmeans,desvarbds):
     print(' \n')
 
     sys.stdout.flush()  #This for peregrine
-    return mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat
+    return mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2
 
 
 
@@ -623,23 +645,36 @@ def objfunc(x,myjckt,desvarmeans,desvarbds):
     global towerfix
     mass = JcktWrapper(x,myjckt,desvarmeans,desvarbds)[0]/1.5e6
     #          x=  [ batter,  Dpile,    tpile,        Lp,   Dleg,     tleg,       Dbrc,   tbrc,     Dbrc_mud,   tbrc_mud,   Dgir,      tgir,      Db,   DTRb   Dt,   DTRt   Htwr2fac        dck_widthfact]
-    cnstrts=[0.0]*24 #given as negatives, since PYOPT wants <0
+    cnstrts=[0.0]*29 #given as negatives, since PYOPT wants <0
     if not(towerfix):
-        cnstrts=[0.0]*26 #given as negatives, since PYOPT wants <0
+        cnstrts=[0.0]*32 #given as negatives, since PYOPT wants <0
 
     #Note the minus signs here for pyOPT's sake (it wants constraints <0, as opposed to regular python cobyla)
 
     cnstrts[0]=-f0Cnstrt1(x,myjckt,desvarmeans,desvarbds)
     cnstrts[1]=-f0Cnstrt2(x,myjckt,desvarmeans,desvarbds)
+
     cnstrts[2]=-cbCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[3]=-tCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[4]=-KjntCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[5]=-XjntCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnt=6
+    cnstrts[3]=-cbCnstrt2(x,myjckt,desvarmeans,desvarbds)
+
+    cnstrts[4]=-tCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[5]=-tCnstrt2(x,myjckt,desvarmeans,desvarbds)
+
+    cnstrts[6]=-KjntCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[7]=-KjntCnstrt2(x,myjckt,desvarmeans,desvarbds)
+
+    cnstrts[8]=-XjntCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[9]=-XjntCnstrt2(x,myjckt,desvarmeans,desvarbds)
+
+    cnt=10
     if not(towerfix):
-        cnstrts[6]=-GLCnstrt(x,myjckt,desvarmeans,desvarbds)
-        cnstrts[7]=-EUCnstrt(x,myjckt,desvarmeans,desvarbds)
-        cnt=8
+        cnstrts[9]=-GLCnstrt(x,myjckt,desvarmeans,desvarbds)
+        cnstrts[10]=-GLCnstrt2(x,myjckt,desvarmeans,desvarbds)
+        cnstrts[11]=-EUCnstrt(x,myjckt,desvarmeans,desvarbds)
+        cnstrts[12]=-EUCnstrt2(x,myjckt,desvarmeans,desvarbds)
+        cnt=13
+
+
     cnstrts[cnt]=-XbCrit01(x,myjckt,desvarmeans,desvarbds)
     cnstrts[cnt+1]=-XbCrit02(x,myjckt,desvarmeans,desvarbds)
     cnstrts[cnt+2]=-XbCrit03(x,myjckt,desvarmeans,desvarbds)
@@ -650,14 +685,17 @@ def objfunc(x,myjckt,desvarmeans,desvarbds):
     cnstrts[cnt+7]=-MbCrit03(x,myjckt,desvarmeans,desvarbds)
     cnstrts[cnt+8]=-MbCrit04(x,myjckt,desvarmeans,desvarbds)
     cnstrts[cnt+9]=-MbCrit05(x,myjckt,desvarmeans,desvarbds)
+
     cnstrts[cnt+10]=-LpCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+11]=-Dleg2BrcCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+12]=-Dleg2MudCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+13]=-Dleg2tlegCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+14]=-Dbrc2tbrcCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+15]=-Dmud2mudCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+16]=-ftprintCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+17]=-NorsokCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt+11]=-LpCnstrt2(x,myjckt,desvarmeans,desvarbds)
+
+    cnstrts[cnt+12]=-Dleg2BrcCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt+13]=-Dleg2MudCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt+14]=-Dleg2tlegCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt+15]=-Dbrc2tbrcCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt+16]=-Dmud2mudCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt+17]=-ftprintCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt+18]=-NorsokCnstrt(x,myjckt,desvarmeans,desvarbds)
 
     #cnstrts[26]=-dckwidthCnstrt1(x,myjckt,desvarmeans,desvarbds)
     #cnstrts[27]=-dckwidthCnstrt2(x,myjckt,desvarmeans,desvarbds)
@@ -670,9 +708,9 @@ def f0Cnstrt1(x,myjckt,desvarmeans,desvarbds):  #f1>f0
 
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     cnstrt=(f1-f0)/f0
@@ -684,9 +722,9 @@ def f0Cnstrt2(x,myjckt,desvarmeans,desvarbds): #f1<(f0*(1+f0eps))
 
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     cnstrt=(-f1+f0*(1+f0eps))/f0
@@ -698,13 +736,26 @@ def cbCnstrt(x,myjckt,desvarmeans,desvarbds): #cb<1
 
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     cnstrt=1.-max_cbutil
     print('cbCnstrt=',cnstrt)
+    return cnstrt
+def cbCnstrt2(x,myjckt,desvarmeans,desvarbds): #cb<1
+    global xlast,f1,max_cbutil2
+
+    if xlast==None or np.any([x != xlast]):
+        #print('call Jwrapper from const')
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
+        MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+
+        xlast=x.copy()
+    cnstrt=1.-max_cbutil2
+    print('cbCnstrt2=',cnstrt)
     return cnstrt
 
 def tCnstrt(x,myjckt,desvarmeans,desvarbds): #tUtil<1
@@ -712,13 +763,26 @@ def tCnstrt(x,myjckt,desvarmeans,desvarbds): #tUtil<1
 
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     cnstrt=1.-max_tutil
     print('tutil constraint=',cnstrt)
+    return cnstrt
+def tCnstrt2(x,myjckt,desvarmeans,desvarbds): #tUtil<1
+    global xlast,max_tutil2
+
+    if xlast==None or np.any([x != xlast]):
+        #print('call Jwrapper from const')
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
+        MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+
+        xlast=x.copy()
+    cnstrt=1.-max_tutil2
+    print('tutil constraint2=',cnstrt)
     return cnstrt
 
 
@@ -727,13 +791,26 @@ def KjntCnstrt(x,myjckt,desvarmeans,desvarbds): #KUtil<1
 
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     cnstrt=1.-max_KjntUtil
     print('KjntCnstrt=',cnstrt)
+    return cnstrt
+def KjntCnstrt2(x,myjckt,desvarmeans,desvarbds): #KUtil<1
+    global xlast,max_KjntUtil2
+
+    if xlast==None or np.any([x != xlast]):
+        #print('call Jwrapper from const')
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
+        MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+
+        xlast=x.copy()
+    cnstrt=1.-max_KjntUtil2
+    print('KjntCnstrt2=',cnstrt)
     return cnstrt
 
 def XjntCnstrt(x,myjckt,desvarmeans,desvarbds): #XUtil<1
@@ -741,13 +818,26 @@ def XjntCnstrt(x,myjckt,desvarmeans,desvarbds): #XUtil<1
 
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     cnstrt=1.-max_XjntUtil
     print('XjntCnstrt=',cnstrt)
+    return cnstrt
+def XjntCnstrt2(x,myjckt,desvarmeans,desvarbds): #XUtil<1
+    global xlast,max_XjntUtil2
+
+    if xlast==None or np.any([x != xlast]):
+        #print('call Jwrapper from const')
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
+        MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+
+        xlast=x.copy()
+    cnstrt=1.-max_XjntUtil2
+    print('XjntCnstrt2=',cnstrt)
     return cnstrt
 
 def GLCnstrt(x,myjckt,desvarmeans,desvarbds): #GLUtil<1
@@ -755,13 +845,26 @@ def GLCnstrt(x,myjckt,desvarmeans,desvarbds): #GLUtil<1
 
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     cnstrt=1.-max_GLUtil
     print('GL constraint=',cnstrt)
+    return cnstrt
+def GLCnstrt2(x,myjckt,desvarmeans,desvarbds): #GLUtil<1
+    global xlast,max_GLUtil2
+
+    if xlast==None or np.any([x != xlast]):
+        #print('call Jwrapper from const')
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
+        MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+
+        xlast=x.copy()
+    cnstrt=1.-max_GLUtil2
+    print('GL constraint2=',cnstrt)
     return cnstrt
 
 def EUCnstrt(x,myjckt,desvarmeans,desvarbds): #EUUtil<1
@@ -769,13 +872,26 @@ def EUCnstrt(x,myjckt,desvarmeans,desvarbds): #EUUtil<1
 
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     cnstrt=1.-max_EUUtil
     print('EU constraint=',cnstrt)
+    return cnstrt
+def EUCnstrt2(x,myjckt,desvarmeans,desvarbds): #EUUtil<1
+    global xlast,max_EUUtil2
+
+    if xlast==None or np.any([x != xlast]):
+        #print('call Jwrapper from const')
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
+        MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+
+        xlast=x.copy()
+    cnstrt=1.-max_EUUtil2
+    print('EU constraint2=',cnstrt)
     return cnstrt
 
 #Ensure Dleg>Dmud and Dbrc
@@ -943,9 +1059,9 @@ def XbCrit01(x,myjckt,desvarmeans,desvarbds): #XbrcCrit01
     global xlast,XBrcCrit01
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     print('Xbrc constraint01=', XBrcCrit01)
@@ -955,9 +1071,9 @@ def XbCrit02(x,myjckt,desvarmeans,desvarbds): #XbrcCrit02
     global xlast,XBrcCrit02
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     print('Xbrc constraint02=', XBrcCrit02)
@@ -967,9 +1083,9 @@ def XbCrit03(x,myjckt,desvarmeans,desvarbds): #XbrcCrit03
     global xlast,XBrcCrit03
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     print('Xbrc constraint03=', XBrcCrit03)
@@ -979,9 +1095,9 @@ def XbCrit04(x,myjckt,desvarmeans,desvarbds): #XbrcCrit03
     global xlast,XBrcCrit04
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     print('Xbrc constraint04=', XBrcCrit04)
@@ -991,9 +1107,9 @@ def XbCrit05(x,myjckt,desvarmeans,desvarbds): #XbrcCrit05
     global xlast,XBrcCrit05
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     print('Xbrc constraint05=', XBrcCrit05)
@@ -1009,9 +1125,9 @@ def MbCrit01(x,myjckt,desvarmeans,desvarbds): #MbrcCrit01
     global xlast,MudCrit01
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     print('Mbrc constraint01=', MudCrit01)
@@ -1021,9 +1137,9 @@ def MbCrit02(x,myjckt,desvarmeans,desvarbds): #XbrcCrit02
     global xlast,MudCrit02
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     print('Mbrc constraint02=', MudCrit02)
@@ -1033,9 +1149,9 @@ def MbCrit03(x,myjckt,desvarmeans,desvarbds): #XbrcCrit03
     global xlast,MudCrit03
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     print('Mbrc constraint03=', MudCrit03)
@@ -1045,9 +1161,9 @@ def MbCrit04(x,myjckt,desvarmeans,desvarbds): #XbrcCrit03
     global xlast,MudCrit04
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     print('Mbrc constraint04=', MudCrit04)
@@ -1057,9 +1173,9 @@ def MbCrit05(x,myjckt,desvarmeans,desvarbds): #XbrcCrit05
     global xlast,MudCrit05
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
     print('Mbrc constraint05=', MudCrit05)
@@ -1143,18 +1259,28 @@ def LpCnstrt(x,myjckt,desvarmeans,desvarbds):  #Maximum Htwr2 < Htwr/4
     global xlast,Lp0rat
     if xlast==None or np.any([x != xlast]):
         #print('call Jwrapper from const')
-        mass,f1,max_tutil,max_cbutil,max_KjntUtil,max_XjntUtil,max_GLUtil,max_EUUtil,\
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
         MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
-        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
         xlast=x.copy()
     print('Lp0rat constraint=',Lp0rat)
     return Lp0rat
+def LpCnstrt2(x,myjckt,desvarmeans,desvarbds):  #Maximum Htwr2 < Htwr/4
+    global xlast,Lp0rat2
+    if xlast==None or np.any([x != xlast]):
+        #print('call Jwrapper from const')
+        mass,f1,max_tutil,max_tutil2,max_cbutil,max_cbutil2,max_KjntUtil,max_KjntUtil2,max_XjntUtil,max_XjntUtil2,max_GLUtil,max_GLUtil2,max_EUUtil,max_EUUtil2,\
+        MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,\
+        XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
+        xlast=x.copy()
+    print('Lp0rat2 constraint=',Lp0rat2)
+    return Lp0rat
 
 #Embedment length constraint2
-def LpCnstrt2(x,myjckt,desvarmeans,desvarbds):  #Maximum Lp < Lpmax
+def LpCnstrt3(x,myjckt,desvarmeans,desvarbds):  #Maximum Lp < Lpmax
     idx=3
     cnstrt=maxcnstrt(x,idx,desvarmeans,desvarbds)
-    print('Lp constraint2=',cnstrt)
+    print('Lp constraint3=',cnstrt)
     return cnstrt
 
     #Function to minimize

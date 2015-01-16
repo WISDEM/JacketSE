@@ -417,8 +417,8 @@ class JcktLoad(Assembly):
 
     VPFlag  = Bool(False,units=None, iotype='in',desc='Vertical Pile Flag [Y/N]: If True the Mudbrace is put at the expected joint with Piles, i.e. at the bottom of leg.')
     al_bat3D=Float(      units='rad',iotype='in',desc='Batter Angle in 3D.')
-    RNA_F       =Array(dtype=np.float,  iotype='in',desc='Unfactored Rotor Forces and Moments excluding weight. Array(6)')
-    TwrRigidTop =Bool( units=None,iotype='in',desc='Rigid Member used in tower top or not')
+    RNA_F       =Array(dtype=np.float,  iotype='in',desc='Unfactored Rotor Forces and Moments excluding weight. Array(6).')
+    TwrRigidTop =Bool( units=None,iotype='in',desc='Rigid Member used in tower top or not.')
 
     RNAinputs=VarTree(RNAprops(), iotype='in', desc='Basic Inertial Properties of RNA')
     #CMzoff  =Float(      units='m', iotype='in',desc='RNA CM z offset from Tower Top Flange as It comes out of Tower Processing (trumped by RigidTop incase)')       # RNA CMzoff [m]
