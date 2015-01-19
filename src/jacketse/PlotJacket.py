@@ -61,11 +61,18 @@ def main(myjckt,util=False,savefileroot=[]):
         #ax1.plot([0, 2], [water_dict['wlevel'],water_dict['wlevel']],'.-r')
         #ax1.plot([0, 2], np.array([water_dict['wlevel']-water_dict['wdpth']]).repeat(2),':k')
 
-        ax1.plot(myjckt.Utilization.tower_utilization.GLUtil,twr_z,'k');
-        ax1.plot(myjckt.Utilization.tower_utilization.EUshUtil,twr_z,'.-k');
+        ax1.plot(myjckt.LoadFrameOuts.tower_utilization.StressUtil,twr_zs , label='VonMises Util')
+        ax1.plot(myjckt.LoadFrameOuts.tower_utilization.GLUtil,twr_zs, label='GL Util')
+        ax1.plot(myjckt.LoadFrameOuts.tower_utilization.EUshUtil, twr_zs, label='EUsh Util')
+        if myjckt.LoadFrameOuts2.tower_utilization.StressUtil[0] != -9999.:
+            ax1.plot(myjckt.LoadFrameOuts2.tower_utilization.StressUtil,twr_zs , label='VonMises Util2')
+            ax1.plot(myjckt.LoadFrameOuts2.tower_utilization.GLUtil,twr_zs, label='GL Util2')
+            ax1.plot(myjckt.LoadFrameOuts2.tower_utilization.EUshUtil, twr_zs, label='EUsh Util2')
+
         ax1.grid()
         #ax1.legend(['0 m MSL','SeaBed','GL Global Buckling', 'EU Shell Buckling'])
-        ax1.legend(['GL Global Buckling', 'EU Shell Buckling'])
+        #ax1.legend(['GL Global Buckling', 'EU Shell Buckling'])
+        ax1.legend(bbox_to_anchor=(1.05, 1.0), loc=2)
 
         ax2=plt.twiny(ax1)# .axes(ax1.get_position(),frameon=False)
         #hh2=plt.axes('Position', pos,'NextPlot','Add','XtickLabel','','Xtick',[],frameon=False);
