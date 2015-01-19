@@ -44,11 +44,11 @@ def main(myjckt,util=False,savefileroot=[]):
         RigidTop=(myjckt.RNAinputs.CMoff[2] != 0.) and myjckt.Tower.RigidTop
         fig2=plt.figure();
         ax1 = fig2.add_subplot(111)
-        twr_z=myjckt.Tower.Twrouts.nodes[2,0:myjckt.Tower.Twrouts.nNodes-RigidTop]-myjckt.Tower.Twrouts.nodes[2,0]
+        twr_zs=myjckt.Tower.Twrouts.nodes[2,0:myjckt.Tower.Twrouts.nNodes-RigidTop]-myjckt.Tower.Twrouts.nodes[2,0]
         #Add one diameter at the very top since the tube object does not have the final D
         twr_D=np.hstack((myjckt.Tower.Twrouts.TwrObj.D,myjckt.Tower.Twrins.Dt))
 
-        yrange=(np.min(twr_z),np.max(twr_z));
+        yrange=(np.min(twr_zs),np.max(twr_zs));
         #hh=plt.Axes(ox','off',\
         ##    'Ylim',yrange,'Nextplot','Add','Visible','On');
         ax1.set_xlabel('GL and EU Utilization Ratios');
@@ -76,8 +76,8 @@ def main(myjckt,util=False,savefileroot=[]):
 
         ax2=plt.twiny(ax1)# .axes(ax1.get_position(),frameon=False)
         #hh2=plt.axes('Position', pos,'NextPlot','Add','XtickLabel','','Xtick',[],frameon=False);
-        ax2.plot(twr_D/2,twr_z);
-        ax2.plot(-twr_D/2,twr_z);
+        ax2.plot(twr_D/2,twr_zs);
+        ax2.plot(-twr_D/2,twr_zs);
         ax2.set_aspect('equal')
         ax2.set_frame_on(False)
         ax2.set_xticklabels('')
