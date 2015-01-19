@@ -28,18 +28,18 @@ from commonse.Frustum import frustum
 
 class TowerUtilOutputs(VariableTree):
     """Jacket Utilization Basic Outputs"""
-    StressUtil = Array(dtype=np.float, desc='Tower Utilization at each given section (stress)')
-    GLUtil = Array(dtype=np.float, desc='Tower Utilization at each given section (global buckling)')
-    EUshUtil = Array(dtype=np.float, desc='Tower Utilization at each given section (shell buckling)')
+    StressUtil = Array(np.array([-9999.]),dtype=np.float, desc='Tower Utilization at each given section (stress)')
+    GLUtil     = Array(np.array([-9999.]),dtype=np.float, desc='Tower Utilization at each given section (global buckling)')
+    EUshUtil   = Array(np.array([-9999.]),dtype=np.float, desc='Tower Utilization at each given section (shell buckling)')
 
 
 class JacketUtilOutputs(VariableTree):
     """Jacket Utilization Basic Outputs"""
 
-    t_util = Array(dtype=np.float, desc='Member Utilization (tensile strength)')
-    cb_util = Array(dtype=np.float, desc='Member Utilization (compression-bending buckling)')
-    XjntUtil = Array(dtype=np.float, desc='X-Joint Utilization')
-    KjntUtil = Array(dtype=np.float, desc='K-Joint Utilization')
+    t_util   = Array(np.array([-9999.]),dtype=np.float, desc='Member Utilization (tensile strength)')
+    cb_util  = Array(np.array([-9999.]),dtype=np.float, desc='Member Utilization (compression-bending buckling)')
+    XjntUtil = Array(np.array([-9999.]),dtype=np.float, desc='X-Joint Utilization')
+    KjntUtil = Array(np.array([-9999.]),dtype=np.float, desc='K-Joint Utilization')
 
 
 #______________________________________________________________________________#

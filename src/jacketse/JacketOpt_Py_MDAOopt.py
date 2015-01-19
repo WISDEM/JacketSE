@@ -173,36 +173,23 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
             guess=np.hstack((guess[0:-6+junk],guess[-1]))
             desvarmeans=np.hstack((desvarmeans[0:-6+junk],desvarmeans[-1]))
             desvarbds=np.vstack((desvarbds[0:-6+junk,:],desvarbds[-1,:]))
-#Cobyla : If it returns 3 elements , it means it did not converge;  constraint2,constraint3
-        if towerfix:
-               tt = time.time()
-               res1=scipy.optimize.fmin_cobyla(mass,guess,[f0Cnstrt1,f0Cnstrt2,batCnsrt1, batCnsrt2, \
-                   cbCnstrt,cbCnstrt2,tCnstrt,tCnstrt2,KjntCnstrt,KjntCnstrt2,XjntCnstrt,XjntCnstrt2,\
-                   girDCnsrt1,girDCnsrt2,girtCnsrt1,girtCnsrt2,\
-                   XbCrit01,XbCrit02,XbCrit03,XbCrit04,XbCrit05,MbCrit01,MbCrit02,MbCrit03,MbCrit04,MbCrit05,\
-                   LpCnstrt,LpCnstrt2,LpCnstrt3, Dleg2BrcCnstrt,Dleg2MudCnstrt, DlegCnstrt,tlegCnstrt,tlegCnstrt2,Dleg2tlegCnstrt,DpCnstrt,tpCnstrt,\
-                   DbrcCnstrt,tbrcCnstrt,tbrcCnstrt2,Dbrc2tbrcCnstrt,DmudCnstrt,tmudCnstrt,tmudCnstrt2,Dmud2mudCnstrt,\
-                   dckwidthCnstrt1,dckwidthCnstrt2,ftprintCnstrt,NorsokCnstrt],args=[myjckt,desvarmeans,desvarbds],consargs=None,rhobeg=0.01,maxfun=3000,disp=1)
-        elif not(DTRsdiff):
-               tt = time.time()
-               res1=scipy.optimize.fmin_cobyla(mass,guess,[f0Cnstrt1,f0Cnstrt2,batCnsrt1, batCnsrt2, \
-                   cbCnstrt,cbCnstrt2,tCnstrt,tCnstrt2,KjntCnstrt,KjntCnstrt2,XjntCnstrt,XjntCnstrt2, GLCnstrt,GLCnstrt2,EUCnstrt,EUCnstrt2,\
-                   girDCnsrt1,girDCnsrt2,girtCnsrt1,girtCnsrt2,\
-                   TwrCnstrt01,TwrCnstrt02,TwrCnstrt03,TwrCnstrt04,TwrCnstrt05,TwrCnstrt08,TwrCnstrt09,\
-                   XbCrit01,XbCrit02,XbCrit03,XbCrit04,XbCrit05,MbCrit01,MbCrit02,MbCrit03,MbCrit04,MbCrit05,\
-                   LpCnstrt,LpCnstrt2,LpCnstrt3, Dleg2BrcCnstrt,Dleg2MudCnstrt, DlegCnstrt,tlegCnstrt,tlegCnstrt2,Dleg2tlegCnstrt,DpCnstrt,tpCnstrt,\
-                   DbrcCnstrt,tbrcCnstrt,tbrcCnstrt2,Dbrc2tbrcCnstrt,DmudCnstrt,tmudCnstrt,tmudCnstrt2,Dmud2mudCnstrt,\
-                   dckwidthCnstrt1,dckwidthCnstrt2,ftprintCnstrt,NorsokCnstrt],args=[myjckt,desvarmeans,desvarbds],consargs=None,rhobeg=0.01,maxfun=3000,disp=1)
-        else:  #DTRt variable
-               tt = time.time()
-               res1=scipy.optimize.fmin_cobyla(mass,guess,[f0Cnstrt1,f0Cnstrt2,batCnsrt1, batCnsrt2, \
-                   cbCnstrt,cbCnstrt2,tCnstrt,tCnstrt2,KjntCnstrt,KjntCnstrt2,XjntCnstrt,XjntCnstrt2, GLCnstrt,GLCnstrt2,EUCnstrt,EUCnstrt2,\
-                   girDCnsrt1,girDCnsrt2,girtCnsrt1,girtCnsrt2,\
-                   TwrCnstrt01,TwrCnstrt02,TwrCnstrt03,TwrCnstrt04,TwrCnstrt05,TwrCnstrt06,TwrCnstrt07,TwrCnstrt08,TwrCnstrt09,\
-                   XbCrit01,XbCrit02,XbCrit03,XbCrit04,XbCrit05,MbCrit01,MbCrit02,MbCrit03,MbCrit04,MbCrit05,\
-                   LpCnstrt,LpCnstrt2,LpCnstrt3, Dleg2BrcCnstrt,Dleg2MudCnstrt, DlegCnstrt,tlegCnstrt,tlegCnstrt2,Dleg2tlegCnstrt,DpCnstrt,tpCnstrt,\
-                   DbrcCnstrt,tbrcCnstrt,tbrcCnstrt2,Dbrc2tbrcCnstrt,DmudCnstrt,tmudCnstrt,tmudCnstrt2,Dmud2mudCnstrt,\
-                   dckwidthCnstrt1,dckwidthCnstrt2,ftprintCnstrt,NorsokCnstrt],args=[myjckt,desvarmeans,desvarbds],consargs=None,rhobeg=0.01,maxfun=3000,disp=1)
+
+        constrfuncs=[f0Cnstrt1,f0Cnstrt2,batCnsrt1, batCnsrt2,cbCnstrt,tCnstrt,KjntCnstrt,XjntCnstrt,\
+                     girDCnsrt1,girDCnsrt2,girtCnsrt1,girtCnsrt2,\
+                     XbCrit01,XbCrit02,XbCrit03,XbCrit04,XbCrit05,MbCrit01,MbCrit02,MbCrit03,MbCrit04,MbCrit05,\
+                     Dleg2BrcCnstrt,Dleg2MudCnstrt, DlegCnstrt,tlegCnstrt,tlegCnstrt2,Dleg2tlegCnstrt,DpCnstrt,tpCnstrt,\
+                     DbrcCnstrt,tbrcCnstrt,tbrcCnstrt2,Dbrc2tbrcCnstrt,DmudCnstrt,tmudCnstrt,tmudCnstrt2,Dmud2mudCnstrt,\
+                     dckwidthCnstrt1,dckwidthCnstrt2,ftprintCnstrt,NorsokCnstrt,LpCnstrt,LpCnstrt3]  #Initialize
+        if not(towerfix):
+            constrfuncs.extend([GLCnstrt,EUCnstrt,TwrCnstrt01,TwrCnstrt02,TwrCnstrt03,TwrCnstrt04,TwrCnstrt05,TwrCnstrt08,TwrCnstrt09])
+            if DTRsdiff:
+                constrfuncs.extend([TwrCnstrt06,TwrCnstrt07])
+        if myjckt.twodlcs:
+            constrfuncs.extend([cbCnstrt2,tCnstrt2,KjntCnstrt2,XjntCnstrt2,GLCnstrt2,EUCnstrt2,LpCnstrt2])
+
+        #Cobyla : If it returns 3 elements , it means it did not converge;  constraint2,constraint3
+        tt = time.time()
+        res1=scipy.optimize.fmin_cobyla(mass,guess,constrfuncs,args=[myjckt,desvarmeans,desvarbds],consargs=None,rhobeg=0.01,maxfun=3000,disp=1)
 
         #Store results for later
         xstr=res1*desvarmeans #dimensional again
@@ -228,10 +215,13 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         for ii,key in enumerate(varlist):
             opt_prob.addVar(key,'c',lower=desvarbds[ii,0],upper=desvarbds[ii,1],value=guess[ii])
 
+        cnt= 6+ 11+7 #counter for number of constraints- initial value for fixed tower and 1 dlc
         if not(towerfix):
-            opt_prob.addConGroup('cnstrts',32,type='i')
-        else:
-            opt_prob.addConGroup('cnstrts',29,type='i')
+            cnt += 2
+        if myjckt.twodlcs:
+            cnt += 4 +2+1
+
+        opt_prob.addConGroup('cnstrts',cnt,type='i')
         print opt_prob
 
         #Finally call the optimizer
@@ -374,17 +364,19 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         if not(towerfix):
             myjckt.driver.add_constraint('max(LoadFrameOuts.tower_utilization.GLUtil) <=1.0')
             myjckt.driver.add_constraint('max(LoadFrameOuts.tower_utilization.EUshUtil) <=1.0')
-            myjckt.driver.add_constraint('max(LoadFrameOuts2.tower_utilization.GLUtil) <=1.0')
-            myjckt.driver.add_constraint('max(LoadFrameOuts2.tower_utilization.EUshUtil) <=1.0')
+            if myjckt.twodlcs:
+                myjckt.driver.add_constraint('max(LoadFrameOuts2.tower_utilization.GLUtil) <=1.0')
+                myjckt.driver.add_constraint('max(LoadFrameOuts2.tower_utilization.EUshUtil) <=1.0')
 
         myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts.jacket_utilization.t_util) <=1.0')
         myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts.jacket_utilization.cb_util) <=1.0')
         myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts.jacket_utilization.KjntUtil) <= 1.0')
         myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts.jacket_utilization.XjntUtil) <= 1.0')
-        myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts2.jacket_utilization.t_util) <=1.0')
-        myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts2.jacket_utilization.cb_util) <=1.0')
-        myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts2.jacket_utilization.KjntUtil) <= 1.0')
-        myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts2.jacket_utilization.XjntUtil) <= 1.0')
+        if myjckt.twodlcs:
+            myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts2.jacket_utilization.t_util) <=1.0')
+            myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts2.jacket_utilization.cb_util) <=1.0')
+            myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts2.jacket_utilization.KjntUtil) <= 1.0')
+            myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts2.jacket_utilization.XjntUtil) <= 1.0')
 
         myjckt.driver.add_constraint('PreBuild.wbase <= {:f}'.format(mxftprint))
 
@@ -410,7 +402,8 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         myjckt.driver.add_constraint('PreBuild.beta3D >= {:f}'.format(NorsokMin))
 
         myjckt.driver.add_constraint('LoadFrameOuts.Lp0rat >= 0.')
-        myjckt.driver.add_constraint('LoadFrameOuts2.Lp0rat >= 0.')
+        if myjckt.twodlcs:
+            myjckt.driver.add_constraint('LoadFrameOuts2.Lp0rat >= 0.')
         # ----------------------
 
         # --- recorder ---
@@ -451,8 +444,8 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         # modal analysis
     print('First two Freqs.= {:5.4f} and {:5.4f} Hz \n'.format(*myjckt.LoadFrameOuts.Frameouts.Freqs))
     #print tower top displacement
-    print('Tower Top Displacement in Global Coordinate System DLC1.6 [m] ={:5.4f}'.format(*myjckt.LoadFrameOuts.Frameouts.top_deflection))
-    print('Tower Top Displacement in Global Coordinate System DLC6.1 [m] ={:5.4f}'.format(*myjckt.LoadFrameOuts2.Frameouts.top_deflection))
+    print('Tower Top Displacement in Global Coordinate System DLC1.6 [m] ={:5.4f}'.format(myjckt.LoadFrameOuts.Frameouts.top_deflection[0]))
+    print('Tower Top Displacement in Global Coordinate System DLC6.1 [m] ={:5.4f}'.format(myjckt.LoadFrameOuts2.Frameouts.top_deflection[0]))
     print "\n"
     #print GL EU utilizations
     print "Minimum found at GLutil=%f EUutil=%f DLC1.6"  % (np.nanmax(myjckt.LoadFrameOuts.tower_utilization.GLUtil),np.nanmax(myjckt.LoadFrameOuts.tower_utilization.EUshUtil))
@@ -585,7 +578,7 @@ def JcktWrapper(x,myjckt,desvarmeans,desvarbds):
 
     #Get Utilizations
     max_GLUtil=np.nanmax(myjckt.LoadFrameOuts.tower_utilization.GLUtil)
-    max_GLUtil2=np.nanmax(myjckt.LoadFrameOuts2tower_utilization.GLUtil)
+    max_GLUtil2=np.nanmax(myjckt.LoadFrameOuts2.tower_utilization.GLUtil)
     #max_GLUtil=myjckt.tower_utilization.GLUtil
     max_EUUtil=np.nanmax(myjckt.LoadFrameOuts.tower_utilization.EUshUtil)
     max_EUUtil2=np.nanmax(myjckt.LoadFrameOuts.tower_utilization.EUshUtil)
@@ -617,7 +610,7 @@ def JcktWrapper(x,myjckt,desvarmeans,desvarbds):
     XBrcCrit05=np.nanmax(myjckt.XBrcCriteria.brc_crit05)
 
     #Pile Embedment Criteria
-    Lp0rat1=myjckt.LoadFrameOuts.Lp0rat
+    Lp0rat=myjckt.LoadFrameOuts.Lp0rat
     Lp0rat2=myjckt.LoadFrameOuts2.Lp0rat
     #__________________________________________#
 
@@ -645,35 +638,42 @@ def objfunc(x,myjckt,desvarmeans,desvarbds):
     global towerfix
     mass = JcktWrapper(x,myjckt,desvarmeans,desvarbds)[0]/1.5e6
     #          x=  [ batter,  Dpile,    tpile,        Lp,   Dleg,     tleg,       Dbrc,   tbrc,     Dbrc_mud,   tbrc_mud,   Dgir,      tgir,      Db,   DTRb   Dt,   DTRt   Htwr2fac        dck_widthfact]
-    cnstrts=[0.0]*29 #given as negatives, since PYOPT wants <0
-    if not(towerfix):
-        cnstrts=[0.0]*32 #given as negatives, since PYOPT wants <0
 
+    cnt= 6+ 11+7 #counter for number of constraints- initial value for fixed tower and 1 dlc
+
+    if not(towerfix):
+        cnt += 2
+
+    if myjckt.twodlcs:
+        cnt += 4 +2+1
+
+    cnstrts=[0.0]*cnt #given as negatives, since PYOPT wants <0
     #Note the minus signs here for pyOPT's sake (it wants constraints <0, as opposed to regular python cobyla)
 
     cnstrts[0]=-f0Cnstrt1(x,myjckt,desvarmeans,desvarbds)
     cnstrts[1]=-f0Cnstrt2(x,myjckt,desvarmeans,desvarbds)
 
     cnstrts[2]=-cbCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[3]=-cbCnstrt2(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[3]=-tCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[4]=-KjntCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[5]=-XjntCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnt=6
 
-    cnstrts[4]=-tCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[5]=-tCnstrt2(x,myjckt,desvarmeans,desvarbds)
+    if myjckt.twodlcs:
+        cnstrts[6]=-cbCnstrt2(x,myjckt,desvarmeans,desvarbds)
+        cnstrts[7]=-tCnstrt2(x,myjckt,desvarmeans,desvarbds)
+        cnstrts[8]=-KjntCnstrt2(x,myjckt,desvarmeans,desvarbds)
+        cnstrts[9]=-XjntCnstrt2(x,myjckt,desvarmeans,desvarbds)
+        cnt=10
 
-    cnstrts[6]=-KjntCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[7]=-KjntCnstrt2(x,myjckt,desvarmeans,desvarbds)
-
-    cnstrts[8]=-XjntCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[9]=-XjntCnstrt2(x,myjckt,desvarmeans,desvarbds)
-
-    cnt=10
     if not(towerfix):
-        cnstrts[9]=-GLCnstrt(x,myjckt,desvarmeans,desvarbds)
-        cnstrts[10]=-GLCnstrt2(x,myjckt,desvarmeans,desvarbds)
-        cnstrts[11]=-EUCnstrt(x,myjckt,desvarmeans,desvarbds)
-        cnstrts[12]=-EUCnstrt2(x,myjckt,desvarmeans,desvarbds)
-        cnt=13
-
+        cnstrts[cnt]  =-GLCnstrt(x,myjckt,desvarmeans,desvarbds)
+        cnstrts[cnt+1]=-EUCnstrt(x,myjckt,desvarmeans,desvarbds)
+        cnt += 2
+        if myjckt.twodlcs:
+            cnstrts[cnt]  =-GLCnstrt2(x,myjckt,desvarmeans,desvarbds)
+            cnstrts[cnt+1]=-EUCnstrt2(x,myjckt,desvarmeans,desvarbds)
+            cnt += 2
 
     cnstrts[cnt]=-XbCrit01(x,myjckt,desvarmeans,desvarbds)
     cnstrts[cnt+1]=-XbCrit02(x,myjckt,desvarmeans,desvarbds)
@@ -687,15 +687,18 @@ def objfunc(x,myjckt,desvarmeans,desvarbds):
     cnstrts[cnt+9]=-MbCrit05(x,myjckt,desvarmeans,desvarbds)
 
     cnstrts[cnt+10]=-LpCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+11]=-LpCnstrt2(x,myjckt,desvarmeans,desvarbds)
+    cnt += 11
+    if myjckt.twodlcs:
+        cnstrts[cnt]=-LpCnstrt2(x,myjckt,desvarmeans,desvarbds)
+        cnt +=1
 
-    cnstrts[cnt+12]=-Dleg2BrcCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+13]=-Dleg2MudCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+14]=-Dleg2tlegCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+15]=-Dbrc2tbrcCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+16]=-Dmud2mudCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+17]=-ftprintCnstrt(x,myjckt,desvarmeans,desvarbds)
-    cnstrts[cnt+18]=-NorsokCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt]=-Dleg2BrcCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt+1]=-Dleg2MudCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt+2]=-Dleg2tlegCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt+3]=-Dbrc2tbrcCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt+4]=-Dmud2mudCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt+5]=-ftprintCnstrt(x,myjckt,desvarmeans,desvarbds)
+    cnstrts[cnt+6]=-NorsokCnstrt(x,myjckt,desvarmeans,desvarbds)
 
     #cnstrts[26]=-dckwidthCnstrt1(x,myjckt,desvarmeans,desvarbds)
     #cnstrts[27]=-dckwidthCnstrt2(x,myjckt,desvarmeans,desvarbds)
@@ -1274,7 +1277,7 @@ def LpCnstrt2(x,myjckt,desvarmeans,desvarbds):  #Maximum Htwr2 < Htwr/4
         XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
         xlast=x.copy()
     print('Lp0rat2 constraint=',Lp0rat2)
-    return Lp0rat
+    return Lp0rat2
 
 #Embedment length constraint2
 def LpCnstrt3(x,myjckt,desvarmeans,desvarbds):  #Maximum Lp < Lpmax

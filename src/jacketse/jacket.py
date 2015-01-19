@@ -2307,7 +2307,7 @@ class Frame3DDOutputs(VariableTree):
     mass     = Array(dtype=np.float,units='kg',  desc='Structural Mass and Total mass in the Jacket-Tower Structure: float(2)')
     forces   = Array(dtype=np.float,desc='Node Forces and Moments')
     reactions= Array(dtype=np.float,desc='Reaction Forces and Moments')
-    top_deflection = Array(dtype=np.float,units='m', desc='Deflection of tower top in Global Coordinate System')
+    top_deflection = Array(np.array([-9999.,-9999.,-9999.]),dtype=np.float,units='m', desc='Deflection of tower top in Global Coordinate System')
     Pileloads= Array(np.array([0.,0.,0.]),dtype=np.float,desc='(highest axial load-)Pile head (bottom of analyzed structure) Axial Force, Shear, and Bending. In the future this will be revised to account for correct geoemtry and orientation, or now it works with vertical pile')
     ElemL    = Array(                     dtype=np.float,desc='Lengths of all elements in the Frame3DD model.')
     ElemMass = Array(                     dtype=np.float,desc='Masses of all elements in the Frame3DD model.')
@@ -2652,12 +2652,13 @@ class JacketSE(Assembly):
     Twrouts  = VarTree(TwrGeoOutputs(), iotype='out', desc='Basic Output data for Tower')
     Legouts  = VarTree(LegGeoOutputs(), iotype='out', desc='Leg Geometry Output')
 
-    def __init__(self, clamped=True, AFflag=False, PrebuildTP=True):
+    def __init__(self, clamped=True, AFflag=False, PrebuildTP=True,twodlcs=True):
 
         self.clamped = clamped  #initialize to true
         self.AFflag = AFflag
         self.PrebuildTP = PrebuildTP
         #PrebuildTP=  Bool(True, iotype='in', desc='If TRUE then the TP will have dimensions connected to those of legs and braces, and some TP inputs will be overwritten.')
+        self.twodlcs=twodlcs
         super(JacketSE,self).__init__()
 
         if not (self.clamped or self.AFflag):
@@ -2693,9 +2694,12 @@ class JacketSE(Assembly):
         if self.PrebuildTP:
             self.driver.workflow.add(['PreBuildTP'])
 
-        self.driver.workflow.add(['TP','Tower','Build','ABS1','LoadFrameOuts','LoadFrameOuts2','FrameOut'])
+        self.driver.workflow.add(['TP','Tower','Build','ABS1','LoadFrameOuts'])
 
-        self.driver.workflow.add(['BrcCriteria','TotMass' ])
+        if self.twodlcs:
+            self.driver.workflow.add('LoadFrameOuts2')
+
+        self.driver.workflow.add(['FrameOut','BrcCriteria','TotMass' ])
         #________________________#
 
 
@@ -2835,14 +2839,13 @@ class JacketSE(Assembly):
         self.connect('FrameAuxIns.gvector[2]','ABS1.varin')
         self.connect('ABS1.varout',                ['LoadFrameOuts.gravity'     ,    'LoadFrameOuts2.gravity'])
 
-        self.connect('Pileinputs.Lp',                  ['LoadFrameOuts.Lp'        ,  'LoadFrameOuts2.Lp' ])
-        self.connect('Piles.PileObjout',               ['LoadFrameOuts.PileObjout',  'LoadFrameOuts2.PileObjout'])
-        # Calculate Pile Stiffness if SPI is activated
-        if not self.clamped:
-            self.connect('Soil.SoilObj',                   ['LoadFrameOuts.SoilObj' ,'LoadFrameOuts2.SoilObj'])
-            self.connect('JcktGeoIn.batter',               ['LoadFrameOuts.batter'  ,'LoadFrameOuts2.batter'])
-            self.connect('PreBuild.innr_ang',              ['LoadFrameOuts.innr_ang','LoadFrameOuts2.innr_ang'])
-            self.connect('PreLeg.prelegouts.legZbot',      ['LoadFrameOuts.loadZ'   ,'LoadFrameOuts2.loadZ'])
+        self.connect('Pileinputs.Lp',              ['LoadFrameOuts.Lp'          ,  'LoadFrameOuts2.Lp' ])
+        self.connect('Piles.PileObjout',           ['LoadFrameOuts.PileObjout'  ,  'LoadFrameOuts2.PileObjout'])
+
+        self.connect('Soil.SoilObj',               ['LoadFrameOuts.SoilObj'     ,'LoadFrameOuts2.SoilObj'])
+        self.connect('JcktGeoIn.batter',           ['LoadFrameOuts.batter'      ,'LoadFrameOuts2.batter'])
+        self.connect('PreBuild.innr_ang',          ['LoadFrameOuts.innr_ang'    ,'LoadFrameOuts2.innr_ang'])
+        self.connect('PreLeg.prelegouts.legZbot',  ['LoadFrameOuts.loadZ'       ,'LoadFrameOuts2.loadZ'])
 
         # LoadFrameOuts2
         self.connect('RNA_F2',                     'LoadFrameOuts2.RNA_F')
@@ -3374,7 +3377,7 @@ if __name__ == '__main__':
 
     #RNA loads              Fx-z,         Mxx-zz
     RNA_F=np.array([1000.e3,0.,0.,0.,0.,0.])    #operational
-    RNA_F2=np.array([800.e3,0.,0.,0.,0.,0.])    #Parked
+    RNA_F2=np.array([500.e3,0.,0.,0.,0.,0.])    #Parked
     ## if turbine_jacket
     ##RNA_F=np.array([1284744.19620519,0.,-2914124.84400512,3963732.76208099,-2275104.79420872,-346781.68192839])
 
@@ -3392,9 +3395,12 @@ if __name__ == '__main__':
     ## if turbine_jacket
     ##FrameAuxIns.gvector=np.array([0.,0.,-9.81])    #GRAVITY
 
+    #Decide whether or not to consider DLC 6.1 as well
+    twodlcs=False
+
     #-----Launch the assembly-----#
 
-    myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,(Jcktins.PreBuildTPLvl>0)))
+    myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,(Jcktins.PreBuildTPLvl>0),twodlcs=twodlcs))
 
     #Pass all inputs to assembly
     myjckt.JcktGeoIn=Jcktins
@@ -3535,8 +3541,8 @@ if __name__ == '__main__':
     # modal analysis
     print('First two Freqs.= {:5.4f} and {:5.4f} Hz \n'.format(*myjckt.LoadFrameOuts.Frameouts.Freqs))
     #print tower top displacement
-    print('Tower Top Displacement in Global Coordinate System DLC1.6 [m] ={:5.4f}'.format(*myjckt.LoadFrameOuts.Frameouts.top_deflection))
-    print('Tower Top Displacement in Global Coordinate System DLC6.1 [m] ={:5.4f}'.format(*myjckt.LoadFrameOuts2.Frameouts.top_deflection))
+    print('Tower Top Displacement in Global Coordinate System DLC1.6 [m] ={:5.4f}'.format(myjckt.LoadFrameOuts.Frameouts.top_deflection[0]))
+    print('Tower Top Displacement in Global Coordinate System DLC6.1 [m] ={:5.4f}'.format(myjckt.LoadFrameOuts2.Frameouts.top_deflection[0]))
 
     print "\n"
     #print GL EU utilizations
@@ -3593,9 +3599,10 @@ if __name__ == '__main__':
     ax1.plot(myjckt.LoadFrameOuts.tower_utilization.StressUtil,twr_zs , label='VonMises Util')
     ax1.plot(myjckt.LoadFrameOuts.tower_utilization.GLUtil,twr_zs, label='GL Util')
     ax1.plot(myjckt.LoadFrameOuts.tower_utilization.EUshUtil, twr_zs, label='EUsh Util')
-    ax1.plot(myjckt.LoadFrameOuts2.tower_utilization.StressUtil,twr_zs , label='VonMises Util2')
-    ax1.plot(myjckt.LoadFrameOuts2.tower_utilization.GLUtil,twr_zs, label='GL Util2')
-    ax1.plot(myjckt.LoadFrameOuts2.tower_utilization.EUshUtil, twr_zs, label='EUsh Util2')
+    if myjckt.LoadFrameOuts2.tower_utilization.StressUtil[0] != -9999.:
+        ax1.plot(myjckt.LoadFrameOuts2.tower_utilization.StressUtil,twr_zs , label='VonMises Util2')
+        ax1.plot(myjckt.LoadFrameOuts2.tower_utilization.GLUtil,twr_zs, label='GL Util2')
+        ax1.plot(myjckt.LoadFrameOuts2.tower_utilization.EUshUtil, twr_zs, label='EUsh Util2')
 
     ax1.legend(bbox_to_anchor=(1.05, 1.0), loc=2)
 
