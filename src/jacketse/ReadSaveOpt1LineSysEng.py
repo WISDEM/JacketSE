@@ -83,8 +83,9 @@ class DesPrms(object): #Design Parameters
     def __init__(self,**kwargs):
 
 
-        prms={'TurbRating':3., 'wdepth':20.,'HW50':30,'Tp50':12.,'dck_botz':16.,'HH':100.,'U50HH':70.,'TPlumpmass':200.e3, \
-              'RNA_F':np.array([1.5*1700.e3,0.,0.,12564863.93,0.,0.]),'RNAins':RNAprops(),'f0':0.35,'legndiv':3,'nbays':4,'mxftprint':30.} #SI Units excpet for MW for the rating and legndiv
+        prms={'TurbRating':3., 'wdepth':20.,'HW50':30,'Tp50':12.,'HW50_2':30,'Tp50_2':12.,'dck_botz':16.,'HH':100.,'U50HH':30.,'U50HH_2':70.,'TPlumpmass':200.e3, \
+              'RNA_F':np.array([1.5*1700.e3,0.,0.,12564863.93,0.,0.]),'RNA_F2':np.array([700.e3,0.,0.,0.,0.,0.]),\
+              'RNAins':RNAprops(),'f0':0.35,'legndiv':3,'nbays':4,'mxftprint':30.} #SI Units excpet for MW for the rating and legndiv
 
         prms.update(kwargs) #update in case user put some new params in
         for key in prms:  #Initialize material object with these parameters, possibly updated by user' stuff
@@ -227,25 +228,30 @@ def ReadTab1Line(casefile,caseno,desvarnames,towerdata=False,titlines=3,hdrlines
     Desprms.HW50=float(line[4])
     Desprms.Tp50=float(line[5])
     Desprms.U50HH=float(line[6])
-    Desprms.dck_botz=float(line[7])
-    Desprms.HH=float(line[8])
-    Desprms.TPlumpmass=float(line[9])
+    Desprms.HW50_2=float(line[7])
+    Desprms.Tp50_2=float(line[8])
+    Desprms.U50HH_2=float(line[9])
 
-    Desprms.RNAins.mass=float(line[10])
-    Desprms.RNAins.I=np.array(line[11:17])
-    Desprms.RNAins.CMoff=np.array(line[17:20])
-    Desprms.RNA_F=np.array(line[20:26])
-    Desprms.RNAins.Thoff=np.array(line[26:29])
+    Desprms.dck_botz=float(line[10])
+    Desprms.HH=float(line[11])
+    Desprms.TPlumpmass=float(line[12])
 
-    Desprms.f0=float(line[29])
+    Desprms.RNAins.mass=float(line[13])
+    Desprms.RNAins.I=np.array(line[14:20])
+    Desprms.RNAins.CMoff=np.array(line[20:23])
+    Desprms.RNA_F=np.array(line[23:29])
+    Desprms.RNA_F2=np.array(line[29:35])
+    Desprms.RNAins.Thoff=np.array(line[35:38])
+
+    Desprms.f0=float(line[38])
     if not(towerdata):
-        Desprms.legndiv=int(line[31])
-        Desprms.nbays=int(line[32])
-        Desprms.mxftprint=float(line[33])
-        offset=33 #this is an attempt to miniize issues if the table changes
+        Desprms.legndiv=int(line[40])
+        Desprms.nbays=int(line[41])
+        Desprms.mxftprint=float(line[42])
+        offset=42 #this is an attempt to miniize issues if the table changes
         mxrange=37
     else:
-        offset=30
+        offset=40
         mxrange=19
     #Assign bounds
 
@@ -335,22 +341,28 @@ def SaveOpt1Line(outdir,caseno,casename,desvars,rescobyla,myjckt,xlsfilename,Des
         sheet.write(turbrow,0,'Turbine Data',easyxf('font: name Arial, bold True'))
         sheet.write(turbrow+1,1,'Turbine Rating '); sheet.write(turbrow+1,2,Desprms.TurbRating) ;sheet.write(turbrow+1,3,'[MW]')
         sheet.write(turbrow+2,1,'HubHeight '); sheet.write(turbrow+2,2,Desprms.HH) ;sheet.write(turbrow+2,3,'[m]')
-        sheet.write(turbrow+3,1,'Unfactored Thrust '); sheet.write(turbrow+3,2,Desprms.RNA_F[0]/1.e3) ;sheet.write(turbrow+3,3,'[kN]')
-        sheet.write(turbrow+4,1,'Unfactored Torque '); sheet.write(turbrow+4,2,Desprms.RNA_F[3]/1.e3) ;sheet.write(turbrow+4,3,'[kNm]')
-        sheet.write(turbrow+5,1,'RNA mass'); sheet.write(turbrow+5,2,Desprms.RNAins.mass/1.e3) ;sheet.write(turbrow+5,3,'[tonnes]')
-        sheet.write(turbrow+6,1,'RNA CMzoff'); sheet.write(turbrow+6,2,Desprms.RNAins.CMoff[2]) ;sheet.write(turbrow+6,3,'[m]')
-        sheet.write(turbrow+7,1,'RNA Thzoff'); sheet.write(turbrow+7,2,Desprms.RNAins.Thoff[2]) ;sheet.write(turbrow+7,3,'[m]')
-        sheet.write(turbrow+8,1,'Target f0'); sheet.write(turbrow+8,2,Desprms.f0) ;sheet.write(turbrow+8,3,'[Hz]')
+        sheet.write(turbrow+3,1,'Unfactored Thrust DLC 1.6'); sheet.write(turbrow+3,2,Desprms.RNA_F[0]/1.e3) ;sheet.write(turbrow+3,3,'[kN]')
+        sheet.write(turbrow+4,1,'Unfactored Torque DLC 1.6'); sheet.write(turbrow+4,2,Desprms.RNA_F[3]/1.e3) ;sheet.write(turbrow+4,3,'[kNm]')
+        sheet.write(turbrow+5,1,'Unfactored Thrust DLC 6.1'); sheet.write(turbrow+5,2,Desprms.RNA_F2[0]/1.e3) ;sheet.write(turbrow+5,3,'[kN]')
+        sheet.write(turbrow+6,1,'Unfactored Torque DLC 6.1'); sheet.write(turbrow+6,2,Desprms.RNA_F2[3]/1.e3) ;sheet.write(turbrow+6,3,'[kNm]')
 
-        envrow=turbrow+9
+        sheet.write(turbrow+7,1,'RNA mass'); sheet.write(turbrow+7,2,Desprms.RNAins.mass/1.e3) ;sheet.write(turbrow+7,3,'[tonnes]')
+        sheet.write(turbrow+8,1,'RNA CMzoff'); sheet.write(turbrow+8,2,Desprms.RNAins.CMoff[2]) ;sheet.write(turbrow+8,3,'[m]')
+        sheet.write(turbrow+9,1,'RNA Thzoff'); sheet.write(turbrow+9,2,Desprms.RNAins.Thoff[2]) ;sheet.write(turbrow+9,3,'[m]')
+        sheet.write(turbrow+10,1,'Target f0'); sheet.write(turbrow+10,2,Desprms.f0) ;sheet.write(turbrow+10,3,'[Hz]')
+
+        envrow=turbrow+11
         sheet.write(envrow,0,'Water/Loading Data',easyxf('font: name Arial, bold True'))
         sheet.write(envrow+1,1,'Water Depth'); sheet.write(envrow+1,2,Desprms.wdepth) ;sheet.write(envrow+1,3,'[m]')
-        sheet.write(envrow+2,1,'HW50'); sheet.write(envrow+2,2,Desprms.HW50) ;sheet.write(envrow+2,3,'[m]')
-        sheet.write(envrow+3,1,'Tp50'); sheet.write(envrow+3,2,Desprms.Tp50) ;sheet.write(envrow+3,3,'[sec]')
-        sheet.write(envrow+4,1,'U50HH'); sheet.write(envrow+4,2,Desprms.U50HH) ;sheet.write(envrow+4,3,'[m/sec]')
+        sheet.write(envrow+2,1,'HW50 DLC 1.6'); sheet.write(envrow+2,2,Desprms.HW50) ;sheet.write(envrow+2,3,'[m]')
+        sheet.write(envrow+3,1,'Tp50 DLC 1.6'); sheet.write(envrow+3,2,Desprms.Tp50) ;sheet.write(envrow+3,3,'[sec]')
+        sheet.write(envrow+4,1,'U50HH DLC 1.6'); sheet.write(envrow+4,2,Desprms.U50HH) ;sheet.write(envrow+4,3,'[m/sec]')
+        sheet.write(envrow+5,1,'HW50 DLC 6.1'); sheet.write(envrow+5,2,Desprms.HW50_2) ;sheet.write(envrow+5,3,'[m]')
+        sheet.write(envrow+6,1,'Tp50 DLC 6.1'); sheet.write(envrow+6,2,Desprms.Tp50_2) ;sheet.write(envrow+6,3,'[sec]')
+        sheet.write(envrow+7,1,'U50HH DLC 6.1'); sheet.write(envrow+7,2,Desprms.U50HH_2) ;sheet.write(envrow+7,3,'[m/sec]')
 
         #
-        pilerow=envrow+6
+        pilerow=envrow+9
         sheet.write(pilerow,0,'PILES',easyxf('font: name Arial, bold True'))
         sheet.write(pilerow+1,1,'Pile OD')
         sheet.write(pilerow+2,1,'Pile t')

@@ -514,9 +514,10 @@ def JcktWrapper(x,myjckt,desvarmeans,desvarbds):
         #via global
         towerfix -boolean, if true the tower is fixed, no optimization on it.
         """
-    global DTRsdiff,MDAOswitch2,towerfix
-    global  xlast,f1,max_GLUtil,max_EUUtil,max_KjntUtil,max_XjntUtil,max_tutil,max_cbutil,offset,\
-            MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat
+    global DTRsdiff,MDAOswitch2,towerfix, offset
+    global  xlast,f1,max_GLUtil,max_EUUtil,max_KjntUtil,max_XjntUtil,max_tutil,max_cbutil,\
+            max_GLUtil2,max_EUUtil2,max_KjntUtil2,max_XjntUtil2,max_tutil2,max_cbutil2,\
+            MudCrit01,MudCrit02,MudCrit03,MudCrit04,MudCrit05,XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2
 #   x 0     1     2         3     4    5       6       7        8        9        10    11    12   13   14   15        16          17
 #   batter,Dp,   tp,       Lp,   Dleg,tleg,    Dbrc   tbrc    Dmdbrc   tmdbrc     Dgir,tgir   Db,DTRb,   Dt,DTRt,     H2frac, dck_wdth_fac
 
