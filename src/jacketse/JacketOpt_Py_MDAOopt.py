@@ -309,9 +309,9 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
             myjckt.replace('driver', pyOptDriver())
             if  MDAOswitch== 'md_pysnopt':
                 myjckt.driver.optimizer = 'SNOPT'
-                myjckt.driver.options = {'Major feasibility tolerance': 1e-3,
-                                     'Minor feasibility tolerance': 1e-3,
-                                     'Major optimality tolerance': 1e-3,
+                myjckt.driver.options = {'Major feasibility tolerance': 1e-3,\
+                                     'Minor feasibility tolerance': 1e-3,\
+                                     'Major optimality tolerance': 1e-3,\
                                      'Function precision': 1e-3}
             elif MDAOswitch== 'md_pycobyla':
                 myjckt.driver.optimizer = 'COBYLA'
