@@ -1260,7 +1260,7 @@ class Soil(Component):
     def execute(self):  #Should add Andrew's stiffness calculation program
         self.SoilObj=SoilC(zbots=self.SoilIns.zbots,gammas=self.SoilIns.gammas,cus=self.SoilIns.cus,\
                            phis=self.SoilIns.phis,delta=self.SoilIns.delta, sndflg=self.SoilIns.sndflg,\
-                           PenderSwtch=self.SoilIns.PenderSwtch,SoilSF=self.SoilIns.SoilSF)
+                           PenderSwtch=self.SoilIns.PenderSwtch,SoilSF=self.SoilIns.SoilSF,plug=self.SoilIns.plug)
 
 
 #_____________________________________________________#
