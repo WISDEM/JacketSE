@@ -307,16 +307,19 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
             myjckt.driver.iprint=1
         else:
             myjckt.replace('driver', pyOptDriver())
+            myjckt.driver.pyopt_diff=True #This makes pyopt calculate finite differences
+
             if  MDAOswitch== 'md_pysnopt':
                 myjckt.driver.optimizer = 'SNOPT'
                 myjckt.driver.options = {'Major feasibility tolerance': 1e-3,\
                                      'Minor feasibility tolerance': 1e-3,\
                                      'Major optimality tolerance': 1e-3,\
                                      'Function precision': 1e-3}
-                myjckt.driver.pyopt_diff=True
+
             elif MDAOswitch== 'md_pycobyla':
                 myjckt.driver.optimizer = 'COBYLA'
                 myjckt.driver.options = {'RHOEND':1.e-2,'RHOEND':1.e-3,'MAXFUN':2000,'IPRINT':1}
+
             else:
                 sys.exit('Error: MDAOswitch must be set to ''pyCobyla'' or ''pySNOPT'' or ''md_Cobyla'' or ''md_pySNOPT'' or ''md_pyCobyla'' or ''extCobyla'' !!!')
         # ----------------------
