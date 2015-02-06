@@ -33,6 +33,11 @@ def main(myjckt):
     print('Tower Top Displacement in Global Coordinate System DLC6.1 [m] ={:5.4f}'.format(myjckt.LoadFrameOuts2.Frameouts.top_deflection[0]))
 
     print "\n"
+    #print Pile Lp0rat
+    print ('Lp0 ={:5.4f} and Lp0rat={:5.4f} DLC 1.6').format(myjckt.Piles.Pileinputs.Lp/(1.+myjckt.LoadFrameOuts.Lp0rat),myjckt.LoadFrameOuts.Lp0rat)
+    print ('Lp0 ={:5.4f} and Lp0rat={:5.4f} DLC 6.1').format(myjckt.Piles.Pileinputs.Lp/(1.+myjckt.LoadFrameOuts2.Lp0rat),myjckt.LoadFrameOuts2.Lp0rat)
+
+    print "\n"
     #print GL EU utilizations
     print "GLutil=%f EUutil=%f DLC1.6"  % (np.nanmax(myjckt.LoadFrameOuts.tower_utilization.GLUtil),np.nanmax(myjckt.LoadFrameOuts.tower_utilization.EUshUtil))
     print "GLutil=%f EUutil=%f DLC6.1"  % (np.nanmax(myjckt.LoadFrameOuts2.tower_utilization.GLUtil),np.nanmax(myjckt.LoadFrameOuts2.tower_utilization.EUshUtil))

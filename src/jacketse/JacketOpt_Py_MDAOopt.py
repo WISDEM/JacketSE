@@ -313,6 +313,7 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
                                      'Minor feasibility tolerance': 1e-3,\
                                      'Major optimality tolerance': 1e-3,\
                                      'Function precision': 1e-3}
+                myjckt.driver.pyopt_diff=True
             elif MDAOswitch== 'md_pycobyla':
                 myjckt.driver.optimizer = 'COBYLA'
                 myjckt.driver.options = {'RHOEND':1.e-2,'RHOEND':1.e-3,'MAXFUN':2000,'IPRINT':1}
