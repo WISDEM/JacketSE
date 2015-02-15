@@ -1374,7 +1374,10 @@ def main(prmsfile='MyJacketInputs.py',MDAOswitch='pyCobyla', tablefile=[],f0epsi
     #OR ANOTHER ONE
     ##python JacketOpt_Py_MDAOopt.py C:\PROJECTS\OFFSHORE_WIND\SEJacketTower\SITEdata\SetJacketInputsPeregrine.py C:\PROJECTS\OFFSHORE_WIND\SEJacketTower\SITEdata\SiteData_PythonInput.xlsx 3 3 C:\PROJECTS\OFFSHORE_WIND\SEJacketTower\SITEdata\output.xls md_pySNOPT False
 
-    ##python JacketOpt_Py_MDAOopt.py D:\RRD_ENGINEERING\PROJECTS\BOOK_CHAPTER\CALCS\LongIsland\SetJacketInputsPeregrine.py D:\RRD_ENGINEERING\PROJECTS\BOOK_CHAPTER\CALCS\LongIsland\SiteData_LI.xlsx 3 3 D:\RRD_ENGINEERING\PROJECTS\BOOK_CHAPTER\CALCS\LongIsland\LIoutput.xls md_pySNOPT False
+    #BOOK CHAPTER
+    ##python D:\RRD_ENGINEERING\PYTHON\WISDEM\JACKETSE\SRC\JACKETSE\JacketOpt_Py_MDAOopt.py D:\RRD_ENGINEERING\PROJECTS\BOOK_CHAPTER\CALCS\LongIsland\SetJacketInputsPeregrine.py D:\RRD_ENGINEERING\PROJECTS\BOOK_CHAPTER\CALCS\LongIsland\SiteData_4book.xlsx 3 3 D:\RRD_ENGINEERING\PROJECTS\BOOK_CHAPTER\CALCS\LongIsland\LIoutput.xls pySNOPT True
+
+    ##python JacketOpt_Py_MDAOopt.py D:\RRD_ENGINEERING\PROJECTS\BOOK_CHAPTER\CALCS\LongIsland\SetJacketInputsPeregrine.py D:\RRD_ENGINEERING\PROJECTS\BOOK_CHAPTER\CALCS\LongIsland\SiteData_LI.xlsx 3 3 D:\RRD_ENGINEERING\PROJECTS\BOOK_CHAPTER\CALCS\LongIsland\LIoutput.xls md_pySNOPT True
 
     ##python JacketOpt_Py_MDAOopt.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SetJacketInputsPeregrine.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SiteData_PythonInput.xlsx 3 3 D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\output.xls md_pySNOPT
     ##python JacketOpt_Py_MDAOopt.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SetJacketInputsPeregrine.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SiteData_PythonInput.xlsx 3 3 D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\output.xls extcobyla
