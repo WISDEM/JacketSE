@@ -1373,10 +1373,14 @@ def main(prmsfile='MyJacketInputs.py',MDAOswitch='pyCobyla', tablefile=[],f0epsi
     ##python JacketOpt_Py_MDAOopt.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\LCOE_ANALYSIS\SetJacketInputsPeregrine.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\LCOE_ANALYSIS\testmatrix.dat 55 55 D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\LCOE_ANALYSIS\output.xls pySNOPT false D:\\RRD_ENGINEERING\\PROJECTS\\NREL\\OFFSHOREWIND\\LCOE_ANALYSIS\\CASES_55_63_tobereplaced\\55_R2D0H0M0T0S0_out.dat
     #OR ANOTHER ONE
     ##python JacketOpt_Py_MDAOopt.py C:\PROJECTS\OFFSHORE_WIND\SEJacketTower\SITEdata\SetJacketInputsPeregrine.py C:\PROJECTS\OFFSHORE_WIND\SEJacketTower\SITEdata\SiteData_PythonInput.xlsx 3 3 C:\PROJECTS\OFFSHORE_WIND\SEJacketTower\SITEdata\output.xls md_pySNOPT False
+    #BOOK CHAPTER
+    ##python D:\RRD_ENGINEERING\PYTHON\WISDEM\JACKETSE\SRC\JACKETSE\JacketOpt_Py_MDAOopt.py D:\RRD_ENGINEERING\PROJECTS\BOOK_CHAPTER\CALCS\LongIsland\SetJacketInputsPeregrine.py D:\RRD_ENGINEERING\PROJECTS\BOOK_CHAPTER\CALCS\LongIsland\SiteData_4book.xlsx 3 3 D:\RRD_ENGINEERING\PROJECTS\BOOK_CHAPTER\CALCS\LongIsland\LIoutput.xls pySNOPT True
     #FOR BOOK CHAPTER
     ##python JacketOpt_Py_MDAOopt.py C:\RRD\BOOK_CHAPTER\CALCS\LongIsland\SetJacketInputsPeregrine.py C:\RRD\BOOK_CHAPTER\CALCS\LongIsland\SiteData_4book.xlsx 3 3 C:\RRD\BOOK_CHAPTER\CALCS\LongIsland\LIoutput.xls md_pySNOPT True
 
     ##python JacketOpt_Py_MDAOopt.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SetJacketInputsPeregrine.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SiteData_PythonInput.xlsx 3 3 D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\output.xls md_pySNOPT
+
+    ##python JacketOpt_Py_MDAOopt.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SetJacketInputsPeregrine.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SiteData_PythonInput.xlsx 3 3 D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\output.xls extcobyla
     ##python JacketOpt_Py_MDAOopt.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SetJacketInputsPeregrine.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SiteData_PythonInput.xlsx 3 3 D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\output.xls extcobyla
 ##___________________________________________________________##
 
