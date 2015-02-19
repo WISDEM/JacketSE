@@ -108,8 +108,11 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
 
     casename='JacketOpt' #initialize
     outdir=ntpath.dirname(prmsfile)
+    strname2='' #initialize #used in output filenames
 
     if caseno: #This is the case of a table of multiple cases file
+
+        strname2=str(caseno).zfill(2) #used in output filenames
 
         #Set global variables that are passed through keywords
         f0epsilon=f0epsset
@@ -163,6 +166,8 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
     MDAOswitch=MDAOswitch.lower()
 
     MDAOswitch2=False #Initialize
+
+
     if MDAOswitch=='extcobyla':
     #_____________________________________#
            #  FIRST EXT OPT CASE   #
@@ -228,13 +233,9 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         #Finally call the optimizer
         args=(myjckt,desvarmeans,desvarbds)
 
-        strname2='' #initialize
         if MDAOswitch=='pysnopt':
-            strname='pyopt_snopt_'+'.hst'
 
-            if caseno:
-                strname2=str(caseno).zfill(2)
-                strname='pyopt_snopt_'+strname2+'.hst'
+            strname='pyopt_snopt_'+strname2+'.hst'
 
             opt_prob.write2file(outfile=os.path.join(os.path.dirname(prmsfile),strname), disp_sols=False, solutions=[])
 
@@ -305,6 +306,8 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
             myjckt.driver.rhoend=1.e-3
             myjckt.driver.maxfun=2000
             myjckt.driver.iprint=1
+
+
         else:
             myjckt.replace('driver', pyOptDriver())
             myjckt.driver.pyopt_diff=True #This makes pyopt calculate finite differences
@@ -322,6 +325,11 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
 
             else:
                 sys.exit('Error: MDAOswitch must be set to ''pyCobyla'' or ''pySNOPT'' or ''md_Cobyla'' or ''md_pySNOPT'' or ''md_pyCobyla'' or ''extCobyla'' !!!')
+
+        strname=MDAOswitch+strname2
+        myjckt.driver.options['Print file']=os.path.join(os.path.dirname(prmsfile),strname+'.out')
+        myjckt.driver.options['Summary file']=os.path.join(os.path.dirname(prmsfile),strname+'.sum')
+
         # ----------------------
 
         # --- Objective ---
