@@ -314,10 +314,10 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
 
             if  MDAOswitch== 'md_pysnopt':
                 myjckt.driver.optimizer = 'SNOPT'
-                myjckt.driver.options = {'Major feasibility tolerance': 1e-3,\
-                                     'Minor feasibility tolerance': 1e-3,\
-                                     'Major optimality tolerance': 1e-3,\
-                                     'Function precision': 1e-3}
+                myjckt.driver.options = {'Major feasibility tolerance': 1e-6,\
+                                     'Minor feasibility tolerance': 1e-6,\
+                                     'Major optimality tolerance': 1e-6,\
+                                     'Function precision': 1e-6}
 
             elif MDAOswitch== 'md_pycobyla':
                 myjckt.driver.optimizer = 'COBYLA'
@@ -1390,6 +1390,9 @@ def main(prmsfile='MyJacketInputs.py',MDAOswitch='pyCobyla', tablefile=[],f0epsi
 
     ##python JacketOpt_Py_MDAOopt.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SetJacketInputsPeregrine.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SiteData_PythonInput.xlsx 3 3 D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\output.xls extcobyla
     ##python JacketOpt_Py_MDAOopt.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SetJacketInputsPeregrine.py D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\SiteData_PythonInput.xlsx 3 3 D:\RRD_ENGINEERING\PROJECTS\NREL\OFFSHOREWIND\SEjacketTower\SITEdata\output.xls extcobyla
+
+    #FOR KAtherine's study
+    ##python JacketOpt_Py_MDAOopt.py C:\PROJECTS\OFFSHORE_WIND\SEJacketTower\SITEdata\SetJacketInputsPeregrine.py C:\PROJECTS\OFFSHORE_WIND\SEJacketTower\SITEdata\SiteData_PythonInput.xlsx 2 2 C:\PROJECTS\OFFSHORE_WIND\SEJacketTower\SITEdata\2DLCoutputplug.xls md_pysnopt
 ##___________________________________________________________##
 
 
