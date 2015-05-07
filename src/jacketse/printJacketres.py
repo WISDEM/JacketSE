@@ -38,7 +38,10 @@ def main(myjckt):
     print ('Lp0 ={:5.4f} and Lp0rat={:5.4f} DLC 6.1').format(myjckt.Piles.Pileinputs.Lp/(1.+myjckt.LoadFrameOuts2.Lp0rat),myjckt.LoadFrameOuts2.Lp0rat)
 
     print "\n"
-    #print GL EU utilizations
+    #print VMises, GL and EU utilizations
+    print "VMutil=%f DLC1.6"  % (np.nanmax(myjckt.LoadFrameOuts.tower_utilization.StressUtil))
+    print "VMutil=%f DLC6.1"  % (np.nanmax(myjckt.LoadFrameOuts2.tower_utilization.StressUtil))
+    print "\n"
     print "GLutil=%f EUutil=%f DLC1.6"  % (np.nanmax(myjckt.LoadFrameOuts.tower_utilization.GLUtil),np.nanmax(myjckt.LoadFrameOuts.tower_utilization.EUshUtil))
     print "GLutil=%f EUutil=%f DLC6.1"  % (np.nanmax(myjckt.LoadFrameOuts2.tower_utilization.GLUtil),np.nanmax(myjckt.LoadFrameOuts2.tower_utilization.EUshUtil))
     print "Mudline Footprint=%f"  % (myjckt.PreBuild.wbase)
