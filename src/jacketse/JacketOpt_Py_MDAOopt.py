@@ -135,7 +135,7 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
             setattr(desvars,key,guesses[ii])       #from user's input NOTE IT IS IMPORTANT TO CHECK ORDER OF variables
 
         #Then build the initial assembly
-        myjckt,f0epsilon,jcktDTRmin=MyJacketInputs.main(Desprms,desvars)
+        myjckt,f0epsilon,jcktDTRmin=MyJacketInputs.main(Desprms,desvars,caseno)
 
     else:
         #Read Input & Build the initial assembly and get guesses, for the x design variable array check out objfunc
@@ -167,6 +167,14 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
 
     MDAOswitch2=False #Initialize
 
+    if towerfix:
+            junk=int(not DTRsdiff)
+            guess=np.hstack((guess[0:-6+junk],guess[-1]))
+            desvarmeans=np.hstack((desvarmeans[0:-6+junk],desvarmeans[-1]))
+            desvarbds=np.vstack((desvarbds[0:-6+junk,:],desvarbds[-1,:]))
+            varlist2=(varlist[0:-6+junk])
+            varlist2.append(varlist[-1])
+            varlist=varlist2
 
     if MDAOswitch=='extcobyla':
     #_____________________________________#
@@ -174,11 +182,11 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
     #_____________________________________#
         MDAOswitch2=True
         guess=guess/desvarmeans
-        if towerfix:
-            junk=int(not DTRsdiff)
-            guess=np.hstack((guess[0:-6+junk],guess[-1]))
-            desvarmeans=np.hstack((desvarmeans[0:-6+junk],desvarmeans[-1]))
-            desvarbds=np.vstack((desvarbds[0:-6+junk,:],desvarbds[-1,:]))
+##        if towerfix:
+##            junk=int(not DTRsdiff)
+##            guess=np.hstack((guess[0:-6+junk],guess[-1]))
+##            desvarmeans=np.hstack((desvarmeans[0:-6+junk],desvarmeans[-1]))
+##            desvarbds=np.vstack((desvarbds[0:-6+junk,:],desvarbds[-1,:]))
 
         constrfuncs=[f0Cnstrt1,f0Cnstrt2,batCnsrt1, batCnsrt2,cbCnstrt,tCnstrt,KjntCnstrt,XjntCnstrt,\
                      girDCnsrt1,girDCnsrt2,girtCnsrt1,girtCnsrt2,\
@@ -204,14 +212,14 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
     #_____________________________________#
            #  THEN PYOPT CASES   #
     #_____________________________________#
-        if towerfix:
-            junk=int(not DTRsdiff)
-            guess=np.hstack((guess[0:-6+junk],guess[-1]))
-            desvarmeans=np.hstack((desvarmeans[0:-6+junk],desvarmeans[-1]))
-            desvarbds=np.vstack((desvarbds[0:-6+junk,:],desvarbds[-1,:]))
-            varlist2=(varlist[0:-6+junk])
-            varlist2.append(varlist[-1])
-            varlist=varlist2
+##        if towerfix:
+##            junk=int(not DTRsdiff)
+##            guess=np.hstack((guess[0:-6+junk],guess[-1]))
+##            desvarmeans=np.hstack((desvarmeans[0:-6+junk],desvarmeans[-1]))
+##            desvarbds=np.vstack((desvarbds[0:-6+junk,:],desvarbds[-1,:]))
+##            varlist2=(varlist[0:-6+junk])
+##            varlist2.append(varlist[-1])
+##            varlist=varlist2
 
         opt_prob=pyOpt.Optimization('Jacket Optimization via External PyOPT with {!r:^} '.format(MDAOswitch), objfunc)
         if caseno:
@@ -297,6 +305,7 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         from openmdao.lib.drivers.api import COBYLAdriver
 
         # ----------------------
+        #myjckt.run() #debug
 
         # --- Setup Optimizer ---
         if MDAOswitch == 'md_cobyla':
@@ -314,11 +323,11 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
 
             if  MDAOswitch== 'md_pysnopt':
                 myjckt.driver.optimizer = 'SNOPT'
-                myjckt.driver.options = {'Major feasibility tolerance': 1e-6,\
-                                     'Minor feasibility tolerance': 1e-6,\
-                                     'Major optimality tolerance': 1e-6,\
-                                     'Function precision': 1e-6}
-
+                myjckt.driver.options = {'Major feasibility tolerance': 1e-3,\
+                                     'Minor feasibility tolerance': 1e-3,\
+                                     'Major optimality tolerance': 1e-3,\
+                                     'Function precision': 1e-3}
+                                        #Set to -3 from -6 in aaron's project
             elif MDAOswitch== 'md_pycobyla':
                 myjckt.driver.optimizer = 'COBYLA'
                 myjckt.driver.options = {'RHOEND':1.e-2,'RHOEND':1.e-3,'MAXFUN':2000,'IPRINT':1}
@@ -368,7 +377,7 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
             varcnt=16
        #Note: because we want to use dck_withfrac as a parameter, we need to 0-out the dck_width, else it would trump the dck_withfrac
         myjckt.JcktGeoIn.dck_width=0.
-        myjckt.driver.add_parameter('JcktGeoIn.dck_widthfrac',low=desvarbds[varcnt+int(DTRsdiff),0], high=desvarbds[varcnt+int(DTRsdiff),1])
+        myjckt.driver.add_parameter('JcktGeoIn.dck_widthfrac',low=desvarbds[varcnt+int(DTRsdiff)*int(not towerfix),0], high=desvarbds[varcnt+int(DTRsdiff)*int(not towerfix),1])
 
         #--- Constraints ---#
         myjckt.driver.add_constraint('LoadFrameOuts.Frameouts.Freqs[0] >= {:f}'.format(f0))
@@ -1426,6 +1435,9 @@ def main(prmsfile='MyJacketInputs.py',MDAOswitch='pyCobyla', tablefile=[],f0epsi
 
     #FOR KAtherine's study
     ##python JacketOpt_Py_MDAOopt.py C:\PROJECTS\OFFSHORE_WIND\SEJacketTower\SITEdata\SetJacketInputsPeregrine.py C:\PROJECTS\OFFSHORE_WIND\SEJacketTower\SITEdata\SiteData_PythonInput.xlsx 2 2 C:\PROJECTS\OFFSHORE_WIND\SEJacketTower\SITEdata\2DLCoutputplug.xls md_pysnopt
+
+    #FOR Aaron's study
+    ##python JacketOpt_Py_MDAOopt.py C:\PROJECTS\OFFSHORE_WIND\aaron\SetJacketInputsPeregrine.py C:\PROJECTS\OFFSHORE_WIND\aaron\SiteTurbineDataInput_RRD_SS.xlsx 1 1 C:\PROJECTS\OFFSHORE_WIND\aaron\10MWJacketResults.xls md_pysnopt True
 ##___________________________________________________________##
 
 
