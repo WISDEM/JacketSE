@@ -251,8 +251,8 @@ def ReadTab1Line(casefile,caseno,desvarnames,towerdata=False,titlines=3,hdrlines
         offset=42 #this is an attempt to miniize issues if the table changes
         mxrange=37
     else:
-        offset=40
-        mxrange=19
+        offset=39
+        mxrange=23
     #Assign bounds
 
     idx=(np.arange(1,mxrange)+offset)
@@ -277,7 +277,7 @@ def ReadTab1Line(casefile,caseno,desvarnames,towerdata=False,titlines=3,hdrlines
     return Desprms,Desvarbds,bds,desvarmeans,guesses,casename
 
 #__________________________________________________________#
-def SaveOpt1Line(outdir,caseno,casename,desvars,rescobyla,myjckt,xlsfilename,Desprms,xlsfile_only=False):
+def SaveOpt1Line(outdir,caseno,casename,desvars,rescobyla,myjckt,xlsfilename,Desprms,towerdata=False,xlsfile_only=False):
     """This function saves results into a file, in terms of case number and case name, and design variables.\n
     INPUT \n
         outdir      -string, path to where to save a text file \n
@@ -285,10 +285,12 @@ def SaveOpt1Line(outdir,caseno,casename,desvars,rescobyla,myjckt,xlsfilename,Des
         casename    -string, case name. \n
         desvars     -object of class DesVars, which contains the ordered dictionary of labels. \n
         rescobyla   -float(nvars), dimensional output from cobyla. \n
-        myjckt      -Openmdao assembly, for jacketSE. \n
+        myjckt      -Openmdao assembly, for jacketSE or TowerSE (mytwr). \n
         xlsfilename -string, xcel file name (path included) where to write summary of results for the current case. \n
         Desprms     -object of class DesPrms, which contains the ordered dictionary of labels and values for current case design parameters. \n
-        xlsfile_only -flag, if True the xlsfilename file will be edited, and no textfile will be touched, useful during reconstruction. \n
+    OPTIONALS:
+        towerdata    - boolean, If True, then a tower table of experiment is expected.
+        xlsfile_only - boolean, if True the xlsfilename file will be edited, and no textfile will be touched, useful during reconstruction. \n
         """
     if not(xlsfile_only):
         filename=os.path.join(outdir,casename + '_out.dat')
@@ -367,264 +369,416 @@ def SaveOpt1Line(outdir,caseno,casename,desvars,rescobyla,myjckt,xlsfilename,Des
         sheet.write(pilerow+1,1,'Pile OD')
         sheet.write(pilerow+2,1,'Pile t')
         sheet.write(pilerow+3,1,'Pile length')
+
+        if towerdata:
+            sheet.write(pilerow+4,1,'Pile Embed. Lgth.')
+            pilerow +=1
         sheet.write(pilerow+4,1,'Pile Material')
         sheet.write(pilerow+5,1,'Pile Material rho')
         sheet.write(pilerow+6,1,'Pile Material E')
         sheet.write(pilerow+7,1,'Pile Material nu')
         sheet.write(pilerow+8,1,'Pile Material fy')
-        sheet.write(pilerow+9,1,'Piles'' mass')
+        if towerdata:
+            sheet.write(pilerow+9,1,'Pile Embed. Mass')
+            sheet.write(pilerow+10,1,'Pile (exposed) Mass')
+            pilerow +=2
+
+        sheet.write(pilerow+9,1,'Total Piles'' mass')
+
         #values
-        sheet.write(pilerow+1,2,myjckt.Piles.Pileinputs.Dpile)
-        sheet.write(pilerow+2,2,myjckt.Piles.Pileinputs.tpile)
-        sheet.write(pilerow+3,2,myjckt.Piles.Pileinputs.Lp)
-        sheet.write(pilerow+4,2,myjckt.Piles.PileObjout.mat[0].matname)
-        sheet.write(pilerow+5,2,myjckt.Piles.PileObjout.mat[0].rho)
-        sheet.write(pilerow+6,2,myjckt.Piles.PileObjout.mat[0].E)
-        sheet.write(pilerow+7,2,myjckt.Piles.PileObjout.mat[0].nu)
-        sheet.write(pilerow+8,2,myjckt.Piles.PileObjout.mat[0].fy)
-        sheet.write(pilerow+9,2,myjckt.Mpiles/1.e3)
+        pilerow=envrow+9 #reset
+        if not(towerdata):
+            Dp=myjckt.Piles.Pileinputs.Dpile
+            tp=myjckt.Piles.Pileinputs.tpile
+            Lp=myjckt.Piles.Pileinputs.Lp
+            matname=myjckt.Piles.PileObjout.mat[0].matname
+            rho=myjckt.Piles.PileObjout.mat[0].rho
+            E=myjckt.Piles.PileObjout.mat[0].E
+            nu=myjckt.Piles.PileObjout.mat[0].nu
+            fy=myjckt.Piles.PileObjout.mat[0].fy
+            tonnage=myjckt.Mpiles/1.e3
+        else:
+            Dp=myjckt.DMP
+            tp=myjckt.tMP
+            Lp=myjckt.wdepth+myjckt.MP2MSL
+            matname=myjckt.mp_material.matname
+            rho=myjckt.mp_material.rho
+            E=myjckt.mp_material.E
+            nu=myjckt.mp_material.nu
+            fy=myjckt.mp_material.fy
+            tonnage=(myjckt.MPprep.MPmass+myjckt.MPprep.Emdmass)/1.e3
+
+
+        sheet.write(pilerow+1,2,Dp)
+        sheet.write(pilerow+2,2,tp)
+        sheet.write(pilerow+3,2,Lp)
+        if towerdata:
+            sheet.write(pilerow+4,2,myjckt.MPprep.Emdlength)
+            pilerow +=1
+
+        sheet.write(pilerow+4,2,matname)
+        sheet.write(pilerow+5,2,rho)
+        sheet.write(pilerow+6,2,E)
+        sheet.write(pilerow+7,2,nu)
+        sheet.write(pilerow+8,2,fy)
+        if towerdata:
+            sheet.write(pilerow+9,2, myjckt.MPprep.Emdmass/1.e3)
+            sheet.write(pilerow+10,2,myjckt.MPprep.MPmass/1.e3)
+            pilerow +=2
+
+        sheet.write(pilerow+9,2,tonnage)
+
         #units
+        pilerow=envrow+9 #reset
         sheet.write(pilerow+1,3,'[m]')
         sheet.write(pilerow+2,3,'[m]')
         sheet.write(pilerow+3,3,'[m]')
+        if towerdata:
+            sheet.write(pilerow+4,3,'[m]')
+            pilerow +=1
+
         sheet.write(pilerow+4,3,'[-]')
         sheet.write(pilerow+5,3,'[kg/m3]')
         sheet.write(pilerow+6,3,'[N/m2]')
         sheet.write(pilerow+7,3,'[-]')
         sheet.write(pilerow+8,3,'[N/m2]')
+        if towerdata:
+            sheet.write(pilerow+9,3,'[tonnes]')
+            sheet.write(pilerow+10,3,'[tonnes]')
+            pilerow +=2
+
         sheet.write(pilerow+9,3,'[tonnes]')
 
         #MAIN LATTICE
         jcktrow=pilerow+11
-        sheet.write(jcktrow,0,'MAIN LATTICE',easyxf('font: name Arial, bold True'))
-        sheet.write(jcktrow+1,1,'Batter')
-        sheet.write(jcktrow+2,1,'No. of legs')
-        sheet.write(jcktrow+3,1,'No. of bays')
-        sheet.write(jcktrow+4,1,'Footprint')
-        sheet.write(jcktrow+5,1,'Leg OD')
-        sheet.write(jcktrow+6,1,'Leg t')
-        sheet.write(jcktrow+7,1,'X-brace OD')
-        sheet.write(jcktrow+8,1,'X-brace t')
-        sheet.write(jcktrow+9,1,'Mud-brace OD')
-        sheet.write(jcktrow+10,1,'Mud-brace t')
-        sheet.write(jcktrow+11,1,'Xbrace-Leg Angle')
-        #values
-        sheet.write(jcktrow+1,2,myjckt.JcktGeoIn.batter)
-        sheet.write(jcktrow+2,2,myjckt.JcktGeoIn.nlegs)
-        sheet.write(jcktrow+3,2,myjckt.JcktGeoIn.nbays)
-        sheet.write(jcktrow+4,2,myjckt.wbase)
-        sheet.write(jcktrow+5,2,myjckt.Legs.legouts.LegObj.D[0])
-        sheet.write(jcktrow+6,2,myjckt.Legs.legouts.LegObj.t[0])
-        sheet.write(jcktrow+7,2,myjckt.Xbraces.Xbrcouts.LLURObj.D[0])
-        sheet.write(jcktrow+8,2,myjckt.Xbraces.Xbrcouts.LLURObj.t[0])
-        sheet.write(jcktrow+9,2,myjckt.Mudbraces.Mbrcouts.brcObj.D[0])
-        sheet.write(jcktrow+10,2,myjckt.Mudbraces.Mbrcouts.brcObj.t[0])
-        sheet.write(jcktrow+11,2,myjckt.PreBuild.beta3D*180./np.pi)
-        #units
-        sheet.write(jcktrow+1,3,'[-]')
-        sheet.write(jcktrow+2,3,'[-]')
-        sheet.write(jcktrow+3,3,'[-]')
-        sheet.write(jcktrow+4,3,'[m]')
-        sheet.write(jcktrow+5,3,'[m]')
-        sheet.write(jcktrow+6,3,'[m]')
-        sheet.write(jcktrow+7,3,'[m]')
-        sheet.write(jcktrow+8,3,'[m]')
-        sheet.write(jcktrow+9,3,'[m]')
-        sheet.write(jcktrow+10,3,'[m]')
-        sheet.write(jcktrow+11,3,'[deg]')
 
-        for ii in range(myjckt.JcktGeoIn.nbays):
-            sheet.write(jcktrow+12+ii,1,('Bay {:d} Length').format(ii))
-            sheet.write(jcktrow+12+ii,2,(myjckt.Xbraces.bay_hs[ii]))
-            sheet.write(jcktrow+12+ii,3,'[m]')
+        if not(towerdata):
+            sheet.write(jcktrow,0,'MAIN LATTICE',easyxf('font: name Arial, bold True'))
+            sheet.write(jcktrow+1,1,'Batter')
+            sheet.write(jcktrow+2,1,'No. of legs')
+            sheet.write(jcktrow+3,1,'No. of bays')
+            sheet.write(jcktrow+4,1,'Footprint')
+            sheet.write(jcktrow+5,1,'Leg OD')
+            sheet.write(jcktrow+6,1,'Leg t')
+            sheet.write(jcktrow+7,1,'X-brace OD')
+            sheet.write(jcktrow+8,1,'X-brace t')
+            sheet.write(jcktrow+9,1,'Mud-brace OD')
+            sheet.write(jcktrow+10,1,'Mud-brace t')
+            sheet.write(jcktrow+11,1,'Xbrace-Leg Angle')
+            #values
+            sheet.write(jcktrow+1,2,myjckt.JcktGeoIn.batter)
+            sheet.write(jcktrow+2,2,myjckt.JcktGeoIn.nlegs)
+            sheet.write(jcktrow+3,2,myjckt.JcktGeoIn.nbays)
+            sheet.write(jcktrow+4,2,myjckt.wbase)
+            sheet.write(jcktrow+5,2,myjckt.Legs.legouts.LegObj.D[0])
+            sheet.write(jcktrow+6,2,myjckt.Legs.legouts.LegObj.t[0])
+            sheet.write(jcktrow+7,2,myjckt.Xbraces.Xbrcouts.LLURObj.D[0])
+            sheet.write(jcktrow+8,2,myjckt.Xbraces.Xbrcouts.LLURObj.t[0])
+            sheet.write(jcktrow+9,2,myjckt.Mudbraces.Mbrcouts.brcObj.D[0])
+            sheet.write(jcktrow+10,2,myjckt.Mudbraces.Mbrcouts.brcObj.t[0])
+            sheet.write(jcktrow+11,2,myjckt.PreBuild.beta3D*180./np.pi)
+            #units
+            sheet.write(jcktrow+1,3,'[-]')
+            sheet.write(jcktrow+2,3,'[-]')
+            sheet.write(jcktrow+3,3,'[-]')
+            sheet.write(jcktrow+4,3,'[m]')
+            sheet.write(jcktrow+5,3,'[m]')
+            sheet.write(jcktrow+6,3,'[m]')
+            sheet.write(jcktrow+7,3,'[m]')
+            sheet.write(jcktrow+8,3,'[m]')
+            sheet.write(jcktrow+9,3,'[m]')
+            sheet.write(jcktrow+10,3,'[m]')
+            sheet.write(jcktrow+11,3,'[deg]')
 
-        rowno=jcktrow+12+myjckt.JcktGeoIn.nbays
-        sheet.write(rowno,1,'Total Leg Height from mudline')
-        sheet.write(rowno+1,1,'Leg bottom z')
-        sheet.write(rowno+2,1,'Leg bottom stump')
-        sheet.write(rowno+3,1,'Leg top stump')
-        sheet.write(rowno+4,1,'Leg Material')
-        sheet.write(rowno+5,1,'Leg Material rho')
-        sheet.write(rowno+6,1,'Leg Material E')
-        sheet.write(rowno+7,1,'Leg Material nu')
-        sheet.write(rowno+8,1,'Leg Material fy')
-        sheet.write(rowno+9,1,'Xbrace Material ')
-        sheet.write(rowno+10,1,'Xbrace Material rho')
-        sheet.write(rowno+11,1,'Xbrace Material E')
-        sheet.write(rowno+12,1,'Xbrace Material nu')
-        sheet.write(rowno+13,1,'Xbrace Material fy')
-        sheet.write(rowno+14,1,'Mudbrace Material')
-        sheet.write(rowno+15,1,'Mudbrace Material rho')
-        sheet.write(rowno+16,1,'Mudbrace Material E')
-        sheet.write(rowno+17,1,'Mudbrace Material nu')
-        sheet.write(rowno+18,1,'Mudbrace Material fy')
-        sheet.write(rowno+19,1,'Mass')
-        #values
-        sheet.write(rowno,2,myjckt.PreBuild.JcktH)
-        sheet.write(rowno+1,2,myjckt.PreBuild.legZbot)
-        sheet.write(rowno+2,2,myjckt.PreBuild.legbot_stmph)
-        sheet.write(rowno+3,2,myjckt.TPinputs.hstump)
-        sheet.write(rowno+4,2,myjckt.Legs.legouts.LegObj.mat[0].matname)
-        sheet.write(rowno+5,2,myjckt.Legs.legouts.LegObj.mat[0].rho)
-        sheet.write(rowno+6,2,myjckt.Legs.legouts.LegObj.mat[0].E)
-        sheet.write(rowno+7,2,myjckt.Legs.legouts.LegObj.mat[0].nu)
-        sheet.write(rowno+8,2,myjckt.Legs.legouts.LegObj.mat[0].fy)
-        sheet.write(rowno+9,2, myjckt.Xbraces.Xbrcouts.LLURObj.mat[0].matname)
-        sheet.write(rowno+10,2,myjckt.Xbraces.Xbrcouts.LLURObj.mat[0].rho)
-        sheet.write(rowno+11,2,myjckt.Xbraces.Xbrcouts.LLURObj.mat[0].E)
-        sheet.write(rowno+12,2,myjckt.Xbraces.Xbrcouts.LLURObj.mat[0].nu)
-        sheet.write(rowno+13,2,myjckt.Xbraces.Xbrcouts.LLURObj.mat[0].fy)
-        sheet.write(rowno+14,2, myjckt.Mudbraces.Mbrcouts.brcObj.mat[0].matname)
-        sheet.write(rowno+15,2, myjckt.Mudbraces.Mbrcouts.brcObj.mat[0].rho)
-        sheet.write(rowno+16,2, myjckt.Mudbraces.Mbrcouts.brcObj.mat[0].E)
-        sheet.write(rowno+17,2, myjckt.Mudbraces.Mbrcouts.brcObj.mat[0].nu)
-        sheet.write(rowno+18,2, myjckt.Mudbraces.Mbrcouts.brcObj.mat[0].fy)
-        sheet.write(rowno+19,2,(myjckt.FrameOut.Frameouts_outs.mass[0]-myjckt.Tower.Twrouts.mass-myjckt.TP.TPouts.mass)/1.e3)  #mass of main lattice no TP
-        #units
-        sheet.write(rowno,  3,'[m]')
-        sheet.write(rowno+1,3,'[m]')
-        sheet.write(rowno+2,3,'[m]')
-        sheet.write(rowno+3,3,'[m]')
-        sheet.write(rowno+4,3,'[-]')
-        sheet.write(rowno+5,3,'[kg/m3]')
-        sheet.write(rowno+6,3,'[N/m2]')
-        sheet.write(rowno+7,3,'[-]')
-        sheet.write(rowno+8,3,'[N/m2]')
-        sheet.write(rowno+9,3,'[-]')
-        sheet.write(rowno+10,3,'[kg/m3]')
-        sheet.write(rowno+11,3,'[N/m2]')
-        sheet.write(rowno+12,3,'[-]')
-        sheet.write(rowno+13,3,'[N/m2]')
-        sheet.write(rowno+14,3,'[-]')
-        sheet.write(rowno+15,3,'[kg/m3]')
-        sheet.write(rowno+16,3,'[N/m2]')
-        sheet.write(rowno+17,3,'[-]')
-        sheet.write(rowno+18,3,'[N/m2]')
-        sheet.write(rowno+19,3,'[tonnes]')
+            for ii in range(myjckt.JcktGeoIn.nbays):
+                sheet.write(jcktrow+12+ii,1,('Bay {:d} Length').format(ii))
+                sheet.write(jcktrow+12+ii,2,(myjckt.Xbraces.bay_hs[ii]))
+                sheet.write(jcktrow+12+ii,3,'[m]')
+
+            rowno=jcktrow+12+myjckt.JcktGeoIn.nbays
+            sheet.write(rowno,1,'Total Leg Height from mudline')
+            sheet.write(rowno+1,1,'Leg bottom z')
+            sheet.write(rowno+2,1,'Leg bottom stump')
+            sheet.write(rowno+3,1,'Leg top stump')
+            sheet.write(rowno+4,1,'Leg Material')
+            sheet.write(rowno+5,1,'Leg Material rho')
+            sheet.write(rowno+6,1,'Leg Material E')
+            sheet.write(rowno+7,1,'Leg Material nu')
+            sheet.write(rowno+8,1,'Leg Material fy')
+            sheet.write(rowno+9,1,'Xbrace Material ')
+            sheet.write(rowno+10,1,'Xbrace Material rho')
+            sheet.write(rowno+11,1,'Xbrace Material E')
+            sheet.write(rowno+12,1,'Xbrace Material nu')
+            sheet.write(rowno+13,1,'Xbrace Material fy')
+            sheet.write(rowno+14,1,'Mudbrace Material')
+            sheet.write(rowno+15,1,'Mudbrace Material rho')
+            sheet.write(rowno+16,1,'Mudbrace Material E')
+            sheet.write(rowno+17,1,'Mudbrace Material nu')
+            sheet.write(rowno+18,1,'Mudbrace Material fy')
+            sheet.write(rowno+19,1,'Mass')
+            #values
+            sheet.write(rowno,2,myjckt.PreBuild.JcktH)
+            sheet.write(rowno+1,2,myjckt.PreBuild.legZbot)
+            sheet.write(rowno+2,2,myjckt.PreBuild.legbot_stmph)
+            sheet.write(rowno+3,2,myjckt.TPinputs.hstump)
+            sheet.write(rowno+4,2,myjckt.Legs.legouts.LegObj.mat[0].matname)
+            sheet.write(rowno+5,2,myjckt.Legs.legouts.LegObj.mat[0].rho)
+            sheet.write(rowno+6,2,myjckt.Legs.legouts.LegObj.mat[0].E)
+            sheet.write(rowno+7,2,myjckt.Legs.legouts.LegObj.mat[0].nu)
+            sheet.write(rowno+8,2,myjckt.Legs.legouts.LegObj.mat[0].fy)
+            sheet.write(rowno+9,2, myjckt.Xbraces.Xbrcouts.LLURObj.mat[0].matname)
+            sheet.write(rowno+10,2,myjckt.Xbraces.Xbrcouts.LLURObj.mat[0].rho)
+            sheet.write(rowno+11,2,myjckt.Xbraces.Xbrcouts.LLURObj.mat[0].E)
+            sheet.write(rowno+12,2,myjckt.Xbraces.Xbrcouts.LLURObj.mat[0].nu)
+            sheet.write(rowno+13,2,myjckt.Xbraces.Xbrcouts.LLURObj.mat[0].fy)
+            sheet.write(rowno+14,2, myjckt.Mudbraces.Mbrcouts.brcObj.mat[0].matname)
+            sheet.write(rowno+15,2, myjckt.Mudbraces.Mbrcouts.brcObj.mat[0].rho)
+            sheet.write(rowno+16,2, myjckt.Mudbraces.Mbrcouts.brcObj.mat[0].E)
+            sheet.write(rowno+17,2, myjckt.Mudbraces.Mbrcouts.brcObj.mat[0].nu)
+            sheet.write(rowno+18,2, myjckt.Mudbraces.Mbrcouts.brcObj.mat[0].fy)
+            sheet.write(rowno+19,2,(myjckt.FrameOut.Frameouts_outs.mass[0]-myjckt.Tower.Twrouts.mass-myjckt.TP.TPouts.mass)/1.e3)  #mass of main lattice no TP
+            #units
+            sheet.write(rowno,  3,'[m]')
+            sheet.write(rowno+1,3,'[m]')
+            sheet.write(rowno+2,3,'[m]')
+            sheet.write(rowno+3,3,'[m]')
+            sheet.write(rowno+4,3,'[-]')
+            sheet.write(rowno+5,3,'[kg/m3]')
+            sheet.write(rowno+6,3,'[N/m2]')
+            sheet.write(rowno+7,3,'[-]')
+            sheet.write(rowno+8,3,'[N/m2]')
+            sheet.write(rowno+9,3,'[-]')
+            sheet.write(rowno+10,3,'[kg/m3]')
+            sheet.write(rowno+11,3,'[N/m2]')
+            sheet.write(rowno+12,3,'[-]')
+            sheet.write(rowno+13,3,'[N/m2]')
+            sheet.write(rowno+14,3,'[-]')
+            sheet.write(rowno+15,3,'[kg/m3]')
+            sheet.write(rowno+16,3,'[N/m2]')
+            sheet.write(rowno+17,3,'[-]')
+            sheet.write(rowno+18,3,'[N/m2]')
+            sheet.write(rowno+19,3,'[tonnes]')
+
+
+            tprow=rowno+21
+        else:
+            tprow=jcktrow
 
         #TRANSITION PIECE
-        tprow=rowno+21
         #params
         sheet.write(tprow,  0,'TRANSITION PIECE',easyxf('font: name Arial, bold True'))
         sheet.write(tprow+1,1,'Deck Height')
-        sheet.write(tprow+2,1,'Deck Width')
-        sheet.write(tprow+3,1,'Stringer width')
-        sheet.write(tprow+4,1,'Stringer height')
-        sheet.write(tprow+5,1,'Strut OD')
-        sheet.write(tprow+6,1,'Strut t')
-        sheet.write(tprow+7,1,'Girder OD')
-        sheet.write(tprow+8,1,'Girder t')
-        sheet.write(tprow+9,1,'Diagonal brace OD')
-        sheet.write(tprow+10,1,'Diagonal brace t')
-        sheet.write(tprow+11,1,'Shell OD')
-        sheet.write(tprow+12,1,'Shell t')
-        sheet.write(tprow+13,1,'TP length')
+        if towerdata:
+            sheet.write(tprow+2,1,'TP OD')
+            sheet.write(tprow+3,1,'TP t')
+            sheet.write(tprow+4,1,'TP length')
+            sheet.write(tprow+5,1,'TP bottom elevation MSL')
+            sheet.write(tprow+6,1,'TP Material')
+            sheet.write(tprow+7,1,'TP Material rho')
+            sheet.write(tprow+8,1,'TP Material E')
+            sheet.write(tprow+9,1,'TP Material nu')
+            sheet.write(tprow+10,1,'TP Material fy')
+            sheet.write(tprow+11,1,'Grout Material')
+            sheet.write(tprow+12,1,'Grout Material rho')
+            sheet.write(tprow+13,1,'Grout Material E')
+            sheet.write(tprow+14,1,'Grout Material nu')
+            sheet.write(tprow+15,1,'Grout Material fy')
+            sheet.write(tprow+16,1,'Overlap Material')
+            sheet.write(tprow+17,1,'Overlap Material rho')
+            sheet.write(tprow+18,1,'Overlap Material E')
+            sheet.write(tprow+19,1,'Overlap Material nu')
+            sheet.write(tprow+20,1,'Overlap Material fy')
+            sheet.write(tprow+21,1,'Overlap top elevation MSL')
+            sheet.write(tprow+22,1,'TP steel mass')
+            sheet.write(tprow+23,1,'TP grout mass')
+            sheet.write(tprow+24,1,'TP total mass (no pile)')
 
-        sheet.write(tprow+14,1,'Strut Material')
-        sheet.write(tprow+15,1,'Strut Material rho')
-        sheet.write(tprow+16,1,'Strut Material E')
-        sheet.write(tprow+17,1,'Strut Material nu')
-        sheet.write(tprow+18,1,'Strut Material fy')
-        sheet.write(tprow+19,1,'Girder Material')
-        sheet.write(tprow+20,1,'Girder Material rho')
-        sheet.write(tprow+21,1,'Girder Material E')
-        sheet.write(tprow+22,1,'Girder Material nu')
-        sheet.write(tprow+23,1,'Girder Material fy')
-        sheet.write(tprow+24,1,'Diag. Brace Material')
-        sheet.write(tprow+25,1,'Diag. Brace Material rho')
-        sheet.write(tprow+26,1,'Diag. Brace Material E')
-        sheet.write(tprow+27,1,'Diag. Brace Material nu')
-        sheet.write(tprow+28,1,'Diag. Brace Material fy')
-        sheet.write(tprow+29,1,'Shell Material')
-        sheet.write(tprow+30,1,'Shell Material rho')
-        sheet.write(tprow+31,1,'Shell Material E')
-        sheet.write(tprow+32,1,'Shell Material nu')
-        sheet.write(tprow+33,1,'Shell Material fy')
-        sheet.write(tprow+34,1,'Lumped Mass')
-        sheet.write(tprow+35,1,'Tot Mass')
+        else:
+            sheet.write(tprow+2,1,'Deck Width')
+            sheet.write(tprow+3,1,'Stringer width')
+            sheet.write(tprow+4,1,'Stringer height')
+            sheet.write(tprow+5,1,'Strut OD')
+            sheet.write(tprow+6,1,'Strut t')
+            sheet.write(tprow+7,1,'Girder OD')
+            sheet.write(tprow+8,1,'Girder t')
+            sheet.write(tprow+9,1,'Diagonal brace OD')
+            sheet.write(tprow+10,1,'Diagonal brace t')
+            sheet.write(tprow+11,1,'Shell OD')
+            sheet.write(tprow+12,1,'Shell t')
+            sheet.write(tprow+13,1,'TP length')
+
+            sheet.write(tprow+14,1,'Strut Material')
+            sheet.write(tprow+15,1,'Strut Material rho')
+            sheet.write(tprow+16,1,'Strut Material E')
+            sheet.write(tprow+17,1,'Strut Material nu')
+            sheet.write(tprow+18,1,'Strut Material fy')
+            sheet.write(tprow+19,1,'Girder Material')
+            sheet.write(tprow+20,1,'Girder Material rho')
+            sheet.write(tprow+21,1,'Girder Material E')
+            sheet.write(tprow+22,1,'Girder Material nu')
+            sheet.write(tprow+23,1,'Girder Material fy')
+            sheet.write(tprow+24,1,'Diag. Brace Material')
+            sheet.write(tprow+25,1,'Diag. Brace Material rho')
+            sheet.write(tprow+26,1,'Diag. Brace Material E')
+            sheet.write(tprow+27,1,'Diag. Brace Material nu')
+            sheet.write(tprow+28,1,'Diag. Brace Material fy')
+            sheet.write(tprow+29,1,'Shell Material')
+            sheet.write(tprow+30,1,'Shell Material rho')
+            sheet.write(tprow+31,1,'Shell Material E')
+            sheet.write(tprow+32,1,'Shell Material nu')
+            sheet.write(tprow+33,1,'Shell Material fy')
+            sheet.write(tprow+34,1,'Lumped Mass')
+            sheet.write(tprow+35,1,'Tot Mass')
         #value
-        sheet.write(tprow+1,2,myjckt.JcktGeoIn.dck_botz)
-        sheet.write(tprow+2,2,myjckt.PreBuild.dck_width)
-        sheet.write(tprow+3,2,0.05)  #arbitrary for now
-        sheet.write(tprow+4,2,0.2)   #arbitrary for now
-        sheet.write(tprow+5,2,myjckt.TP.TPouts.strtObj.D[0])
-        sheet.write(tprow+6,2,myjckt.TP.TPouts.strtObj.t[0])
-        sheet.write(tprow+7,2,myjckt.TP.TPouts.girObj.D[0])
-        sheet.write(tprow+8,2,myjckt.TP.TPouts.girObj.t[0])
-        sheet.write(tprow+9,2,myjckt.TP.TPouts.brcObj.D[0])
-        sheet.write(tprow+10,2,myjckt.TP.TPouts.brcObj.t[0])
-        sheet.write(tprow+11,2,myjckt.TP.TPouts.stemObj.D[0])
-        sheet.write(tprow+12,2,myjckt.TP.TPouts.stemObj.t[0])
-        sheet.write(tprow+13,2,myjckt.TPinputs.hstem.sum()+myjckt.TPinputs.hstump)  #replaced  the deck stringer height (.25) with stump height
 
-        sheet.write(tprow+14,2,myjckt.TP.TPouts.strtObj.mat[0].matname)
-        sheet.write(tprow+15,2,myjckt.TP.TPouts.strtObj.mat[0].rho)
-        sheet.write(tprow+16,2,myjckt.TP.TPouts.strtObj.mat[0].E)
-        sheet.write(tprow+17,2,myjckt.TP.TPouts.strtObj.mat[0].nu)
-        sheet.write(tprow+18,2,myjckt.TP.TPouts.strtObj.mat[0].fy)
-        sheet.write(tprow+19,2,myjckt.TP.TPouts.girObj.mat[0].matname)
-        sheet.write(tprow+20,2,myjckt.TP.TPouts.girObj.mat[0].rho)
-        sheet.write(tprow+21,2,myjckt.TP.TPouts.girObj.mat[0].E)
-        sheet.write(tprow+22,2,myjckt.TP.TPouts.girObj.mat[0].nu)
-        sheet.write(tprow+23,2,myjckt.TP.TPouts.girObj.mat[0].fy)
-        sheet.write(tprow+24,2,myjckt.TP.TPouts.brcObj.mat[0].matname)
-        sheet.write(tprow+25,2,myjckt.TP.TPouts.brcObj.mat[0].rho)
-        sheet.write(tprow+26,2,myjckt.TP.TPouts.brcObj.mat[0].E)
-        sheet.write(tprow+27,2,myjckt.TP.TPouts.brcObj.mat[0].nu)
-        sheet.write(tprow+28,2,myjckt.TP.TPouts.brcObj.mat[0].fy)
-        sheet.write(tprow+29,2,myjckt.TP.TPouts.stemObj.mat[0].matname)
-        sheet.write(tprow+30,2,myjckt.TP.TPouts.stemObj.mat[0].rho)
-        sheet.write(tprow+31,2,myjckt.TP.TPouts.stemObj.mat[0].E)
-        sheet.write(tprow+32,2,myjckt.TP.TPouts.stemObj.mat[0].nu)
-        sheet.write(tprow+33,2,myjckt.TP.TPouts.stemObj.mat[0].fy)
-        sheet.write(tprow+34,2,myjckt.TP.TPouts.TPlumpedMass[0]/1.e3)
-        sheet.write(tprow+35,2,(myjckt.TP.TPouts.mass+myjckt.TP.TPouts.TPlumpedMass[0])/1.e3)
+        if towerdata:
+            sheet.write(tprow+1,2,myjckt.dck_botz)
+            sheet.write(tprow+2,2,myjckt.DTP)
+            sheet.write(tprow+3,2,myjckt.tTP)
+            sheet.write(tprow+4,2,myjckt.MPprep.TPlength)
+            sheet.write(tprow+5,2,-myjckt.MPprep.olap+myjckt.MP2MSL)
+            sheet.write(tprow+6,2,myjckt.mp_material.matname)
+            sheet.write(tprow+7,2,myjckt.mp_material.rho)
+            sheet.write(tprow+8,2,myjckt.mp_material.E)
+            sheet.write(tprow+9,2,myjckt.mp_material.nu)
+            sheet.write(tprow+10,2,myjckt.mp_material.fy)
+            sheet.write(tprow+11,2,myjckt.grt_material.matname)
+            sheet.write(tprow+12,2,myjckt.grt_material.rho)
+            sheet.write(tprow+13,2,myjckt.grt_material.E)
+            sheet.write(tprow+14,2,myjckt.grt_material.nu)
+            sheet.write(tprow+15,2,myjckt.grt_material.fy)
+            sheet.write(tprow+16,2,myjckt.MPprep.ol_material.matname)
+            sheet.write(tprow+17,2,myjckt.MPprep.ol_material.rho)
+            sheet.write(tprow+18,2,myjckt.MPprep.ol_material.E)
+            sheet.write(tprow+19,2,myjckt.MPprep.ol_material.nu)
+            sheet.write(tprow+20,2,myjckt.MPprep.ol_material.fy)
+            sheet.write(tprow+21,2,myjckt.MP2MSL)
+            sheet.write(tprow+22,2,myjckt.MPprep.TPmass/1.e3)
+            sheet.write(tprow+23,2,myjckt.MPprep.GRTmass/1.e3)
+            sheet.write(tprow+24,2,(myjckt.MPprep.TPmass+myjckt.MPprep.GRTmass)/1.e3)
+
+        else:
+            sheet.write(tprow+1,2,myjckt.JcktGeoIn.dck_botz)
+            sheet.write(tprow+2,2,myjckt.PreBuild.dck_width)
+            sheet.write(tprow+3,2,0.05)  #arbitrary for now
+            sheet.write(tprow+4,2,0.2)   #arbitrary for now
+            sheet.write(tprow+5,2,myjckt.TP.TPouts.strtObj.D[0])
+            sheet.write(tprow+6,2,myjckt.TP.TPouts.strtObj.t[0])
+            sheet.write(tprow+7,2,myjckt.TP.TPouts.girObj.D[0])
+            sheet.write(tprow+8,2,myjckt.TP.TPouts.girObj.t[0])
+            sheet.write(tprow+9,2,myjckt.TP.TPouts.brcObj.D[0])
+            sheet.write(tprow+10,2,myjckt.TP.TPouts.brcObj.t[0])
+            sheet.write(tprow+11,2,myjckt.TP.TPouts.stemObj.D[0])
+            sheet.write(tprow+12,2,myjckt.TP.TPouts.stemObj.t[0])
+            sheet.write(tprow+13,2,myjckt.TPinputs.hstem.sum()+myjckt.TPinputs.hstump)  #replaced  the deck stringer height (.25) with stump height
+
+            sheet.write(tprow+14,2,myjckt.TP.TPouts.strtObj.mat[0].matname)
+            sheet.write(tprow+15,2,myjckt.TP.TPouts.strtObj.mat[0].rho)
+            sheet.write(tprow+16,2,myjckt.TP.TPouts.strtObj.mat[0].E)
+            sheet.write(tprow+17,2,myjckt.TP.TPouts.strtObj.mat[0].nu)
+            sheet.write(tprow+18,2,myjckt.TP.TPouts.strtObj.mat[0].fy)
+            sheet.write(tprow+19,2,myjckt.TP.TPouts.girObj.mat[0].matname)
+            sheet.write(tprow+20,2,myjckt.TP.TPouts.girObj.mat[0].rho)
+            sheet.write(tprow+21,2,myjckt.TP.TPouts.girObj.mat[0].E)
+            sheet.write(tprow+22,2,myjckt.TP.TPouts.girObj.mat[0].nu)
+            sheet.write(tprow+23,2,myjckt.TP.TPouts.girObj.mat[0].fy)
+            sheet.write(tprow+24,2,myjckt.TP.TPouts.brcObj.mat[0].matname)
+            sheet.write(tprow+25,2,myjckt.TP.TPouts.brcObj.mat[0].rho)
+            sheet.write(tprow+26,2,myjckt.TP.TPouts.brcObj.mat[0].E)
+            sheet.write(tprow+27,2,myjckt.TP.TPouts.brcObj.mat[0].nu)
+            sheet.write(tprow+28,2,myjckt.TP.TPouts.brcObj.mat[0].fy)
+            sheet.write(tprow+29,2,myjckt.TP.TPouts.stemObj.mat[0].matname)
+            sheet.write(tprow+30,2,myjckt.TP.TPouts.stemObj.mat[0].rho)
+            sheet.write(tprow+31,2,myjckt.TP.TPouts.stemObj.mat[0].E)
+            sheet.write(tprow+32,2,myjckt.TP.TPouts.stemObj.mat[0].nu)
+            sheet.write(tprow+33,2,myjckt.TP.TPouts.stemObj.mat[0].fy)
+            sheet.write(tprow+34,2,myjckt.TP.TPouts.TPlumpedMass[0]/1.e3)
+            sheet.write(tprow+35,2,(myjckt.TP.TPouts.mass+myjckt.TP.TPouts.TPlumpedMass[0])/1.e3)
 
         #units
         sheet.write(tprow+1,3,'[m]')
-        sheet.write(tprow+2,3,'[m]')
-        sheet.write(tprow+3,3,'[m]')
-        sheet.write(tprow+4,3,'[m]')
-        sheet.write(tprow+5,3,'[m]')
-        sheet.write(tprow+6,3,'[m]')
-        sheet.write(tprow+7,3,'[m]')
-        sheet.write(tprow+8,3,'[m]')
-        sheet.write(tprow+9,3,'[m]')
-        sheet.write(tprow+10,3,'[m]')
-        sheet.write(tprow+11,3,'[m]')
-        sheet.write(tprow+12,3,'[m]')
-        sheet.write(tprow+13,3,'[m]')
-        sheet.write(tprow+14,3,'[-]')
-        sheet.write(tprow+15,3,'[kg/m3]')
-        sheet.write(tprow+16,3,'[N/m2]')
-        sheet.write(tprow+17,3,'[-]')
-        sheet.write(tprow+18,3,'[N/m2]')
-        sheet.write(tprow+19,3,'[-]')
-        sheet.write(tprow+20,3,'[kg/m3]')
-        sheet.write(tprow+21,3,'[N/m2]')
-        sheet.write(tprow+22,3,'[-]')
-        sheet.write(tprow+23,3,'[N/m2]')
-        sheet.write(tprow+24,3,'[-]')
-        sheet.write(tprow+25,3,'[kg/m3]')
-        sheet.write(tprow+26,3,'[N/m2]')
-        sheet.write(tprow+27,3,'[-]')
-        sheet.write(tprow+28,3,'[N/m2]')
-        sheet.write(tprow+29,3,'[-]')
-        sheet.write(tprow+30,3,'[kg/m3]')
-        sheet.write(tprow+31,3,'[N/m2]')
-        sheet.write(tprow+32,3,'[-]')
-        sheet.write(tprow+33,3,'[N/m2]')
 
-        sheet.write(tprow+34,3,'[tonnes]')
-        sheet.write(tprow+35,3,'[tonnes]')
+        if towerdata:
+            sheet.write(tprow+2,3,'[m]')
+            sheet.write(tprow+3,3,'[m]')
+            sheet.write(tprow+4,3,'[m]')
+            sheet.write(tprow+5,3,'[m]')
+            sheet.write(tprow+6,3,'[-]')
+            sheet.write(tprow+7,3,'[kg/m3]')
+            sheet.write(tprow+8,3,'[N/m2]')
+            sheet.write(tprow+9,3,'[-]')
+            sheet.write(tprow+10,3,'[N/m2]')
+            sheet.write(tprow+11,3,'[-]')
+            sheet.write(tprow+12,3,'[kg/m3]')
+            sheet.write(tprow+13,3,'[N/m2]')
+            sheet.write(tprow+14,3,'[-]')
+            sheet.write(tprow+15,3,'[N/m2]')
+            sheet.write(tprow+16,3,'[-]')
+            sheet.write(tprow+17,3,'[kg/m3]')
+            sheet.write(tprow+18,3,'[N/m2]')
+            sheet.write(tprow+19,3,'[-]')
+            sheet.write(tprow+20,3,'[N/m2]')
+            sheet.write(tprow+21,3,'[m]')
+            sheet.write(tprow+22,3,'[tonnes]')
+            sheet.write(tprow+23,3,'[tonnes]')
+            sheet.write(tprow+24,3,'[tonnes]')
+
+            twrrow0=tprow+26
+
+        else:
+
+            sheet.write(tprow+1,3,'[m]')
+            sheet.write(tprow+2,3,'[m]')
+            sheet.write(tprow+3,3,'[m]')
+            sheet.write(tprow+4,3,'[m]')
+            sheet.write(tprow+5,3,'[m]')
+            sheet.write(tprow+6,3,'[m]')
+            sheet.write(tprow+7,3,'[m]')
+            sheet.write(tprow+8,3,'[m]')
+            sheet.write(tprow+9,3,'[m]')
+            sheet.write(tprow+10,3,'[m]')
+            sheet.write(tprow+11,3,'[m]')
+            sheet.write(tprow+12,3,'[m]')
+            sheet.write(tprow+13,3,'[m]')
+            sheet.write(tprow+14,3,'[-]')
+            sheet.write(tprow+15,3,'[kg/m3]')
+            sheet.write(tprow+16,3,'[N/m2]')
+            sheet.write(tprow+17,3,'[-]')
+            sheet.write(tprow+18,3,'[N/m2]')
+            sheet.write(tprow+19,3,'[-]')
+            sheet.write(tprow+20,3,'[kg/m3]')
+            sheet.write(tprow+21,3,'[N/m2]')
+            sheet.write(tprow+22,3,'[-]')
+            sheet.write(tprow+23,3,'[N/m2]')
+            sheet.write(tprow+24,3,'[-]')
+            sheet.write(tprow+25,3,'[kg/m3]')
+            sheet.write(tprow+26,3,'[N/m2]')
+            sheet.write(tprow+27,3,'[-]')
+            sheet.write(tprow+28,3,'[N/m2]')
+            sheet.write(tprow+29,3,'[-]')
+            sheet.write(tprow+30,3,'[kg/m3]')
+            sheet.write(tprow+31,3,'[N/m2]')
+            sheet.write(tprow+32,3,'[-]')
+            sheet.write(tprow+33,3,'[N/m2]')
+
+            sheet.write(tprow+34,3,'[tonnes]')
+            sheet.write(tprow+35,3,'[tonnes]')
+
+
+            twrrow0=tprow+37
 
         #TOWER
-        twrrow=tprow+37
         #params
+        twrrow=twrrow0
         sheet.write(twrrow,0,'TOWER',easyxf('font: name Arial, bold True'))
         sheet.write(twrrow+1,1,'Base OD')
         sheet.write(twrrow+2,1,'Base t')
         sheet.write(twrrow+3,1,'Base DTR')
+        if towerdata:
+            sheet.write(twrrow+4,1,'Waist OD')
+            sheet.write(twrrow+5,1,'Waist t')
+            sheet.write(twrrow+6,1,'Waist DTR')
+            twrrow+=3
         sheet.write(twrrow+4,1,'Top OD')
         sheet.write(twrrow+5,1,'Top t')
         sheet.write(twrrow+6,1,'Top DTR')
@@ -637,28 +791,75 @@ def SaveOpt1Line(outdir,caseno,casename,desvars,rescobyla,myjckt,xlsfilename,Des
         sheet.write(twrrow+13,1,'Tower Material fy')
 
         sheet.write(twrrow+14,1,'mass')
+
         #values
-        sheet.write(twrrow+1,2,myjckt.Tower.Twrouts.TwrObj.D[0])
-        sheet.write(twrrow+2,2,myjckt.Tower.Twrouts.TwrObj.t[0])
-        sheet.write(twrrow+3,2,myjckt.Tower.Twrins.DTRb)
-        sheet.write(twrrow+4,2,myjckt.Tower.Twrins.Dt)
-        sheet.write(twrrow+5,2,myjckt.Tower.Twrins.Dt/myjckt.Tower.Twrins.DTRt)
+        twrrow=twrrow0
+        if towerdata:
+            Db=myjckt.d[0]
+            tb=myjckt.t[0]
+            Dt=myjckt.d[-1]
+            tt=myjckt.t[-1]
+            Dw=myjckt.d[-2]
+            tw=myjckt.t[-2]
+            Htwr=myjckt.twrlength
+            Htwr2=myjckt.twrlength*myjckt.z[-2]
+            matname=myjckt.twr_material.matname
+            rho=myjckt.twr_material.rho
+            E=myjckt.twr_material.E
+            nu=myjckt.twr_material.nu
+            fy=myjckt.twr_material.fy
+            tonnage=(myjckt.tower1.mass-myjckt.MPprep.Submass)/1.e3
+        else:
+            Db=myjckt.Tower.Twrouts.TwrObj.D[0]
+            tb=myjckt.Tower.Twrouts.TwrObj.t[0]
+            Dt=myjckt.Tower.Twrins.Dt
+            tt=myjckt.Tower.Twrins.Dt/myjckt.Tower.Twrins.DTRt
+#            Dw==myjckt.Twrins.Dw   #do not think these are available yet in JacketSE
+#            tw=myjckt.Twrins.tw
+            Htwr=myjckt.Tower.Twrouts.Htwr
+            Htwr2=myjckt.Tower.Twrouts.Htwr2
+            matname=myjckt.Tower.Twrouts.TwrObj.mat[0].matname
+            rho=myjckt.Tower.Twrouts.TwrObj.mat[0].rho
+            E=myjckt.Tower.Twrouts.TwrObj.mat[0].E
+            nu=myjckt.Tower.Twrouts.TwrObj.mat[0].nu
+            fy=myjckt.Tower.Twrouts.TwrObj.mat[0].fy
+            tonnage=myjckt.Tower.Twrouts.mass/1.e3
+
+        sheet.write(twrrow+1,2,Db)
+        sheet.write(twrrow+2,2,tb)
+        sheet.write(twrrow+3,2,Db/tb)
+        if towerdata:
+            sheet.write(twrrow+4,2,Dw)
+            sheet.write(twrrow+5,2,tw)
+            sheet.write(twrrow+6,2,Dw/tw)
+            twrrow+=3
+
+        sheet.write(twrrow+4,2,Dt)
+        sheet.write(twrrow+5,2,tt)
         #sheet.write(twrrow+4,2,myjckt.Tower.Twrouts.TwrObj.D[-1]) This does not work since it does not give me the exact final node, but its constantxsec element tube
         #sheet.write(twrrow+5,2,myjckt.Tower.Twrouts.TwrObj.t[-1])
-        sheet.write(twrrow+6,2,myjckt.Tower.Twrins.DTRt)
-        sheet.write(twrrow+7,2,myjckt.Tower.Twrouts.Htwr)
-        sheet.write(twrrow+8,2,myjckt.Tower.Twrouts.Htwr2)
-        sheet.write(twrrow+9, 2,myjckt.Tower.Twrouts.TwrObj.mat[0].matname)
-        sheet.write(twrrow+10,2,myjckt.Tower.Twrouts.TwrObj.mat[0].rho)
-        sheet.write(twrrow+11,2,myjckt.Tower.Twrouts.TwrObj.mat[0].E)
-        sheet.write(twrrow+12,2,myjckt.Tower.Twrouts.TwrObj.mat[0].nu)
-        sheet.write(twrrow+13,2,myjckt.Tower.Twrouts.TwrObj.mat[0].fy)
+        sheet.write(twrrow+6,2,Dt/tt)
+        sheet.write(twrrow+7,2,Htwr)
+        sheet.write(twrrow+8,2,Htwr2)
+        sheet.write(twrrow+9, 2,matname)
+        sheet.write(twrrow+10,2,rho)
+        sheet.write(twrrow+11,2,E)
+        sheet.write(twrrow+12,2,nu)
+        sheet.write(twrrow+13,2,fy)
 
-        sheet.write(twrrow+14,2,myjckt.Tower.Twrouts.mass/1.e3)
+        sheet.write(twrrow+14,2,tonnage)
+
         #units
+        twrrow=twrrow0
         sheet.write(twrrow+1,3,'[m]')
         sheet.write(twrrow+2,3,'[m]')
         sheet.write(twrrow+3,3,'[-]')
+        if towerdata:
+            sheet.write(twrrow+4,3,'[m]')
+            sheet.write(twrrow+5,3,'[m]')
+            sheet.write(twrrow+6,3,'[-]')
+            twrrow+=3
+
         sheet.write(twrrow+4,3,'[m]')
         sheet.write(twrrow+5,3,'[m]')
         sheet.write(twrrow+6,3,'[-]')
@@ -674,8 +875,16 @@ def SaveOpt1Line(outdir,caseno,casename,desvars,rescobyla,myjckt,xlsfilename,Des
         #TOTAL MASS
         Totrow=twrrow+16
         sheet.write(Totrow,1,'TOTAL MASS',easyxf('font: name Arial, bold True'))
-        sheet.write(Totrow,2,(myjckt.TP.TPouts.TPlumpedMass[0]+myjckt.FrameOut.Frameouts_outs.mass[0]+myjckt.Mpiles)/1.e3,\
-                    easyxf('font: name Arial, bold True'))
+        if towerdata:
+            tonnage=(myjckt.tower1.mass+myjckt.MPprep.Emdmass)/1.e3
+            f1=myjckt.f1
+            f2=myjckt.f2
+        else:
+            tonnage=(myjckt.TP.TPouts.TPlumpedMass[0]+myjckt.FrameOut.Frameouts_outs.mass[0]+myjckt.Mpiles)/1.e3
+            f1=myjckt.FrameOut.Frameouts_outs.Freqs[0]
+            f2=myjckt.FrameOut.Frameouts_outs.Freqs[1]
+
+        sheet.write(Totrow,2,tonnage,   easyxf('font: name Arial, bold True'))
         sheet.write(Totrow,3,'[tonnes]')
 
         #Calculated Frequencies
@@ -684,8 +893,8 @@ def SaveOpt1Line(outdir,caseno,casename,desvars,rescobyla,myjckt,xlsfilename,Des
         sheet.write(Freqrow+1,1,'1st EigenFrequency ')
         sheet.write(Freqrow+2,1,'2nd EigenFrequency ')
         #values
-        sheet.write(Freqrow+1,2,myjckt.FrameOut.Frameouts_outs.Freqs[0], easyxf('font: name Arial, bold True'))
-        sheet.write(Freqrow+2,2,myjckt.FrameOut.Frameouts_outs.Freqs[1], easyxf('font: name Arial, bold True'))
+        sheet.write(Freqrow+1,2,f1, easyxf('font: name Arial, bold True'))
+        sheet.write(Freqrow+2,2,f2, easyxf('font: name Arial, bold True'))
         #units
         sheet.write(Freqrow+1,3,'[Hz]')
         sheet.write(Freqrow+2,3,'[Hz]')
