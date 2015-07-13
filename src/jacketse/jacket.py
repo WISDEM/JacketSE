@@ -1239,8 +1239,9 @@ class SoilGeoInputs(VariableTree):
     phis    = Array(units='deg',   dtype=np.float, desc='Layers'' Friction Angles')
     delta   = Float(units='deg',                   desc='Pile-soil friction angle')
     sndflg  = Bool(units=None, desc='Flag indicating whether it is a cohesionless (sand,True) or cohesive (clay, False) soil.')
-    SoilSF    =Float(  units=None,    iotype='in', desc='Safety factor for soil (affects pile capacity): From ABS BOWTI and API RP2A use 2.0')  #Changed from 1.25 that was given to us by Keystone, on 4/16/2015
+    SoilSF  = Float(  units=None,    iotype='in', desc='Safety factor for soil (affects pile capacity): From ABS BOWTI and API RP2A use 2.0')  #Changed from 1.25 that was given to us by Keystone, on 4/16/2015
     PenderSwtch= Bool(False, units=None, desc='Flag indicating whether Pender''s or MAtlock&Reese (Default) method is used.')
+    plug    = Bool(False, units=None, desc='Flag indicating whether plugged or unplugged pile.')
 
 class SoilGeoOutputs(VariableTree):
     """Basic Soil-Pile Stiffness Data"""
