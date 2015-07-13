@@ -366,7 +366,7 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         if not(towerfix):
             myjckt.driver.add_parameter('Twrinputs.Db',          low=desvarbds[12,0], high=desvarbds[12,1])
             myjckt.driver.add_parameter('Twrinputs.DTRb',        low=desvarbds[13,0], high=desvarbds[13,1])
-            myjckt.driver.add_parameter('Twrinputs.Dt',          low=desvarbds[14,0], high=desvarbds[14,1])
+            #myjckt.driver.add_parameter('Twrinputs.Dt',          low=desvarbds[14,0], high=desvarbds[14,1])  For Aaron's project we are fixing tower-top OD
 
             if DTRsdiff:
                 myjckt.driver.add_parameter('Twrinputs.DTRt',        low=desvarbds[15,0], high=desvarbds[15,1])
@@ -439,6 +439,11 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         myjckt.run()
         #Set results into xstr to be written later
         xstr=myjckt.driver.eval_parameters()
+        #_______________________________________________________________________#
+        #Following TWO LINES FOR AARON's PROJECT ONLY
+        params=myjckt.driver.list_param_targets()  #This is for Aaron's project to reestablish the correct output in the file
+        xstr=np.insert(xstr,params.index('Twrinputs.Db')+1,myjckt.Twrinputs.Dt)
+        #_______________________________________________________________________#
 
     if (MDAOswitch=='pycobyla') or (MDAOswitch=='pysnopt'):
         print opt_prob.solution(0)

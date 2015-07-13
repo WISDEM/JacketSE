@@ -727,7 +727,6 @@ def SaveOpt1Line(outdir,caseno,casename,desvars,rescobyla,myjckt,xlsfilename,Des
 
         else:
 
-            sheet.write(tprow+1,3,'[m]')
             sheet.write(tprow+2,3,'[m]')
             sheet.write(tprow+3,3,'[m]')
             sheet.write(tprow+4,3,'[m]')

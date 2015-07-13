@@ -20,7 +20,7 @@ class WaterInputs(VariableTree):
     """Basic Wave Inputs needed to calculate Jacket Loads"""
     # inputs
     wdepth = Float(units='m', desc='Water Depth')
-    sea_floor_level = Float(units='m', desc='reference location of sea floor')
+    z_floor = Float(units='m', desc='reference location of sea floor')
     wlevel = Float(units='m', desc='Water Level: Distance from bottom of structure (including buried pile) to water surface')
     T = Float(units='s', desc='50-yr wave period (single wave here, not peak spectral period)')
     HW = Float(units='m', desc='50-yr wave height PEAK-to-PEAK!!!  (it used to be half-amplitude of sinusoid, changed since)')
@@ -481,22 +481,22 @@ class JcktLoad(Assembly):
 
         # connections to windj/t
         self.connect('windIns.U50HH', ['windj.Uref', 'windt.Uref'])
-        self.connect('windIns.HH + waterIns.wdepth + waterIns.sea_floor_level', ['windj.zref', 'windt.zref'])
+        self.connect('windIns.HH + waterIns.wdepth + waterIns.z_floor', ['windj.zref', 'windt.zref'])
         self.connect('pre.pillegZs_out', 'windj.z')
         self.connect('pre.twrZs_out', 'windt.z')
-        self.connect('waterIns.wdepth + waterIns.sea_floor_level', ['windj.z0', 'windt.z0'])
+        self.connect('waterIns.wdepth + waterIns.z_floor', ['windj.z0', 'windt.z0'])
         self.connect('windIns.psi', ['windj.betaWind', 'windt.betaWind'])
         self.connect('windIns.al_shear', ['windj.shearExp', 'windt.shearExp'])
 
 
         # connections to wavej/t
         self.connect('waterIns.Uc', ['wavej.Uc', 'wavet.Uc'])
-        self.connect('waterIns.wdepth + waterIns.sea_floor_level', ['wavej.z_surface', 'wavet.z_surface'])
+        self.connect('waterIns.wdepth + waterIns.z_floor', ['wavej.z_surface', 'wavet.z_surface'])
         self.connect('waterIns.HW', ['wavej.hs', 'wavet.hs'])
         # self.connect('waterIns.T', ['wavej.T', 'wavet.T'])
         self.connect('waterIns.T', 'wavej.T')
         self.connect('waterIns.T', 'wavet.T')
-        self.connect('waterIns.sea_floor_level', ['wavej.z_floor', 'wavet.z_floor'])
+        self.connect('waterIns.z_floor', ['wavej.z_floor', 'wavet.z_floor'])
         self.connect('gravity', ['wavej.g', 'wavet.g'])
         self.connect('waterIns.psi', ['wavej.betaWave', 'wavet.betaWave'])
         self.connect('pre.pillegZs_out', 'wavej.z')
@@ -617,7 +617,7 @@ if __name__ == '__main__':
 
     # wave inputs
     test.waterIns.wdepth = 30.0
-    test.waterIns.sea_floor_level = 0.0
+    test.waterIns.z_floor = 0.0
     test.waterIns.wlevel = 30.0
     test.waterIns.T = 12.0
     test.waterIns.HW = 10.0
