@@ -18,9 +18,12 @@ from openmdao.main.datatypes.api import Int, Float, Array, VarTree, Bool
 # from commonse.Tube import Tube
 # from commonse.RigidMember import RigidMember
 import ApiCodeChecks as API
-from towerse.tower import AeroLoads
+
+from commonse.WindWaveDrag import FluidLoads, AeroHydroLoads
 from commonse.rna import RotorLoads
-from towerse.towerSupplement import hoopStressEurocode, shellBucklingEurocode, bucklingGL, vonMisesStressUtilization
+from commonse.UtilizationSupplement import hoopStressEurocode, shellBucklingEurocode, bucklingGL, vonMisesStressUtilization
+
+
 from VarTrees import JcktGeoOutputs, TwrGeoOutputs
 from commonse.Frustum import frustum
 #______________________________________________________________________________#
@@ -140,10 +143,13 @@ class IEC_PSFS(VariableTree):
 
 
 class TwrUtilization(Component):
-    "THIS UNTILIZATION WORKS WITH WIND AND MAIN THRUST LOADS ALONG GLOBAL X ONLY"
+    "THIS UTILIZATION WORKS WITH WIND AND MAIN THRUST LOADS ALONG GLOBAL X ONLY"
     #inputs
-    towerWindLoads = VarTree(AeroLoads(), iotype='in', desc='Aero loads in inertial coordinate system.')
-    towerWaveLoads = VarTree(AeroLoads(), iotype='in', desc='Hydro loads in inertial coordinate system.')
+    ##towerWindLoads = VarTree(FluidLoads(), iotype='in', desc='Aero loads in inertial coordinate system.')
+    ##towerWaveLoads = VarTree(FluidLoads(), iotype='in', desc='Hydro loads in inertial coordinate system.')
+
+    towerWWLoads=VarTree(FluidLoads(), iotype='in', desc='Combined distributed loads and z coordinates as coming from AeroHydroLoads component.')
+
     top_F = Array(iotype='in')
     top_M = Array(iotype='in')
     Dt = Float(iotype='in', units='m', desc='TowerTop OD from Tower.')
@@ -168,11 +174,14 @@ class TwrUtilization(Component):
         gamma_b = self.IECpsfIns.gamma_b
         gamma_g = self.IECpsfIns.gamma_g
 
-        z = self.towerWindLoads.z  # this should be the same for wind and wave
-        Px = self.towerWindLoads.Px + self.towerWaveLoads.Px
-        Py = self.towerWindLoads.Py + self.towerWaveLoads.Py
-        Pz = self.towerWindLoads.Pz + self.towerWaveLoads.Pz
-
+        ##z = self.towerWindLoads.z  # this should be the same for wind and wave
+        ##Px = self.towerWindLoads.Px + self.towerWaveLoads.Px
+        ##Py = self.towerWindLoads.Py + self.towerWaveLoads.Py
+        ##Pz = self.towerWindLoads.Pz + self.towerWaveLoads.Pz
+        z =self.towerWWLoads.z
+        Px=self.towerWWLoads.Px
+        Py=self.towerWWLoads.Py
+        Pz=self.towerWWLoads.Pz
         #Make it all along x
         Px=np.sqrt(Px**2+Py**2)
         Py *=0.
@@ -250,8 +259,10 @@ class TwrUtilization(Component):
         # axial and shear stress (all stress evaluated on +x yaw side)
         axial_stress = Fz/twr_A - np.sqrt(Mx**2+My**2)/twr_Jyy*twr_D/2.0
         shear_stress = 2 * np.sqrt(Vx**2+Vy**2) / twr_A
-        hoop_stress = hoopStressEurocode(self.towerWindLoads, self.towerWaveLoads,
-            z, twr_D, twr_t, L_reinforced)
+
+        #hoop_stress = hoopStressEurocode(self.towerWindLoads, self.towerWaveLoads,
+        #    z, twr_D, twr_t, L_reinforced)
+        hoop_stress = hoopStressEurocode(z, twr_D, twr_t, L_reinforced,self.towerWWLoads.qdyn)
 
         # von mises stress
         VMutil = vonMisesStressUtilization(axial_stress, hoop_stress, shear_stress,
@@ -303,8 +314,9 @@ class UtilAssembly(Assembly):
     tilt = Float(iotype='in', units='deg')
     g = Float(9.81, iotype='in', units='m/s**2', desc='Gravity Acceleration (ABSOLUTE VALUE!)')
 
-    towerWindLoads = VarTree(AeroLoads(), iotype='in', desc='Aero loads in inertial coordinate system')
-    towerWaveLoads = VarTree(AeroLoads(), iotype='in', desc='Hydro loads in inertial coordinate system')
+    towerWindLoads = VarTree(FluidLoads(), iotype='in', desc='Aero loads in inertial coordinate system')
+    towerWaveLoads = VarTree(FluidLoads(), iotype='in', desc='Hydro loads in inertial coordinate system')
+
     Dt = Float(iotype='in', units='m', desc='TowerTop OD from Tower')
     tt = Float(iotype='in', units='m', desc='TowerTop wall thickness from Tower')
     Twr_data = VarTree(TwrGeoOutputs(), iotype='in', desc='Tower Node data')  # From Tower
@@ -321,6 +333,7 @@ class UtilAssembly(Assembly):
 
         self.add('PrepArray',PrepArray())
         self.add('rotorLoads', RotorLoads())
+        self.add('WWloads', AeroHydroLoads())
         self.add('TwrUtil', TwrUtilization())
         self.add('JcktUtil', JcktUtilization())
 
@@ -341,11 +354,21 @@ class UtilAssembly(Assembly):
         self.connect('tilt', 'rotorLoads.tilt')
         self.connect('g', 'rotorLoads.g')
 
+        #connections to WWLoads
+        self.connect('towerWindLoads',   'WWloads.windLoads')
+        self.connect('towerWaveLoads',   'WWloads.waveLoads')
+        self.connect('towerWindLoads.z', 'WWloads.z')
+
         # connections to TwrUtil
         self.connect('rotorLoads.top_F', 'TwrUtil.top_F')
         self.connect('rotorLoads.top_M', 'TwrUtil.top_M')
-        self.connect('towerWindLoads', 'TwrUtil.towerWindLoads')
-        self.connect('towerWaveLoads', 'TwrUtil.towerWaveLoads')
+
+        ##self.connect('towerWindLoads', 'TwrUtil.towerWindLoads')
+        ##self.connect('towerWaveLoads', 'TwrUtil.towerWaveLoads')
+        self.connect('WWloads.outloads',   'TwrUtil.towerWWLoads')
+
+        #self.connect('yaw', 'distLoads.yaw') set yaw=0, i.e. the rotor is aligned with the wind, although 45 deg from global x
+
         self.connect('Dt', 'TwrUtil.Dt')
         self.connect('tt', 'TwrUtil.tt')
         self.connect('Twr_data', 'TwrUtil.Twr_data')

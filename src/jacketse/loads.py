@@ -4,8 +4,7 @@ from openmdao.main.api import VariableTree, Component, Assembly
 from openmdao.main.datatypes.api import Int, Float, Array, Bool, VarTree
 import sys
 
-from towerse.tower import AeroLoads, TowerWindDrag, TowerWaveDrag  # TODO: perhaps I should move these to CommonSE
-from towerse.towerSupplement import hoopStressEurocode, shellBucklingEurocode, vonMisesStressUtilization
+from commonse.WindWaveDrag import FluidLoads, TowerWindDrag, TowerWaveDrag
 from commonse.environment import PowerWind, LinearWaves
 from commonse.utilities import sind, cosd
 
@@ -158,7 +157,7 @@ class JcktLoadPre(Component):
 
 # class DistributedToPointLoads(Component):
 
-#     aeroLoads = VarTree(AeroLoads(), iotype='in', desc='aero/hydro loads in inertial coordinate system')
+#     FluidLoads = VarTree(FluidLoads(), iotype='in', desc='aero/hydro loads in inertial coordinate system')
 
 #     Tx = Array(iotype='out')
 #     Ty = Array(iotype='out')
@@ -190,10 +189,10 @@ class JcktLoadPre(Component):
 class JcktLoadPost(Component):
 
     # inputs
-    towerWindLoads   = VarTree(AeroLoads(), iotype='in', desc='aero loads in inertial coordinate system')
-    towerWaveLoads   = VarTree(AeroLoads(), iotype='in', desc='aero loads in inertial coordinate system')
-    pileLegWindLoads = VarTree(AeroLoads(), iotype='in', desc='aero loads in inertial coordinate system')
-    pileLegWaveLoads = VarTree(AeroLoads(), iotype='in', desc='aero loads in inertial coordinate system')
+    towerWindLoads   = VarTree(FluidLoads(), iotype='in', desc='aero loads in inertial coordinate system')
+    towerWaveLoads   = VarTree(FluidLoads(), iotype='in', desc='aero loads in inertial coordinate system')
+    pileLegWindLoads = VarTree(FluidLoads(), iotype='in', desc='aero loads in inertial coordinate system')
+    pileLegWaveLoads = VarTree(FluidLoads(), iotype='in', desc='aero loads in inertial coordinate system')
     nlegs            = Int(units=None, iotype='in', desc='Number of Jacket Legs')  # comes from JcktGeoIn.nlegs
     al_bat3D         = Float(   units='rad',iotype='in', desc='Batter Angle in 3D.')
     VPFlag=      Bool(False,units=None,    iotype='in',desc='Vertical Pile Flag [Y/N]: If True the Mudbrace is put at the expected joint with Piles, i.e. at the bottom of leg.')
@@ -446,8 +445,8 @@ class JcktLoad(Assembly):
 
     #outputs
     Loadouts=   VarTree(LoadOutputs(), iotype='out', desc='Jacket Loading Basic Outputs')
-    twrWindLoads = VarTree(AeroLoads(), iotype='out', desc='Tower wind loads in inertial coordinate system')
-    twrWaveLoads = VarTree(AeroLoads(), iotype='out', desc='Tower wave loads in inertial coordinate system')
+    twrWindLoads = VarTree(FluidLoads(), iotype='out', desc='Tower wind loads in inertial coordinate system')
+    twrWaveLoads = VarTree(FluidLoads(), iotype='out', desc='Tower wave loads in inertial coordinate system')
     #stress = Array(iotype='out', units='N/m**2', desc='von Mises stress along tower on downwind side (yaw-aligned +x).  normalized by yield stress.  includes safety factors.')
     #z_buckling = Array(iotype='out', units='m', desc='z-locations along tower where shell buckling is evaluted')
     #buckling = Array(iotype='out', desc='a shell buckling constraint.  should be <= 0 for feasibility.  includes safety factors')
