@@ -2189,7 +2189,7 @@ class SPIstiffness(Component):
         ks_avg=SubgrReact(self.SoilObj,self.Lp, sndflg=self.SoilObj.sndflg, bwtable=True)  #offshore pile is always below water table
 
         #Here is the Stiffness matrix
-        self.SPI_Kmat=SoilPileStiffness(ks_avg,Dp,self.Lp,Ep,Gp,Jxx_p,loadZ=self.loadZ,PenderSwtch=self.SoilObj.PenderSwtch,H=self.H,M=self.M,batter=self.batter*(not(self.VPFlag)),psi=self.innr_ang)
+        self.SPI_Kmat=SoilPileStiffness(ks_avg,Dp,self.Lp,Ep,Gp,Jxx_p,loadZ=self.loadZ,PenderSwtch=self.SoilObj.PenderSwtch,sndflg=self.SoilObj.sndflg,H=self.H,M=self.M,batter=self.batter*(not(self.VPFlag)),psi=self.innr_ang)
 
 #_____________________________________________________#
 
@@ -2945,7 +2945,7 @@ def FindBrcAng(Hbays,nbays,wbas0,al_bat2D):   #Does it need to be a component???
             ##          (1-2*tan(pi/2-beta2D-al_bat2D)*np.sin(al_bat2D)* \
             ##           np.sin(beta2D+al_bat2D)/np.sin(2*al_bat2D+beta2D))
             bay_bs[ii]=bay_bs[ii-1]*(1.-2.*tan(al_bat2D)*tan(pi/2-beta2D-al_bat2D)/\
-                                        (1.+tan(al_bat2D*tan(pi/2-beta2D-al_bat2D))))
+                                        (1.+tan(al_bat2D)*tan(pi/2-beta2D-al_bat2D)))
         return bay_bs  #array [nbays]
 
     def bay_h(beta2D):   #bay heights known if beta2D is known

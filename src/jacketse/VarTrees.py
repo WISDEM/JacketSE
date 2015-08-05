@@ -27,6 +27,14 @@ class RNAprops(VariableTree):
 
     yawangle=Float(0.,   units='deg', desc='YAW angle CCW RH rule, to account for possible nacelle weight contribution.')       # RNA Yaw angle [deg]
 
+class TPmassprops(VariableTree):
+    """Basic Inertial and Geometric Properties of TP additional mass for towerSE"""
+    mass=Float(   units='kg',    desc='TP lumped mass')    #TP mass [kg]
+    I    =Array(np.zeros(6), dtype=np.float, units='kg*m**2',desc='TP lumped mass [IXX,IYY,IZZ,IXY,IXZ,IYZ] @deck height (=tower-base flange)')
+    CMoff=Array(np.zeros(3), dtype=np.float,units=None, desc='TP lumped mass CM [x/DTP,y/DTP,z/TPlength] offset from deck height')
+    #Thoff=Array(np.zeros(3), dtype=np.float,units='m',desc='Rotor Hub Center [x,y,z] offset from Tower Top Flange')       # Thrust point of application [m]
+    #rna_weightM = Bool(True, units=None, desc='flag to consider or not the RNA weight effect on Moment')
+    #yawangle=Float(0.,   units='deg', desc='YAW angle CCW RH rule, to account for possible nacelle weight contribution.')       # RNA Yaw angle [deg]
 
 
 class JcktGeoOutputs(VariableTree):

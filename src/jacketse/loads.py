@@ -491,7 +491,7 @@ class JcktLoad(Assembly):
         # connections to wavej/t
         self.connect('waterIns.Uc', ['wavej.Uc', 'wavet.Uc'])
         self.connect('waterIns.wdepth + waterIns.z_floor', ['wavej.z_surface', 'wavet.z_surface'])
-        self.connect('waterIns.HW', ['wavej.hs', 'wavet.hs'])
+        self.connect('waterIns.HW', ['wavej.hmax', 'wavet.hmax'])
         # self.connect('waterIns.T', ['wavej.T', 'wavet.T'])
         self.connect('waterIns.T', 'wavej.T')
         self.connect('waterIns.T', 'wavet.T')

@@ -27,7 +27,7 @@ def main(myjckt):
     print('frame3dd model mass (structural + TP lumped) + Pile Mass [kg] = {:6.0f}'.format(myjckt.LoadFrameOuts.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass+myjckt.Mpiles))
     print "\n"
     # modal analysis
-    print('First two Freqs.= {:5.4f} and {:5.4f} Hz \n'.format(*myjckt.LoadFrameOuts.Frameouts.Freqs))
+    print('First two Freqs. (they may be accounting for degradation factors, so higher than requested shown)= {:5.4f} and {:5.4f} Hz \n'.format(*myjckt.LoadFrameOuts.Frameouts.Freqs))
     #print tower top displacement
     print('Tower Top Displacement in Global Coordinate System DLC1.6 [m] ={:5.4f}'.format(myjckt.LoadFrameOuts.Frameouts.top_deflection[0]))
     print('Tower Top Displacement in Global Coordinate System DLC6.1 [m] ={:5.4f}'.format(myjckt.LoadFrameOuts2.Frameouts.top_deflection[0]))

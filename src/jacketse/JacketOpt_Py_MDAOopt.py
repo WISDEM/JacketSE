@@ -87,7 +87,7 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         myjckt   -OPenMdao assembly of JacketSE, final configuration after optimization.
         \n
         """
-    global DTRsdiff,f0,f0eps,jcktDTRmin,mxftprint,MDAOswitch2,towerfix  #global vars to pass a few parameters around through the constraints
+    global DTRsdiff,f0,f0eps,f1fac,jcktDTRmin,mxftprint,MDAOswitch2,towerfix  #global vars to pass a few parameters around through the constraints
 
     towerfix=towerfixed
 
@@ -135,17 +135,20 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
             setattr(desvars,key,guesses[ii])       #from user's input NOTE IT IS IMPORTANT TO CHECK ORDER OF variables
 
         #Then build the initial assembly
-        myjckt,f0epsilon,jcktDTRmin=MyJacketInputs.main(Desprms,desvars,caseno)
+        myjckt,f0epsilon,f1degfac,jcktDTRmin=MyJacketInputs.main(Desprms,desvars,caseno)
 
     else:
         #Read Input & Build the initial assembly and get guesses, for the x design variable array check out objfunc
-        myjckt,f0,f0epsilon,jcktDTRmin,mxftprint,guesses,desvarbds=MyJacketInputs.main()
+        myjckt,f0,f0epsilon,f1degfac,jcktDTRmin,mxftprint,guesses,desvarbds=MyJacketInputs.main()
         desvarmeans=np.mean(desvarbds,1)
 
     # Set other global var here
     DTRsdiff=myjckt.Twrinputs.DTRsdiff
 
     f0eps=f0epsilon
+    f1fac=f1degfac
+    if not f1fac:
+        f1fac=1 #initialize
 
     guess=guesses
 
@@ -380,8 +383,8 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         myjckt.driver.add_parameter('JcktGeoIn.dck_widthfrac',low=desvarbds[varcnt+int(DTRsdiff)*int(not towerfix),0], high=desvarbds[varcnt+int(DTRsdiff)*int(not towerfix),1])
 
         #--- Constraints ---#
-        myjckt.driver.add_constraint('LoadFrameOuts.Frameouts.Freqs[0] >= {:f}'.format(f0))
-        myjckt.driver.add_constraint('LoadFrameOuts.Frameouts.Freqs[0] <= {:f}'.format(f0*(1+f0eps)))
+        myjckt.driver.add_constraint('LoadFrameOuts.Frameouts.Freqs[0] >= {:f}'.format(f0/f1fac))
+        myjckt.driver.add_constraint('LoadFrameOuts.Frameouts.Freqs[0] <= {:f}'.format(f0*(1+f0eps)/f1fac))
 
         if not(towerfix):
             myjckt.driver.add_constraint('max(LoadFrameOuts.tower_utilization.StressUtil) <=1.0')
@@ -717,7 +720,7 @@ def f0Cnstrt1(x,myjckt,desvarmeans,desvarbds):  #f1>f0
         XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
-    cnstrt=(f1-f0)/f0
+    cnstrt=(f1fac*f1-f0)/f0
     print('f0Cnstrt1=',cnstrt)
     return cnstrt
 
@@ -731,7 +734,7 @@ def f0Cnstrt2(x,myjckt,desvarmeans,desvarbds): #f1<(f0*(1+f0eps))
         XBrcCrit01,XBrcCrit02,XBrcCrit03,XBrcCrit04,XBrcCrit05,Lp0rat,Lp0rat2=JcktWrapper(x,myjckt,desvarmeans,desvarbds)
 
         xlast=x.copy()
-    cnstrt=(-f1+f0*(1+f0eps))/f0
+    cnstrt=(-f1fac*f1+f0*(1+f0eps))/f0
     print('f0Cnstrt2=',cnstrt)
     return cnstrt
 

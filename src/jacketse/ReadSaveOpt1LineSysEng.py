@@ -25,7 +25,7 @@ from VarTrees import RNAprops
 from commonse.GetSheetByName import get_sheet_idx
 import SetJacketInputsPeregrine
 from PlotJacket import main as PlotJacket
-from towerse.DesVarsAux import TwrDesPrms, TwrDesVarBounds
+from RRD_towerse.DesVarsAux import TwrDesPrms, TwrDesVarBounds
 #__________________________________________________________#
 
 class DesVars(object): #Design Variables Grouped in a structure
@@ -239,11 +239,24 @@ def ReadTab1Line(casefile,caseno,desvarnames,towerdata=False,titlines=3,hdrlines
     Desprms.RNAins.mass=float(line[13])
     Desprms.RNAins.I=np.array(line[14:20])
     Desprms.RNAins.CMoff=np.array(line[20:23])
-    Desprms.RNA_F=np.array(line[23:29])
-    Desprms.RNA_F2=np.array(line[29:35])
-    Desprms.RNAins.Thoff=np.array(line[35:38])
+    tpidx=23
 
-    Desprms.f0=float(line[38])
+    if towerdata:
+        Desprms.TPmassins.mass=float(line[23])
+        Desprms.TPmassins.I=np.array(line[24:30])
+        Desprms.TPmassins.CMoff=np.array(line[30:33])
+        tpidx=33
+
+    Desprms.RNA_F=np.array(line[tpidx:tpidx+6])
+    Desprms.RNA_F2=np.array(line[tpidx+6:tpidx+6+6])
+    Desprms.RNAins.Thoff=np.array(line[tpidx+12:tpidx+15])
+    offset1=tpidx+15
+
+    if towerdata:
+        Desprms.TP_F=np.array(line[tpidx+15:tpidx+21])
+        offset1=tpidx+21
+
+    Desprms.f0=float(line[offset1])
     if not(towerdata):
         Desprms.legndiv=int(line[40])
         Desprms.nbays=int(line[41])
@@ -251,7 +264,7 @@ def ReadTab1Line(casefile,caseno,desvarnames,towerdata=False,titlines=3,hdrlines
         offset=42 #this is an attempt to miniize issues if the table changes
         mxrange=37
     else:
-        offset=39
+        offset=offset1+1
         mxrange=23
     #Assign bounds
 
@@ -591,7 +604,8 @@ def SaveOpt1Line(outdir,caseno,casename,desvars,rescobyla,myjckt,xlsfilename,Des
             sheet.write(tprow+21,1,'Overlap top elevation MSL')
             sheet.write(tprow+22,1,'TP steel mass')
             sheet.write(tprow+23,1,'TP grout mass')
-            sheet.write(tprow+24,1,'TP total mass (no pile)')
+            sheet.write(tprow+24,1,'TP lumped mass')
+            sheet.write(tprow+25,1,'TP total mass (no pile)')
 
         else:
             sheet.write(tprow+2,1,'Deck Width')
@@ -637,11 +651,11 @@ def SaveOpt1Line(outdir,caseno,casename,desvars,rescobyla,myjckt,xlsfilename,Des
             sheet.write(tprow+3,2,myjckt.tTP)
             sheet.write(tprow+4,2,myjckt.MPprep.TPlength)
             sheet.write(tprow+5,2,-myjckt.MPprep.olap+myjckt.MP2MSL)
-            sheet.write(tprow+6,2,myjckt.mp_material.matname)
-            sheet.write(tprow+7,2,myjckt.mp_material.rho)
-            sheet.write(tprow+8,2,myjckt.mp_material.E)
-            sheet.write(tprow+9,2,myjckt.mp_material.nu)
-            sheet.write(tprow+10,2,myjckt.mp_material.fy)
+            sheet.write(tprow+6,2,myjckt.tp_material.matname)
+            sheet.write(tprow+7,2,myjckt.tp_material.rho)
+            sheet.write(tprow+8,2,myjckt.tp_material.E)
+            sheet.write(tprow+9,2,myjckt.tp_material.nu)
+            sheet.write(tprow+10,2,myjckt.tp_material.fy)
             sheet.write(tprow+11,2,myjckt.grt_material.matname)
             sheet.write(tprow+12,2,myjckt.grt_material.rho)
             sheet.write(tprow+13,2,myjckt.grt_material.E)
@@ -655,7 +669,8 @@ def SaveOpt1Line(outdir,caseno,casename,desvars,rescobyla,myjckt,xlsfilename,Des
             sheet.write(tprow+21,2,myjckt.MP2MSL)
             sheet.write(tprow+22,2,myjckt.MPprep.TPmass/1.e3)
             sheet.write(tprow+23,2,myjckt.MPprep.GRTmass/1.e3)
-            sheet.write(tprow+24,2,(myjckt.MPprep.TPmass+myjckt.MPprep.GRTmass)/1.e3)
+            sheet.write(tprow+24,2,myjckt.TP_m/1.e3)
+            sheet.write(tprow+25,2,(myjckt.MPprep.TPmass+myjckt.MPprep.GRTmass+myjckt.TP_m)/1.e3)
 
         else:
             sheet.write(tprow+1,2,myjckt.JcktGeoIn.dck_botz)
@@ -722,8 +737,9 @@ def SaveOpt1Line(outdir,caseno,casename,desvars,rescobyla,myjckt,xlsfilename,Des
             sheet.write(tprow+22,3,'[tonnes]')
             sheet.write(tprow+23,3,'[tonnes]')
             sheet.write(tprow+24,3,'[tonnes]')
+            sheet.write(tprow+25,3,'[tonnes]')
 
-            twrrow0=tprow+26
+            twrrow0=tprow+27
 
         else:
 
