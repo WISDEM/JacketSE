@@ -281,6 +281,10 @@ def main(): #\
     FrameAuxIns.tol = 1e-9             # mode shape tolerance
     FrameAuxIns.shift = 0.0            # shift value ... for unrestrained structures
     FrameAuxIns.gvector=np.array([0.,0.,-9.8065])    #GRAVITY
+
+    #Decide whether or not to consider DLC 6.1 as well
+    twodlcs=False
+
     #______________________________________________#
     #______________________________________________#
 
@@ -314,7 +318,7 @@ def main(): #\
 
     # Now Launch the assembly and pass all of the inputs
 
-    myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,Jcktins.PreBuildTPLvl>0))
+    myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,twodlcs=twodlcs))
     myjckt.JcktGeoIn=Jcktins
     myjckt.Soilinputs=Soilinputs
     myjckt.Waterinputs=Waterinputs

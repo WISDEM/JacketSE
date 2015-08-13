@@ -136,7 +136,7 @@ class JcktGeoInputs(VariableTree):
     VPFlag   =    Bool(False,units=None, desc='Vertical Pile Flag [Y/N]: If True the Mudbrace is put at the expected joint with Piles, i.e. at the bottom of leg.')
     clamped  =    Bool(True, units=None, desc='Bottom of structure clamped or connected through springs: Note if AFflag=True in piles, then clamped will be reset to True.')
     AFflag   =    Bool(False,units=None, desc='Apparent Fixity Flag: if True AF is activated. Note if AFflag=True in piles, then clamped will be reset to True.')
-    PreBuildTPLvl=Int(0,  units=None, iotype='in', desc='Level of Prebuild [1-5], see TPPreBuild component')
+    PreBuildTPLvl=Int(0,  units=None, iotype='in', desc='Level of Prebuild [1-5], 0 ignored; see JcktPreBuild component')
 
 class TPlumpMass(VariableTree):
     """Basic Inertial Properties of Optional TP lumped Mass"""
@@ -676,10 +676,12 @@ class TPGeoInputs(VariableTree):
     nstems= Int(1,    units=None, desc='Number of Stem SubMembers (Submember is of uniform geometry)')
     Dstem     = Array(    units='m', dtype=np.float,    desc='TP Stem OD')  #np.array([6.])
     tstem     = Array(  units='m', dtype=np.float,    desc='TP Stem Wall Thickness') #np.array([0.10])
-    hstem     = Array(np.array([]),     units='m', dtype=np.float,    desc='TP Stem Submemeber Length')  #sum is TPlth
+    hstem     = Array(np.array([]),     units='m', dtype=np.float,    desc='TP Stem Submember Length')  #sum is TPlth
     stemndiv= Int(1,    units=None,  desc='Number of FE elements per Stem SubMember')
     TPstemmatins=VarTree(MatInputs(),desc="TP Stem Material Input Data")
     Kbuck_stem= Float(0.8,units=None,desc='TP Stem Kbuckling Factor')   #Effective length factor
+
+    stemwallfactor=Float(1.5,units=None,iotype='in', desc='Stem wall factor over tower base wall thickness. Used only in case of PreBuildTPlvl>0.')
 
     gussets  =  Bool(True, iotype='in', units='-', desc='TP arrangement')  #For now let us just implement gusset type  #TO DO
 
@@ -720,10 +722,9 @@ class PreBuildTP(Component):
 
     TwrDb         =Float(units='m',     iotype='in', desc='Tower Base OD')
     TwrDTRb       =Float(units='m',     iotype='in', desc='Tower Base DTR')
-    stemwallfactor=Float(1.5,units=None,iotype='in', desc='Stem wall factor over tower base wall thickness')
 
     TPinputs=VarTree(TPGeoInputs(),     iotype='in', desc='Basic input data for Transition Piece')
-    PreBuildTPLvl=Int(    units=None,   iotype='in', desc="""Level of Prebuild [1-5]: 1=Strut from leg; 2[default]=1+(Gir=diagBrace=Xbrace); \n
+    PreBuildTPLvl=Int(    units=None,   iotype='in', desc="""Level of Prebuild [1-5]: 1=Stump & Strut from leg; 2[default]=1+(Gir=diagBrace=Xbrace); \n
                                                                3=(Gir=Brace=Xbrace); 4=diagBrace=girders. 5=1+4    in all cases: Stem from Twr; """)
     #outputs
     BuildTPouts  =VarTree(TPGeoInputs(), iotype='out', desc='Revised Input data for Transition Piece')
@@ -734,12 +735,15 @@ class PreBuildTP(Component):
 
          #Set central stem following tower base and bump up thikness
         self.BuildTPouts.Dstem=np.asarray([self.TwrDb]).repeat(self.TPinputs.hstem.size)
-        self.BuildTPouts.tstem=np.asarray([self.TwrDb/self.TwrDTRb*self.stemwallfactor]).repeat(self.TPinputs.hstem.size)
+        self.BuildTPouts.tstem=np.asarray([self.TwrDb/self.TwrDTRb*self.TPinputs.stemwallfactor]).repeat(self.TPinputs.hstem.size)
 
         if PreBuildLvl==1 or PreBuildLvl==2 or PreBuildLvl==5:
             #Set struts equal to top of leg
             self.BuildTPouts.Dstrut=self.LegObj.D[-1]
             self.BuildTPouts.tstrut=self.LegObj.t[-1]
+            self.BuildTPouts.Dstump=self.LegObj.D[-1]
+            self.BuildTPouts.tstump=self.LegObj.t[-1]
+
         if PreBuildLvl==2 or PreBuildLvl==3:
             #set girders and diagonals equal to top braces
             self.BuildTPouts.Dgir=self.XBrcObj.D[-1]
@@ -1470,10 +1474,19 @@ class PreJcktBuild(Component):
 
     LegbD     =Float(    iotype='in',           desc="Leg Base OD")
     LegtD     =Float(    iotype='in',           desc="Leg Top OD")
-    TwrDb     =Float(    iotype='in',           desc="Tower Base OD")
+    Legtt     =Float(    iotype='in',           desc="Leg Top t")
+
     legZbot   = Float(0.,iotype='in',units='m', desc='Bottom Elevation of Leg from Sea-Floor')
     legbot_stmphin =Float( iotype='in',units='m', desc='Bottom Leg Stump Length') #User's input
-    Dstump =  Float(      iotype='in',units='m', desc='TP-leg Stumps OD')
+
+    TwrDb         =Float(units='m',     iotype='in', desc='Tower Base OD')
+    TwrDTRb       =Float(units='m',     iotype='in', desc='Tower Base DTR')
+
+    TPinputs=VarTree(TPGeoInputs(),     iotype='in', desc='Basic input data for Transition Piece')
+    PreBuildTPLvl=Int(    units=None,   iotype='in', desc="""Level of Prebuild [1-5]: 1=Stump & Strut from leg; 2[default]=1+(Gir=diagBrace=Xbrace); \n
+                                                              3=(Gir=Brace=Xbrace); 4=diagBrace=girders. 5=1+4    in all cases: Stem from Twr; """)
+
+    Xbrcinputs=VarTree(XBrcGeoInputs(),iotype='in',desc="Xbrace Input Data. They will be slightly modified here.")
 
     # outputs: some parameters for geometry of the jacket
     legbot_stmph =Float(   iotype='out',  units='m', desc='Bottom Leg Stump Length')  #Updated legbot_stmph : This should be set to 1.5 Dleg[0] if user did not set it
@@ -1490,12 +1503,56 @@ class PreJcktBuild(Component):
     wbas0     =Float(       iotype='out',units='m',  desc='Jacket width at bottom of first bay')
     wbase     =Float(       iotype='out',units='m',  desc='Jacket virtual width at mudline')
 
+    #TP outputs
+    BuildTPouts  =VarTree(TPGeoInputs(),  iotype='out', desc='Revised Input data for Transition Piece')
+    Xbrcouts     =VarTree(XBrcGeoInputs(),iotype='out',desc="Revised Xbrace Input Data.")
+
     def execute(self):
         """This function returns main geometry of the Jacket. Node coordinates and connectivity
           This function builds up a model for Frame3DD based on Jacket object.
           It requires an object as input and spits out an augmented version of it.
 
         !!!!soil and apparent fixity still to fix!!!!"""
+        nbays=self.JcktGeoIn.nbays
+
+        #X-brace precalculations: Next two useful in case Dbrc0 is the only optimization variable in optimization problems
+        self.Xbrcouts=self.Xbrcinputs #initialize
+
+        if self.Xbrcinputs.Dbrc0:
+          self.Xbrcouts.Dbrc=np.array([self.Xbrcinputs.Dbrc0]*nbays)
+        if self.Xbrcinputs.tbrc0:
+           self.Xbrcouts.tbrc=np.array([self.Xbrcinputs.tbrc0]*nbays)
+
+        if any(self.Xbrcouts.Dbrc == 0.) :
+            self.Xbrcouts.Dbrc=self.Xbrcouts.Dbrc[0].repeat(self.Xbrcinputs.Dbrc.size)
+        if any(self.Xbrcouts.tbrc == 0.) :
+            self.Xbrcouts.tbrc=self.Xbrcouts.tbrc[0].repeat(self.Xbrcinputs.tbrc.size)
+
+        #TP precalculations
+        self.BuildTPouts=self.TPinputs #here I transfer all the other inputs before expanding them with new info
+        PreBuildLvl=self.PreBuildTPLvl #shorten name
+
+         #Set central stem following tower base and bump up thikness
+        if PreBuildLvl:
+            self.BuildTPouts.Dstem=np.asarray([self.TwrDb]).repeat(self.TPinputs.hstem.size)
+            self.BuildTPouts.tstem=np.asarray([self.TwrDb/self.TwrDTRb*self.TPinputs.stemwallfactor]).repeat(self.TPinputs.hstem.size)
+
+        if PreBuildLvl==1 or PreBuildLvl==2 or PreBuildLvl==5:
+            #Set struts equal to top of leg
+            self.BuildTPouts.Dstrut=self.LegtD
+            self.BuildTPouts.tstrut=self.Legtt
+            self.BuildTPouts.Dstump=self.LegtD
+            self.BuildTPouts.tstump=self.Legtt
+
+        if PreBuildLvl==2 or PreBuildLvl==3:
+            #set girders and diagonals equal to top braces
+            self.BuildTPouts.Dgir=self.Xbrcinputs.Dbrc[-1]
+            self.BuildTPouts.tgir=self.Xbrcinputs.tbrc[-1]
+            self.BuildTPouts.Dbrc=self.Xbrcinputs.Dbrc[-1]
+            self.BuildTPouts.tbrc=self.Xbrcinputs.tbrc[-1]
+        if PreBuildLvl==4 or PreBuildLvl==5:
+            self.BuildTPouts.Dbrc=self.TPinputs.Dgir
+            self.BuildTPouts.tbrc=self.TPinputs.tgir
 
         #Leg bottom stump height set here if we have leg data and the user did not put a different value
         self.legbot_stmph=self.legbot_stmphin  #default value
@@ -1509,7 +1566,7 @@ class PreJcktBuild(Component):
             self.dck_width = self.JcktGeoIn.dck_width
 
         #shorten names of class Jacket's attributes and calculates a few more parameters
-        nbays=self.JcktGeoIn.nbays                    #nbays
+                          #nbays
         nlegs=self.JcktGeoIn.nlegs                    #legs
         batter=self.JcktGeoIn.batter                  #2D batter (=tg(angle w.r.t. vertical))
 
@@ -1527,12 +1584,12 @@ class PreJcktBuild(Component):
         #Calculate some basic properties THAT CONTAIN SOME ASSUMPTIONS ON GEOMETRY
         self.innr_ang=pi/6. * (nlegs==3) + pi/4. *(nlegs==4) #Angle between radial direction and base side
 
-        self.JcktH= dck_botz + wdpth - legZbot  #Jckt Height, from legtop to legbot
+        self.JcktH= dck_botz -self.BuildTPouts.hstump + wdpth - legZbot  #Jckt Height, from legtop to legbot
         Hbays= self.JcktH-self.legbot_stmph#-self.legtop_stmp  #Jacket Height available for bays,
             #removing 1D for stump at bottom and 0.5D at top and bottom for welds to brace
 
         #other params
-        self.wbase=self.dck_width-2.*self.Dstump/2.*(1.+weld2D) +2.*(wdpth+dck_botz)/batter #virtual width at sea bed
+        self.wbase=self.dck_width-2.*self.BuildTPouts.Dstump/2.*(1.+weld2D) +2.*(wdpth+dck_botz)/batter #virtual width at sea bed
         self.wbas0=self.wbase-2*np.tan(self.al_bat2D)*(legZbot+self.legbot_stmph) #width at 1st horiz. brace  joint
 
          #Calculate bay width, height, brace angle, and angle between X-braces (larger of the two)
@@ -2655,11 +2712,11 @@ class JacketSE(Assembly):
     Twrouts  = VarTree(TwrGeoOutputs(), iotype='out', desc='Basic Output data for Tower')
     Legouts  = VarTree(LegGeoOutputs(), iotype='out', desc='Leg Geometry Output')
 
-    def __init__(self, clamped=True, AFflag=False, PrebuildTP=True,twodlcs=True):
+    def __init__(self, clamped=True, AFflag=False, twodlcs=True):  #PrebuildTP=True,
 
         self.clamped = clamped  #initialize to true
         self.AFflag = AFflag
-        self.PrebuildTP = PrebuildTP
+        ##self.PrebuildTP = PrebuildTP
         #PrebuildTP=  Bool(True, iotype='in', desc='If TRUE then the TP will have dimensions connected to those of legs and braces, and some TP inputs will be overwritten.')
         self.twodlcs=twodlcs
         super(JacketSE,self).__init__()
@@ -2679,7 +2736,8 @@ class JacketSE(Assembly):
         self.add('Mudbraces', MudBraces())
         self.add('Hbraces', HBraces())
         self.add('TP', TP())
-        self.add('PreBuildTP', PreBuildTP())
+##        self.add('PreBuildTP', PreBuildTP())
+##        self.add('PreBuildTP2', PreBuildTP2())
         self.add('Tower', Tower())
         self.add('Build', BuildGeometry())
         self.add('LoadFrameOuts', LoadFrameOuts(self.clamped))
@@ -2694,8 +2752,8 @@ class JacketSE(Assembly):
         # BUILD UP THE DRIVER
         self.driver.workflow.add(['Soil','PreLeg','PreBuild', 'Legs', 'Piles', 'Xbraces', 'Mudbraces', 'Hbraces'])
 
-        if self.PrebuildTP:
-            self.driver.workflow.add(['PreBuildTP'])
+##        if self.PrebuildTP:
+##            self.driver.workflow.add(['PreBuildTP','PreBuildTP2'])
 
         self.driver.workflow.add(['TP','Tower','Build','ABS1','LoadFrameOuts'])
 
@@ -2731,12 +2789,21 @@ class JacketSE(Assembly):
         self.connect('PreLeg.prelegouts.legZbot',  'PreBuild.legZbot')
         self.connect('PreLeg.prelegouts.Dleg[0]' , 'PreBuild.LegbD')
         self.connect('PreLeg.prelegouts.Dleg[-1]', 'PreBuild.LegtD')
-        self.connect('PreLeg.prelegouts.Dleg[-1]', 'PreBuild.Dstump')
-        self.connect('Twrinputs.Db'      , 'PreBuild.TwrDb')
+        self.connect('PreLeg.prelegouts.tleg[-1]', 'PreBuild.Legtt')
+
         self.connect('Waterinputs.wdepth', 'PreBuild.wdepth')
 
+        self.connect('Xbrcinputs',         'PreBuild.Xbrcinputs' )
+        self.connect('JcktGeoIn.PreBuildTPLvl', 'PreBuild.PreBuildTPLvl')
+        self.connect('Twrinputs.Db'      ,      'PreBuild.TwrDb')
+        self.connect('Twrinputs.DTRb'      ,    'PreBuild.TwrDTRb')
+        self.connect('TPinputs',                'PreBuild.TPinputs' )
+        self.connect('PreBuild.BuildTPouts',    'TP.TPinputs' ) #this provides upgraded and overwritten inputs to TP
+
         # Xbraces
-        self.connect('Xbrcinputs',         'Xbraces.Xbrcinputs' )
+        ##self.connect('Xbrcinputs',         'Xbraces.Xbrcinputs' )
+        self.connect('PreBuild.Xbrcouts',  'Xbraces.Xbrcinputs' )
+
         self.connect('JcktGeoIn.nbays',    'Xbraces.nbays')
         self.connect('Legs.legouts.joints','Xbraces.legjnts')
         self.connect('Waterinputs.wdepth', 'Xbraces.wdepth')
@@ -2766,16 +2833,18 @@ class JacketSE(Assembly):
         self.connect('Legs.legouts.joints','TP.legjnts')
         self.connect('TPlumpinputs',       'TP.TPlumpinputs')
 
-        if self.PrebuildTP:#For a version with TP struts =leg OD, also TP stem OD =Tower Db, then diagonal braces and horizontal braces fixed with the top Xbraces
-            self.connect('JcktGeoIn.PreBuildTPLvl', 'PreBuildTP.PreBuildTPLvl')
-            self.connect('Legs.legouts.LegObj',     'PreBuildTP.LegObj')
-            self.connect('Xbraces.Xbrcouts.LLURObj','PreBuildTP.XBrcObj')
-            self.connect('Twrinputs.Db'      ,      'PreBuildTP.TwrDb')
-            self.connect('Twrinputs.DTRb'      ,    'PreBuildTP.TwrDTRb')
-            self.connect('TPinputs',                'PreBuildTP.TPinputs' )
-            self.connect('PreBuildTP.BuildTPouts',  'TP.TPinputs' ) #this provides upgraded and overwritten inputs to TP
-        else:
-            self.connect('TPinputs',                'TP.TPinputs' )
+
+###        if self.PrebuildTP:#For a version with TP struts =leg OD, also TP stem OD =Tower Db, then diagonal braces and horizontal braces fixed with the top Xbraces
+##            #self.connect('JcktGeoIn.PreBuildTPLvl', 'PreBuildTP.PreBuildTPLvl')
+##            #self.connect('Legs.legouts.LegObj',     'PreBuildTP.LegObj')
+##            #self.connect('Xbraces.Xbrcouts.LLURObj','PreBuildTP.XBrcObj')
+##            #self.connect('Twrinputs.Db'      ,      'PreBuildTP.TwrDb')
+##            #self.connect('Twrinputs.DTRb'      ,    'PreBuildTP.TwrDTRb')
+##            #self.connect('TPinputs',                'PreBuildTP.TPinputs' )
+##            #self.connect('PreBuildTP.BuildTPouts',  'TP.TPinputs' ) #this provides upgraded and overwritten inputs to TP
+##
+###        else:
+###            self.connect('TPinputs',                'TP.TPinputs' )
 
         # Piles
         self.connect('Pileinputs',                 'Piles.Pileinputs' )
@@ -2949,7 +3018,7 @@ def FindBrcAng(Hbays,nbays,wbas0,al_bat2D):   #Does it need to be a component???
         return bay_bs  #array [nbays]
 
     def bay_h(beta2D):   #bay heights known if beta2D is known
-        """This function calculates the bay heights given the brace angle and the 2D batter"""
+        """This function calculates the bay heights given the brace angle and the 2D batter and the bay widths"""
         ##return bay_b(beta2D)*tan(pi/2-beta2D-al_bat2D)*\
         ##      (1-np.cos(beta2D+al_bat2D)*np.sin(al_bat2D)/np.sin(2*al_bat2D+beta2D))
         return bay_b(beta2D)*tan(pi/2.-beta2D-al_bat2D)/\
@@ -3330,7 +3399,8 @@ if __name__ == '__main__':
     TPinputs.Dbrc=TPinputs.Dgir
     TPinputs.tbrc=TPinputs.tgir
 
-    TPinputs.hstump=0.0#1.0
+    TPinputs.hstump=1.0#1.0
+    TPinputs.Dstump=1.25#1.0
     TPinputs.stumpndiv=1#2
     TPinputs.brcndiv=1#2
     TPinputs.girndiv=1#2
@@ -3403,7 +3473,7 @@ if __name__ == '__main__':
 
     #-----Launch the assembly-----#
 
-    myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,(Jcktins.PreBuildTPLvl>0),twodlcs=twodlcs))
+    myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,twodlcs=twodlcs)) ##(Jcktins.PreBuildTPLvl>0),
 
     #Pass all inputs to assembly
     myjckt.JcktGeoIn=Jcktins
