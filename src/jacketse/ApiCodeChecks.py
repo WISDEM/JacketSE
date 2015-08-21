@@ -197,7 +197,7 @@ def chk_cb(fa,fbx,fby,delta_all,E,fy,D,t,Klr):
 
     Fb = ApiFb(E, fy, D, t)
     Fa = ApiFa(E, fy, D, t, Klr)
-    Fep = np.pi**2 * E * delta_all/Klr**2
+    Fep = 12./23. * np.pi**2 * E * delta_all/Klr**2  #12/23 is a PSF that AISC 335-89 used in teh past, I have reestablished that on 8/18/2015
     Cm = ApiCmPile(fa, Fep)
 
     chk1 = fa/(Fa*delta_all) + Cm*np.sqrt(fbx**2+fby**2)/ \
@@ -252,6 +252,7 @@ def ApiMbrChk(MbrFrcs,mbr_idx,mbr_strct):
     Area=mbr_strct.Area[mbr_idx].repeat(2,0) #x-sec areas
     BdgMxx=mbr_strct.BdgMxx[mbr_idx].repeat(2,0) #Bending modulus for bending about xx
     BdgMyy=mbr_strct.BdgMyy[mbr_idx].repeat(2,0) #Bending modulus for bending about yy
+    #dpth=mbr_strct.z[mbr_idx]
 
     Asx=mbr_strct.Asx[mbr_idx].repeat(2,0) #shear areas along x
     Asy=mbr_strct.Asy[mbr_idx] .repeat(2,0)#shear areas along x
