@@ -74,7 +74,7 @@ class TwrGeoOutputs(VariableTree):
 class Frame3DDaux(VariableTree):
     """General Frame3DD parameters"""
     sh_fg  = Int(1,  units=None, desc='Shear Deformation Flag: 1=Yes, 0=No.')
-    geo_fg = Int(0,  units=None, desc='Shear Deformation Flag: 1=Yes, 0=No.')
+    geo_fg = Int(0,  units=None, desc='Geometric Stiffness Effects (for buckling analysis) Flag: 1=Yes, 0=No.')
     exagg  = Int(1,  units=None, desc='Shear Deformation Flag: 1=Yes, 0=No.')
     deltaz =Float(10.,units='m',  desc='member z-axis increment for internal forces calc')
     gvector=Array(np.array([0.,0,-9.8065]), units='m/s**2', desc='Inertial Frame Acceleration. For Gravity acceleration gz must be <0.')

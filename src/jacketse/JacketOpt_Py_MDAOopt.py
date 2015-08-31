@@ -406,6 +406,8 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
             myjckt.driver.add_constraint('numpy.nanmax(LoadFrameOuts2.jacket_utilization.XjntUtil) <= 1.0')
 
         myjckt.driver.add_constraint('PreBuild.wbase <= {:f}'.format(mxftprint))
+#NEXT: Special constraint for CASE 9 - 3MW AAron's project
+       # myjckt.driver.add_constraint('PreBuild.wbase > 16')
 
         myjckt.driver.add_constraint('leginputs.Dleg0 >= Mbrcinputs.Dbrc_mud')
         myjckt.driver.add_constraint('leginputs.Dleg0 >= Xbrcinputs.Dbrc0')
