@@ -56,9 +56,13 @@ def Mip_Mop(MMvec,Mloc,Mjoint):
                        #To revise dot produce and vectorization HERE
     from numpy import cos,sin,arctan2,arctan
     out=np.zeros([2,np.shape(MMvec)[1]])
-    M_OoP=np.array([MMvec[0,:] ,\
-                MMvec[1,:]*np.dot(Mloc[1,:],Mjoint[1,:]), \
-                MMvec[2,:]*np.dot(Mloc[2,:],Mjoint[1,:])])  #Mxx*i_jnt+Mzz*Kloc.J_jnt+Myy*J_loc.J_jnt [3,n]
+    M_OoP=np.array([MMvec[0,:]*np.dot(Mloc[0,:],Mjoint[0,:])+\
+                    MMvec[1,:]*np.dot(Mloc[1,:],Mjoint[0,:])+\
+                    MMvec[2,:]*np.dot(Mloc[2,:],Mjoint[0,:])    ,\
+                    MMvec[0,:]*np.dot(Mloc[0,:],Mjoint[1,:])+\
+                    MMvec[1,:]*np.dot(Mloc[1,:],Mjoint[1,:])+\
+                    MMvec[2,:]*np.dot(Mloc[2,:],Mjoint[1,:])    ,\
+                    np.zeros_like(MMvec[2,:])])  #[Mxx*iloc.i_jnt+Myy*jloc.i_jnt+Mzz*Kloc.i_jnt ; Mxx*iloc.j_jnt+Myy*jloc.j_jnt+Mzz*Kloc.j_jnt; 0 0 0 ...0 0 0 0] [3,n]
     #Note M_IP will have the right sign for API convention, + if fibers compress brace
     M_IP=MMvec[0,:]*np.dot(Mloc[0,:],Mjoint[2,:])+\
          MMvec[1,:]*np.dot(Mloc[1,:],Mjoint[2,:])+\
