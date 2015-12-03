@@ -41,7 +41,7 @@ from openmdao.lib.casehandlers.api import DumpCaseRecorder,ListCaseRecorder,CSVC
 from PlotJacket import main as PlotJacket  #COMMENT THIS ONE OUT FOR PEREGRINE"S SAKE
 from printJacketres import main as printJacket
 
-from ReadSaveOpt1LineSysEng import ReadTab1Line,SaveOpt1Line,ReadOptFile,DesVars
+from jacketse.ReadSaveOpt1LineSysEng import ReadTab1Line,SaveOpt1Line,ReadOptFile,DesVars
 
 
 #__________________________________________________________#

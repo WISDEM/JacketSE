@@ -237,23 +237,23 @@ def ReadTab1Line(casefile,caseno,desvarnames,towerdata=False,titlines=3,hdrlines
     Desprms.TPlumpmass=float(line[12])
 
     Desprms.RNAins.mass=float(line[13])
-    Desprms.RNAins.I=np.array(line[14:20])
-    Desprms.RNAins.CMoff=np.array(line[20:23])
+    Desprms.RNAins.I=np.array(line[14:20],dtype=float)
+    Desprms.RNAins.CMoff=np.array(line[20:23],dtype=float)
     tpidx=23
 
     if towerdata:
         Desprms.TPmassins.mass=float(line[23])
-        Desprms.TPmassins.I=np.array(line[24:30])
-        Desprms.TPmassins.CMoff=np.array(line[30:33])
+        Desprms.TPmassins.I=np.array(line[24:30],dtype=float)
+        Desprms.TPmassins.CMoff=np.array(line[30:33],dtype=float)
         tpidx=33
 
-    Desprms.RNA_F=np.array(line[tpidx:tpidx+6])
-    Desprms.RNA_F2=np.array(line[tpidx+6:tpidx+6+6])
-    Desprms.RNAins.Thoff=np.array(line[tpidx+12:tpidx+15])
+    Desprms.RNA_F=np.array(line[tpidx:tpidx+6],dtype=float)
+    Desprms.RNA_F2=np.array(line[tpidx+6:tpidx+6+6],dtype=float)
+    Desprms.RNAins.Thoff=np.array(line[tpidx+12:tpidx+15],dtype=float)
     offset1=tpidx+15
 
     if towerdata:
-        Desprms.TP_F=np.array(line[tpidx+15:tpidx+21])
+        Desprms.TP_F=np.array(line[tpidx+15:tpidx+21],dtype=float)
         offset1=tpidx+21
 
     Desprms.f0=float(line[offset1])

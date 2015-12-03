@@ -277,7 +277,7 @@ class JcktLoadPost(Component):
 
             #Forces on legs 1 (and 3 though sign of Fz reversed)
             junk=np.zeros(waDrag.size)
-            waDrag1_3=  (np.dot(DIRCOSwave , np.vstack((waDrag*np.cos(al_bat3D),junk,waDrag*np.sin(al_bat3D))))).T   #[n,3] [N]
+            waDrag1_3=  (np.dot(DIRCOSwave , np.vstack((waDrag*np.cos(al_bat3D),junk,waDrag*np.sin(al_bat3D))))).T   #[n,3] [N] This is an approx for air drag, as it is not normal to the leg to begin with, but it makes it easier
             wiDrag1_3=  (np.dot(DIRCOSwind , np.vstack((wiDrag*np.cos(al_bat3D),junk,wiDrag*np.sin(al_bat3D))))).T   #[n,3] [N]
 
             #Forces on legs 2 (and 4), it is as if they were vertical
