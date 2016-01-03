@@ -8,14 +8,15 @@
 # Copyright:   (c) rdamiani 2014
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
+import matplotlib.pyplot as plt #first for peregrine's sake
 import numpy as np
 from commonse.axisEqual3D import axisEqual3D
-import matplotlib.pyplot as plt
+
 from mpl_toolkits.mplot3d import Axes3D
 
-def main(myjckt,util=False,savefileroot=[]):
-
-    fig = plt.figure()
+def main(myjckt,util=False,savefileroot=[],toscreen=True):
+#toscreen=False allows peregrine to work
+    fig = plt.figure(1)
     ax = Axes3D(fig)
     nodes=myjckt.JcktGeoOut.nodes  #coordinates
     mems=myjckt.JcktGeoOut.mems
@@ -36,13 +37,13 @@ def main(myjckt,util=False,savefileroot=[]):
 
     if savefileroot:
         plt.savefig(savefileroot+'_config.png',format='png')
-    else:
+    elif toscreen:
         plt.show()
 
     #Plot utilization of Tower if requested
     if util:
         RigidTop=(myjckt.RNAinputs.CMoff[2] != 0.) and myjckt.Tower.RigidTop
-        fig2=plt.figure();
+        fig2=plt.figure(2);
         ax1 = fig2.add_subplot(111)
         twr_zs=myjckt.Tower.Twrouts.nodes[2,0:myjckt.Tower.Twrouts.nNodes-RigidTop]-myjckt.Tower.Twrouts.nodes[2,0]
         #Add one diameter at the very top since the tube object does not have the final D
@@ -88,8 +89,11 @@ def main(myjckt,util=False,savefileroot=[]):
 
         if savefileroot:
             plt.savefig(savefileroot+'_util.png',format='png')
-        else:
+        elif toscreen:
             plt.show()
+
+        plt.close(all)
+
 
 
 if __name__ == '__main__':

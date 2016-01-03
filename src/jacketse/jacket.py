@@ -9,7 +9,7 @@ Copyright (c) NREL. All rights reserved.
 !!!!!TO CHECK Buckling LENGTH PASSED TO Tube.py: element length vs. joint2joint length!!!!
 ALSO lENGTH OF LEGS may not be right.
 """
-
+import matplotlib.pyplot as plt  #first in the list for peregrine's sake
 import math
 import copy
 import numpy as np
@@ -3600,7 +3600,7 @@ if __name__ == '__main__':
 
 
     #Plot geometry
-    import matplotlib.pyplot as plt
+
     from mpl_toolkits.mplot3d import Axes3D
     fig = plt.figure()
     ax = Axes3D(fig)

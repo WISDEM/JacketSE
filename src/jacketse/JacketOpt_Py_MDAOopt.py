@@ -15,6 +15,7 @@
 # Copyright:   (c) rdamiani 2014
 # License:     Apache (2014)
 #-------------------------------------------------------------------------------
+from PlotJacket import main as PlotJacket  #COMMENT THIS ONE OUT FOR PEREGRINE"S SAKE
 import numpy as np
 import scipy.optimize
 
@@ -38,7 +39,7 @@ import imp
 
 from openmdao.lib.casehandlers.api import DumpCaseRecorder,ListCaseRecorder,CSVCaseRecorder, DBCaseRecorder
 
-from PlotJacket import main as PlotJacket  #COMMENT THIS ONE OUT FOR PEREGRINE"S SAKE
+
 from printJacketres import main as printJacket
 
 from jacketse.ReadSaveOpt1LineSysEng import ReadTab1Line,SaveOpt1Line,ReadOptFile,DesVars
@@ -107,7 +108,7 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
     #    sys.path[:] = path # restore
 
     casename='JacketOpt' #initialize
-    outdir=ntpath.dirname(prmsfile)
+    outdir=os.path.dirname(prmsfile)
     strname2='' #initialize #used in output filenames
 
     if caseno: #This is the case of a table of multiple cases file
@@ -436,7 +437,8 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
         # ----------------------
 
         # --- recorder ---
-        myjckt.recorders = [DumpCaseRecorder(ntpath.join(outdir,casename+'_'+MDAOswitch+'.rcd'))]
+        #myjckt.recorders = [DumpCaseRecorder(ntpath.join(outdir,casename+'_'+MDAOswitch+'.rcd'))]
+        myjckt.recorders = [DumpCaseRecorder(os.path.join(outdir,casename+'_'+MDAOswitch+'.rcd'))]
         # ----------------------
 
         #RUN
@@ -474,9 +476,9 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
 
         SaveOpt1Line(outdir,caseno,casename,desvars,xstr,myjckt,xlsfilename,Desprms)
     else: #This does not work
-        casename=ntpath.splitext(prmsfile)[0]
+        casename=os.path.splitext(prmsfile)[0]
         caseno=1
-        xlsfilename=ntpath.join(outdir,'singleoutput.xlsx')
+        xlsfilename=os.path.join(outdir,'singleoutput.xlsx')
         filename=casename+'.optidat'
 
         #SaveOpt1Line(outdir,caseno,casename,desvars,xstr,myjckt,xlsfilename,Desprms)
@@ -498,7 +500,7 @@ def JcktOpt(prmsfile, SNOPTflag=False, MDAOswitch=[], tablefile=[], caseno=[],xl
                         fp)
 
     #Plot
-    PlotJacket(myjckt,util=True,savefileroot=ntpath.join(outdir,casename))
+    PlotJacket(myjckt,util=True,savefileroot=os.path.join(outdir,casename))
 
     return myjckt,casename
 #__________________________________________________________#
