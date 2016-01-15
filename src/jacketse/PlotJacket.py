@@ -92,7 +92,7 @@ def main(myjckt,util=False,savefileroot=[],toscreen=True):
         elif toscreen:
             plt.show()
 
-        plt.close(all)
+#        plt.close(all)
 
 
 
