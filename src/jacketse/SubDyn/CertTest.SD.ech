@@ -1,0 +1,173 @@
+----------- SubDyn v1.01.x MultiMember Support Structure Input File ------------
+OC4 'Jacket' SIMPLIFIED, 1-bay,  substructure Input File.
+-------------------------- SIMULATION CONTROL  ---------------------------------
+            T  Echo           - Echo Input File Logic Variable
+               SDdeltaT       - Subdyn Time Step
+  "DEFAULT"
+            4  IntMethod      - Integration Method
+            F  SttcSolve      - Solve dynamics about static equilibrium point
+-------------------- FEA and CRAIG-BAMPTON PARAMETERS---------------------------
+            3  FEMMod         - FEM analysis mode
+            1  NDiv           - Number of divisions per member
+            F  CBMod          - C-B mod flag
+            75   Nmodes      - Number of internal modes to retain (ignored if CBMod=False). If Nmodes=0 --> Guyan Reduction.
+   2.0000E+00  JDampings      - Damping ratio
+---- STRUCTURE JOINTS: joints connect structure members (~Hydrodyn Input File)---
+           12  NJoints        - Number of joints
+JointID          JointXss               JointYss               JointZss  [Coordinates of Member joints in SS-Coordinate System]
+  (-)               (m)                    (m)                    (m)
+               Joints         - Joint number and coordinates
+   1.0000E+00  -5.9390E+00  -5.9390E+00  -4.3127E+01
+               Joints         - Joint number and coordinates
+   2.0000E+00   5.9390E+00  -5.9390E+00  -4.3127E+01
+               Joints         - Joint number and coordinates
+   3.0000E+00   5.9390E+00   5.9390E+00  -4.3127E+01
+               Joints         - Joint number and coordinates
+   4.0000E+00  -5.9390E+00   5.9390E+00  -4.3127E+01
+               Joints         - Joint number and coordinates
+   5.0000E+00  -4.0160E+00  -4.0160E+00   1.5651E+01
+               Joints         - Joint number and coordinates
+   6.0000E+00   4.0160E+00  -4.0160E+00   1.5651E+01
+               Joints         - Joint number and coordinates
+   7.0000E+00   4.0160E+00   4.0160E+00   1.5651E+01
+               Joints         - Joint number and coordinates
+   8.0000E+00  -4.0160E+00   4.0160E+00   1.5651E+01
+               Joints         - Joint number and coordinates
+   9.0000E+00   0.0000E+00  -4.7918E+00  -8.0609E+00
+               Joints         - Joint number and coordinates
+   1.0000E+01   4.7918E+00   0.0000E+00  -8.0609E+00
+               Joints         - Joint number and coordinates
+   1.1000E+01   0.0000E+00   4.7918E+00  -8.0609E+00
+               Joints         - Joint number and coordinates
+   1.2000E+01  -4.7918E+00   0.0000E+00  -8.0609E+00
+------------------- BASE REACTION JOINTS: 1/0 for Locked/Free DOF @ each Reaction Node ---------------------
+            4  NReact         - Number of joints with reaction forces
+RJointID   RctTDXss    RctTDYss    RctTDZss    RctRDXss    RctRDYss    RctRDZss     [Global Coordinate System]
+  (-)       (flag)      (flag)      (flag)      (flag)      (flag)      (flag)
+               Reacts         - Joint number and dof
+            1            1            1            1            1            1            1
+               Reacts         - Joint number and dof
+            2            1            1            1            1            1            1
+               Reacts         - Joint number and dof
+            3            1            1            1            1            1            1
+               Reacts         - Joint number and dof
+            4            1            1            1            1            1            1
+------- INTERFACE JOINTS: 1/0 for Locked (to the TP)/Free DOF @each Interface Joint (only Locked-to-TP implemented thus far (=rigid TP)) ---------
+            4  NInterf        - Number of joints fixed to TP
+IJointID   ItfTDXss    ItfTDYss    ItfTDZss    ItfRDXss    ItfRDYss    ItfRDZss     [Global Coordinate System]
+  (-)       (flag)      (flag)      (flag)      (flag)      (flag)      (flag)
+               Interf         - Interface joint number and dof
+            5            1            1            1            1            1            1
+               Interf         - Interface joint number and dof
+            6            1            1            1            1            1            1
+               Interf         - Interface joint number and dof
+            7            1            1            1            1            1            1
+               Interf         - Interface joint number and dof
+            8            1            1            1            1            1            1
+----------------------------------- MEMBERS --------------------------------------
+           24  NMembers       - Number of members
+MemberID   MJointID1   MJointID2   MPropSetID1   MPropSetID2     COSMID
+  (-)         (-)         (-)          (-)           (-)           (-)
+               Members        - Member number and connectivity 
+            1            1            5            2            2
+               Members        - Member number and connectivity 
+            2            2            6            2            2
+               Members        - Member number and connectivity 
+            3            3            7            2            2
+               Members        - Member number and connectivity 
+            4            4            8            2            2
+               Members        - Member number and connectivity 
+            5            1            9            3            3
+               Members        - Member number and connectivity 
+            6            9            6            3            3
+               Members        - Member number and connectivity 
+            7            5            9            3            3
+               Members        - Member number and connectivity 
+            8            9            2            3            3
+               Members        - Member number and connectivity 
+            9            2           10            3            3
+               Members        - Member number and connectivity 
+           10           10            7            3            3
+               Members        - Member number and connectivity 
+           11            6           10            3            3
+               Members        - Member number and connectivity 
+           12           10            3            3            3
+               Members        - Member number and connectivity 
+           13            3           11            3            3
+               Members        - Member number and connectivity 
+           14           11            8            3            3
+               Members        - Member number and connectivity 
+           15            7           11            3            3
+               Members        - Member number and connectivity 
+           16           11            4            3            3
+               Members        - Member number and connectivity 
+           17            4           12            3            3
+               Members        - Member number and connectivity 
+           18           12            5            3            3
+               Members        - Member number and connectivity 
+           19            8           12            3            3
+               Members        - Member number and connectivity 
+           20           12            1            3            3
+               Members        - Member number and connectivity 
+           21            5            6            3            3
+               Members        - Member number and connectivity 
+           22            6            7            3            3
+               Members        - Member number and connectivity 
+           23            7            8            3            3
+               Members        - Member number and connectivity 
+           24            8            5            3            3
+------------------ MEMBER X-SECTION PROPERTY data 1/2 [isotropic material for now: use this table for circular-tubular elements] ------------------------
+            6  NPropSets      - Number of property sets
+PropSetID     YoungE          ShearG          MatDens          XsecD           XsecT
+  (-)         (N/m2)          (N/m2)          (kg/m3)           (m)             (m)
+               PropSets       - PropSets number and values 
+   1.0000E+00   2.1000E+11   8.0769E+10   7.8500E+03   8.0000E-01   2.0000E-02
+               PropSets       - PropSets number and values 
+   2.0000E+00   2.1000E+11   8.0769E+10   7.8500E+03   1.2000E+00   5.0000E-02
+               PropSets       - PropSets number and values 
+   3.0000E+00   2.1000E+11   8.0769E+10   7.8500E+03   1.2000E+00   3.5000E-02
+               PropSets       - PropSets number and values 
+   4.0000E+00   2.1000E+11   8.0769E+10   7.8500E+03   1.2000E+00   4.0000E-02
+               PropSets       - PropSets number and values 
+   5.0000E+00   2.1000E+11   8.0769E+10   3.3391E+03   2.0820E+00   4.9100E-01
+               PropSets       - PropSets number and values 
+   6.0000E+00   2.1000E+11   8.0769E+10   7.8500E+03   2.0820E+00   6.0000E-02
+------------------ MEMBER X-SECTION PROPERTY data 2/2 [isotropic material for now: use this table if any section other than circular, however provide COSM(i,j) below] ------------------------
+            0  NXPropSets     - Number of non-circular property sets
+PropSetID     YoungE          ShearG          MatDens          XsecA          XsecAsx       XsecAsy       XsecJxx       XsecJyy        XsecJ0
+  (-)         (N/m2)          (N/m2)          (kg/m3)          (m2)            (m2)          (m2)          (m4)          (m4)          (m4)
+---------------------- MEMBER COSINE MATRICES COSM(i,j) ------------------------
+            0  NCOSMs         - Number of unique direction cosine matrices
+COSMID    COSM11    COSM12    COSM13    COSM21    COSM22    COSM23    COSM31    COSM32    COSM33
+ (-)       (-)       (-)       (-)       (-)       (-)       (-)       (-)       (-)       (-)
+------------------------ JOINT ADDITIONAL CONCENTRATED MASSES--------------------------
+            0  NCMass         - Number of joints that have concentrated masses
+CMJointID       JMass            JMXX             JMYY             JMZZ
+  (-)            (kg)          (kg*m^2)         (kg*m^2)         (kg*m^2)
+---------------------------- OUTPUT: SUMMARY & OUTFILE ------------------------------
+            T  SSSum          - Summary File Logic Variable
+            T  OutCOSM        - Cosine Matrix Logic Variable
+            T  OutAll         - Output all Member Forces Logic Variable
+            1  OutSwtch       - Output to which file variable
+            T  TabDelim       - Use Tab Delimitation for numerical outputs
+            1  OutDec         - Output Decimation
+               OutFmt         - Format for numerical outputs
+  "ES11.4e2"
+               OutSFmt        - Format for output column headers
+  "A11"
+------------------------- MEMBER OUTPUT LIST ------------------------------------------
+            1  NMOutputs      - Number of Members whose output must go into OutJckF and/or FAST .out
+MemberID   NOutCnt    NodeCnt [NOutCnt=how many nodes to get output for [< 10]; NodeCnt are local ordinal numbers from the start of the member, and must be >=1 and <= NDiv+1] If NMOutputs=0 leave blan
+  (-)        (-)        (-)
+   1          2          1    2
+------------------------- SSOutList: The next line(s) contains a list of output parameters that will be output in <rootname>.SD.out or <rootname>.out. ------
+               SSOutList      - List of outputs requested
+  "ReactFXss, ReactFYss, ReactFZss, ReactMXss, ReactMYss, ReactMZss"
+               SSOutList      - List of outputs requested
+  "IntfFXss,  IntfFYss,  IntfFZss,  IntfMXss, IntfMYss, IntfMZss"
+               SSOutList      - List of outputs requested
+  "IntfTDXss,  IntfTDYss,  IntfTDZss,  IntfRDXss, IntfRDYss, IntfRDZss"
+               SSOutList      - List of outputs requested
+  "IntfTAXss,  IntfTAYss,  IntfTAZss,  IntfRAXss, IntfRAYss, IntfRAZss"
+               SSOutList      - List of outputs requested
+  "END"

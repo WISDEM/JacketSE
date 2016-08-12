@@ -9,9 +9,12 @@
 # Created:     11/04/2014
 # Copyright:   (c) rdamiani 2014
 # Licence:     Apache (2014)
+
+#All lines marked CJB+, CJB-, or CJBe have been added, "removed" (commented out), or edited respectively by Casey Broslawski. Summer 2016
 #-------------------------------------------------------------------------------
 
 import numpy as np
+import os
 from openmdao.main.api import set_as_top
 from jacket import JcktGeoInputs,SoilGeoInputs,WaterInputs,WindInputs,RNAprops,TPlumpMass,Frame3DDaux,\
                     MatInputs,LegGeoInputs,XBrcGeoInputs,MudBrcGeoInputs,HBrcGeoInputs,TPGeoInputs,PileGeoInputs,\
@@ -46,7 +49,8 @@ def main(): #\
     Jcktins.nlegs =4
     Jcktins.nbays =4
     Jcktins.batter=30.5495 #=(-43.127+24.614)/(5.939-5.333)
-    Jcktins.dck_botz =15.651
+    #Jcktins.dck_botz =15.651
+    Jcktins.dck_botz =16.15 #CJBe
     Jcktins.dck_width= 8.+1.2
     Jcktins.weld2D   = 0.
     Jcktins.VPFlag = True    #vertical pile T/F;  to enable piles in frame3DD set pileinputs.ndiv>0
@@ -70,6 +74,7 @@ def main(): #\
 
     #Water and wind inputs
     Waterinputs=WaterInputs()
+
     Waterinputs.wdepth   =50.
     Waterinputs.wlevel   =50. #Distance from bottom of structure to surface  THIS, I believe is no longer needed as piles may be negative in z, to check and remove in case
     Waterinputs.T=12.  #Wave Period
@@ -86,14 +91,14 @@ def main(): #\
 
     #Pile data
     Pilematin=MatInputs()
-    Pilematin.matname=np.array(['RC'])
+    Pilematin.matname=np.array(['steel']) #CJB Changed this from RC into steel
     Pilematin.E=np.array([ 2.1e11])
     Pilematin.G=np.array([8.07690e+10])
     Pilematin.rho=np.array([3339.12]) *34274.82/36876.   #From Test04.txt in SD, to check with official FAST certtest
 
     Pileinputs=PileGeoInputs()
     Pileinputs.Pilematins=Pilematin
-    Pileinputs.ndiv=1 #3			   ###----USER INPUT----###
+    Pileinputs.ndiv=0 #CJB Change this from 1 to 0 #3			   ###----USER INPUT----###
     Pileinputs.Dpile=2.082
     Pileinputs.tpile=0.491
     Pileinputs.Lp=0. #[m] Embedment length
@@ -251,6 +256,7 @@ def main(): #\
     Twrinputs.TwrlumpedMass=np.zeros([pmtwr.shape[0],11])
     Twrinputs.TwrlumpedMass[:,0:2]=pmtwr
 
+
     TwrRigidTop=False           #False=Account for RNA via math rather than a physical rigidmember
     #______________________________________________#
 
@@ -317,8 +323,176 @@ def main(): #\
 
 
     # Now Launch the assembly and pass all of the inputs
-
+    #myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,twodlcs=twodlcs, wlevel_Ulist=29))#CJB and JQ
     myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,twodlcs=twodlcs))
+        #pySubDyn Parameters CJB+
+    #SDpySubDynA = pySubDynA()
+
+    #INPUTS TO RUN SUBDYN-------------------------------------------------------
+    #(PATH INFORMATION FOR INPUT FILE AND DRIVER)
+
+    Base_name="OC4_pySubDyn" #Input name here
+
+    #INPUT FILE PATH
+    myjckt.InputFile_name=str(Base_name)+".txt"
+    #myjckt.SDpySubDynA.InputFile_name=str(Base_name)+".txt"
+    myjckt.InputandDriverpath="C:\wisdem\plugins\JacketSE\src\jacketse\SubDyn\CertTest"
+    myjckt.InputFile_path=myjckt.InputandDriverpath+os.sep+str(myjckt.InputFile_name)
+
+    #DRIVER PATH
+    myjckt.Driver_name=str(Base_name)+"D"+".txt"
+    myjckt.Driver_path=myjckt.InputandDriverpath+os.sep+str(myjckt.Driver_name)
+    myjckt.Driver_path=myjckt.InputandDriverpath+os.sep+str(myjckt.Driver_name)
+
+    #PATH TO RUN SUBDYN
+    SDEXEpath="C:\wisdem\plugins\JacketSE\src\jacketse\SubDyn"+os.sep+"bin\SubDyn_Win32.exe"
+    myjckt.SDpath=str(SDEXEpath)+' '+str(myjckt.Driver_path)
+    #test.SDpath='r'+"'''"+test.SDEXEpath+' '+test.SDDriverpath+"'''"
+
+    #PATH TO READ OUTPUT (INPUTS TO READ OUTPUT)
+    myjckt.Readpath_out=str(myjckt.InputandDriverpath)+os.sep+str(Base_name)+".SD.out"
+    myjckt.Readpath_sum=str(myjckt.InputandDriverpath)+os.sep+str(Base_name)+".SD.sum"
+    myjckt.Delete_file=False #Deletes driver, input, and output files. Does not delete Echo file.
+
+    #INPUT FILE INPUTS----------------------------------------------------------
+
+    #Simulation Control
+    myjckt.Echo=np.array([False, "Echo", "- Echo input data to ""<rootname>.SD.ech"" (flag)"])
+    myjckt.SDdeltaT=np.array(["DEFAULT", "SDdeltaT", "- Local Integration Step. If ""default"", the glue-code integration step will be used."])
+    myjckt.IntMethod=np.array([4, "IntMethod", "- Integration Method [1/2/3/4 = RK4/AB4/ABM4/AM2]."])
+    myjckt.SttcSolve=np.array([False, "SttcSolve", "- Solve dynamics about static equilibrium point"])
+
+    #FEA and CRAIG-BAMPTON PARAMETERS
+    myjckt.FEMmod=np.array([3, "- FEM switch: element model in the FEM. [1= Euler-Bernoulli(E-B);  2=Tapered E-B (unavailable);  3= 2-node Timoshenko;  4= 2-node tapered Timoshenko (unavailable)]"])
+    myjckt.NDiv=np.array([1, "NDiv", "- Number of sub-elements per member"])#CJB "HARDWIRED" INTO PYSUBDYN AS 1 TO ALLOW JACKETSE'S NODES TO BE USED AS SUBDYN'S JOINTS
+    myjckt.CBMod=np.array([False, "- [T/F] If True perform C-B reduction, else full FEM dofs will be retained. If True, select Nmodes to retain in C-B reduced system."])
+    myjckt.Nmodes=np.array([75, "- Number of internal modes to retain (ignored if CBMod=False). If Nmodes=0 --> Guyan Reduction."])
+    myjckt.JDampings=np.array([2, "JDampings", "- Damping Ratios for each retained mode (% of critical) If Nmodes>0, list Nmodes structural damping ratios for each retained mode (% of critical), or a single damping ratio to be applied to all retained modes. (last entered value will be used for all remaining modes)."])
+
+    #Structure Joints
+    myjckt.SDjointsHeader=np.array([['JointID','JointXss','JointYss','JointZss','[Coordinates of Member joints in SS-Coordinate System]'], ['(-)','(m)','(m)','(m)']])
+
+    #Base Reaction Joints
+    myjckt.BaseRxnJointsHeader=np.array([['RJointID','RctTDXss','RctTDYss','RctTDZss','RctRDXss','RctRDYss','RctRDZss','[Global Coordinate System]'], ['(-)',('flag'),('flag'),('flag'),('flag'),('flag'),('flag')]])
+
+    #Interface Joints
+    myjckt.InterfaceRxnJointsHeader=np.array([['IJointID','ItfTDXss','ItfTDYss','ItfTDZss','ItfRDXss','ItfRDYss','ItfRDZss','[Global Coordinate System]'], ['(-)',('flag'),('flag'),('flag'),('flag'),('flag'),('flag')]])
+
+    #Members
+    myjckt.MembersHeader=np.array([['MemberID','MJointID1','MJointID2','MPropSetID1','MPropSetID2','COSMID'], ['(-)','(-)','(-)','(-)','(-)','(-)']])
+
+    #MEMBER X-SECTION PROPERTY data 1/2
+    myjckt.NPropSets=np.array([6, 'NPropSets', '- # of structurally unique x-sections (i.e. # of X-sectional props utilized throughout all of the members)'])
+    myjckt.PropSet1Header=np.array([['PropSetID', 'YoungE', 'ShearG', 'MatDens', 'XsecD', 'XsecT'],['(-)', '(N/m2)', '(N/m2)', '(kg/m3)', '(m)', '(m)']])
+
+    #MEMBER X-SECTION PROPERTY data 2/2
+    myjckt.PropSet2=np.array([])
+    myjckt.PropSet2Header=np.array([["PropSetID","YoungE","ShearG","MatDens","XsecA","XsecAsx","XsecAsy","XsecJxx","XsecJyy","XsecJ0"],["(-)","(N/m2)","(N/m2)","(kg/m3)","(m2)","(m2)","(m2)","(m4)","(m4)","(m4)"]])
+
+    #MEMBER COSINE MATRICES COSM(i,j)
+    myjckt.COSMHeader=np.array([["COSMID","COSM11","COSMID12","COSMID13","COSMID21","COSMID22","COSMID23","COSMID31","COSMID32","COSMID33"],["(-)","(-)","(-)","(-)","(-)","(-)","(-)","(-)","(-)","(-)"]])
+    myjckt.COSMs=np.array([])
+
+    #JOINT ADDITIONAL CONCENTRATED MASSES
+    myjckt.CmassHeader=np.array([["CMJointID","JMass","JMXX","JMYY","JMZZ"],["(-)","(kg)" ,"(kg*m^2)","(kg*m^2)","(kg*m^2)"]])
+    myjckt.Cmass=np.array([])
+
+    #OUTPUT: SUMMARY & OUTFILE
+    myjckt.SSSum=np.array([True, "SSSum", "- Output a Summary File (flag).It contains: matrices K,M  and C-B reduced M_BB, M-BM, K_BB, K_MM(OMG^2), PHI_R, PHI_L. It can also contain COSMs if requested."])
+    myjckt.OutCOSM=np.array([True, "OutCOSM", "- Output cosine matrices with the selected output member forces (flag)"])
+    myjckt.OutAll=np.array([True, "OutAll", "- [T/F] Output all members' end forces "])
+    myjckt.OutSwtch=np.array([1, "OutSwtch", "- [1/2/3] Output requested channels to: 1=<rootname>.SD.out;  2=<rootname>.out (generated by FAST);  3=both files."])
+    myjckt.TabDelim=np.array([True, "TabDelim", "- Generate a tab-delimited output in the <rootname>.SD.out file"])
+    myjckt.OutDec=np.array([1, "OutDec", "- Decimation of output in the <rootname>.SD.out file"])
+    myjckt.OutFmt=np.array(["Es11.4e2", "OutFmt", "- Output format for numerical results in the <rootname>.SD.out file"])
+    myjckt.OutSFmt=np.array(["A11", "OutFmt", "- Output format for header strings in the <rootname>.SD.out file"])
+
+    #MEMBER OUTPUT LIST
+    myjckt.MemOutListHeader=np.array([['MemberID','NoutCnt','NodeCnt','[NOutCnt=how many nodes to get output for [< 10]; NodeCnt are local ordinal numbers from the start of the member, and must be >=1 and <= NDiv+1] If NMOutputs=0 leave blank as well.]'],\
+                                           ['(-)','(-)','(-)']])
+
+    #SSOutline
+    myjckt.SSOutlist=np.array([["ReactFXss, ReactFYss, ReactFZss, ReactMXss, ReactMYss, ReactMZss",'-Base reactions (forces onto SS structure)'],\
+                    ["IntfFXss,  IntfFYss,  IntfFZss,  IntfMXss, IntfMYss, IntfMZss",'-Interface reactions (forces from SS structure)'],\
+                    ["IntfTDXss,  IntfTDYss,  IntfTDZss,  IntfRDXss, IntfRDYss, IntfRDZss",'-Interface deflections '],\
+                    ["IntfTAXss,  IntfTAYss,  IntfTAZss,  IntfRAXss, IntfRAYss, IntfRAZss",'Interface accelerations']])
+
+    myjckt.SDjoints=np.array([[1, -5.93900, -5.93900, -43.12700],\
+                            [2, 5.93900, -5.93900, -43.12700],\
+                            [3, 5.93900, 5.93900, -43.12700],\
+                            [4, -5.93900, 5.93900, -43.12700],\
+                            [5, -4.01600, -4.01600, 15.65100],\
+                            [6, 4.01600, -4.01600, 15.65100],\
+                            [7, 4.01600, 4.01600, 15.65100],\
+                            [8, -4.01600, 4.01600, 15.65100],\
+                            [9, 0.00000, -4.79180, -8.06090],\
+                            [10, 4.79180, 0.00000, -8.06090],\
+                            [11, 0.00000, 4.79180, -8.06090],\
+                            [12, -4.79180, 0.00000, -8.06090]])
+
+    myjckt.BaseRxnJoints=np.array([[1,1,1,1,1,1,1],\
+                                 [2,1,1,1,1,1,1],\
+                                 [3,1,1,1,1,1,1],\
+                                 [4,1,1,1,1,1,1]])
+
+    myjckt.InterfaceJointsFlags=np.array([[5,1,1,1,1,1,1],\
+                                   [6,1,1,1,1,1,1],\
+                                   [7,1,1,1,1,1,1],\
+                                   [8,1,1,1,1,1,1]])
+
+    myjckt.Members=np.array([[1, 1, 5, 2, 2],\
+                            [2, 2, 6, 2, 2],\
+                            [3, 3, 7, 2, 2],\
+                            [4, 4, 8, 2, 2],\
+                            [5, 1, 9, 3, 3],\
+                            [6, 9, 6, 3, 3],\
+                            [7, 5, 9, 3, 3],\
+                            [8, 9, 2, 3, 3],\
+                            [9, 2, 10, 3, 3],\
+                            [10, 10, 7, 3, 3],\
+                            [11, 6, 10, 3, 3],\
+                            [12, 10, 3, 3, 3],\
+                            [13, 3, 11, 3, 3],\
+                            [14, 11, 8, 3, 3],\
+                            [15, 7, 11, 3, 3],\
+                            [16, 11, 4, 3, 3],\
+                            [17, 4, 12, 3, 3],\
+                            [18, 12, 5, 3, 3],\
+                            [19, 8, 12, 3, 3],\
+                            [20, 12, 1, 3, 3],\
+                            [21, 5, 6, 3, 3],\
+                            [22, 6, 7, 3, 3],\
+                            [23, 7, 8, 3, 3],\
+                            [24, 8, 5, 3, 3]])
+
+    myjckt.MemOutList=np.array([[1,2,1,2]])
+
+    #DRIVER INPUTS--------------------------------------------------------------
+
+    myjckt.EchoD=np.array([True, "Echo", "- Echo the input file data (flag)"])
+
+    #Environmental Conditions
+    myjckt.Gravity=np.array([9.81, "Gravity", "- Gravity (m/s^2)"])
+    myjckt.WtrDpth=np.array([43.127, "WtrDpth", "- Water Depth (m) positive value"])
+
+    #SubDyn
+    myjckt.SDInputFile=np.array([myjckt.InputFile_path, "SDInputFile"])
+    myjckt.OutRootName=np.array([str(myjckt.InputandDriverpath)+os.sep+str(Base_name), "OutRootName"])
+    myjckt.NSteps=np.array([600, "NSteps", "- Number of time steps in the simulations (-)"])
+    myjckt.TimeInterval=np.array([0.005, "TimeInterval", "- TimeInterval for the simulation (sec)"])
+    myjckt.TP_RefPoint=np.array([0.0, 0.0, 18.15, "TP_RefPoint", "- Location of the TP reference point in global coordinates (m)"])
+    myjckt.SubRotateZ=np.array([0.0, "SubRotateZ", "- Rotation angle of the structure geometry in degrees about the global Z axis."])
+
+    #INPUTS
+    myjckt.InputsMod=np.array([1, "InputsMod", "- Inputs model {0: all inputs are zero for every timestep, 1: steadystate inputs, 2: read inputs from a file (InputsFile)} (switch)"])
+    myjckt.InputsFile=np.array(['""', "InputsFile", "- Name of the inputs file if InputsMod = 2"])
+
+    #STEADY INPUTS
+    myjckt.uTPInSteady=np.array([0.1, 0.0, 0.0, 0.0, 0.0, 0.0, "uTPInSteady", "- input displacements and rotations ( m, rads )"])
+    myjckt.uDotTPInSteady=np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "uDotTPInSteady", "- input translational and rotational velocities ( m/s, rads/s)"])
+    myjckt.uDotDotTPInSteady=np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "uDotDotTPInSteady", "- input translational and rotational accelerations ( m/s^2, rads/s^2)"])
+
+    #myjckt.SDpySubDynA.run()
     myjckt.JcktGeoIn=Jcktins
     myjckt.Soilinputs=Soilinputs
     myjckt.Waterinputs=Waterinputs
@@ -339,36 +513,38 @@ def main(): #\
 
     myjckt.FrameAuxIns=FrameAuxIns
 
-
     return myjckt,f0,f0epsilon,jcktDTRmin,mxftprint,guesses,bounds.T
 
 
 
 if __name__ == '__main__':
-    from PlotJacket import main as PlotJacket  #COMMENT THIS ONE OUT FOR PEREGRINE"S SAKE
 
+    from PlotJacket import main as PlotJacket  #COMMENT THIS ONE OUT FOR PEREGRINE"S SAKE
     myjckt= main()[0]
+    #print 'flag1 ',myjckt.Waterinputs.wlevel #CJB+
+
     #--- RUN JACKET ---#
     myjckt.run()
+    #print 'flag2 ',myjckt.Waterinputs.wlevel #CJB+
     # ---------------
 
     #_____________________________________#
     #Now show results of modal analysis
-    print('First two Freqs.= {:5.4f} and {:5.4f} Hz'.format(*myjckt.Frameouts.Freqs))
+    print('First two Freqs.= {:5.4f} and {:5.4f} Hz'.format(*myjckt.LoadFrameOuts.Frameouts.Freqs))
     #print component masses
-    print('jacket+TP(structural+lumped) mass (no tower, no piles) [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass-myjckt.Tower.Twrouts.mass))
+    print('jacket+TP(structural+lumped) mass (no tower, no piles) [kg] = {:6.0f}'.format(myjckt.LoadFrameOuts.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass-myjckt.Tower.Twrouts.mass))
     print('tower mass [kg] = {:6.0f}'.format(myjckt.Tower.Twrouts.mass))
     print('TP mass structural + lumped mass [kg] = {:6.0f}'.format(myjckt.TP.TPouts.mass+myjckt.TP.TPlumpinputs.mass))
     print('piles (all) mass (for assigned (not optimum, unless optimization is run) Lp [kg] = {:6.0f}'.format(myjckt.Mpiles))
-    print('frame3dd model mass (structural + TP lumped) [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass))
-    print('frame3dd model mass (structural + TP lumped) + Pile Mass [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass+myjckt.Mpiles))
-    print('frame3dd model mass (structural only) no piles no tower [kg] = {:6.0f}'.format(myjckt.Frameouts.mass[0]-myjckt.Tower.Twrouts.mass))
+    print('frame3dd model mass (structural + TP lumped) [kg] = {:6.0f}'.format(myjckt.LoadFrameOuts.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass))
+    print('frame3dd model mass (structural + TP lumped) + Pile Mass [kg] = {:6.0f}'.format(myjckt.LoadFrameOuts.Frameouts.mass[0]+myjckt.TP.TPlumpinputs.mass+myjckt.Mpiles))
+    print('frame3dd model mass (structural only) no piles no tower [kg] = {:6.0f}'.format(myjckt.LoadFrameOuts.Frameouts.mass[0]-myjckt.Tower.Twrouts.mass))
     #print tower top displacement
-    print('Tower Top Displacement in Global Coordinate System [m] ={:5.4f}'.format(*myjckt.Frameouts.top_deflection))
+    print('Tower Top Displacement in Global Coordinate System [m] ={:5.4f}'.format(*myjckt.LoadFrameOuts.Frameouts.top_deflection))
     #print max API code checks
-    print('MAX member compression-bending utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.cb_util)))
-    print('MAX member tension utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.t_util)))
-    print('MAX X-joint  utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.XjntUtil)))
-    print('MAX K-joint  utilization at joints = {:5.4f}'.format(np.max(myjckt.jacket_utilization.KjntUtil)))
+    print('MAX member compression-bending utilization at joints = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts.jacket_utilization.cb_util)))
+    print('MAX member tension utilization at joints = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts.jacket_utilization.t_util)))
+    print('MAX X-joint  utilization at joints = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts.jacket_utilization.XjntUtil)))
+    print('MAX K-joint  utilization at joints = {:5.4f}'.format(np.max(myjckt.LoadFrameOuts.jacket_utilization.KjntUtil)))
 
     PlotJacket(myjckt,util=True)

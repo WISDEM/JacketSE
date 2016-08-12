@@ -83,7 +83,6 @@ class JcktUtilization(Component):
         Legmems=self.Legmems
         Twrmems=self.Twrmems
         TPmems=self.TPmems
-
         #self.JcktGeoOut.mems=np.vstack((self.Pilemems,self.Legmems,LLURmems,ULLRmems,Mudmems,Hmems,Stmpmems,Stemmems,Girdmems,Brcmems,Strtmems,self.Twrmems))
         nfrcs=self.MbrFrcs.shape[-1]
         MbrFrcs=np.empty([nfrcs,9])
