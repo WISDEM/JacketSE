@@ -10,6 +10,9 @@ from commonse.utilities import sind, cosd
 
 from VarTrees import RNAprops
 
+#All lines marked CJB+, CJB-, or CJBe have been added, "removed" (commented out), or edited respectively by Casey Broslawski. Summer 2016
+#print("Modified loads file")
+
 #NOTE: ON 5/9/2014 the input of wave height changed to be the full wave height (peak-to-peak) as Andrew's load routine uses it, if i use ww_loads.py, then this would have to be 0.5(peak-to-peak)
 
 # TODO: share a common set of VariableTrees
@@ -18,18 +21,17 @@ class WaterInputs(VariableTree):
 
     """Basic Wave Inputs needed to calculate Jacket Loads"""
     # inputs
-    wdepth = Float(units='m', desc='Water Depth')
+    wdepth = Float( units='m', desc='Water Depth')
     z_floor = Float(units='m', desc='reference location of sea floor')
-    wlevel = Float(units='m', desc='Water Level: Distance from bottom of structure (including buried pile) to water surface')
+    wlevel = Float( units='m', desc='Water Level: Distance from bottom of structure (including buried pile) to water surface')
     T = Float(units='s', desc='50-yr wave period (single wave here, not peak spectral period)')
     HW = Float(units='m', desc='50-yr wave height PEAK-to-PEAK!!!  (it used to be half-amplitude of sinusoid, changed since)')
     psi = Float(45., units='deg', desc='Wave direction angle relative to global CS.')
     rho = Float(1027., units='kg*m**-3', desc='Water Density')
     Cm = Float(2.0, units=None, desc='Added mass coefficient')
-    Cd =Float(iotype='in', units=None, desc='User input drag coefficient, if left blank it will be automatically calculated based on Cylinder Re')
+    Cd = Float(iotype='in', units=None, desc='User input drag coefficient, if left blank it will be automatically calculated based on Cylinder Re')
     mu = Float(1.3351e-3, units='kg/(m*s)', desc='dynamic viscosity of water')
     Uc = Float(units='m/s', desc='mean current speed')
-
 
 class WindInputs(VariableTree):
 
@@ -97,7 +99,6 @@ class JcktLoadPre(Component):
         Pilemems = self.Pilemems
         Legmems = self.Legmems
         Twrmems = self.Twrmems
-
         # indices of leg 1
         legidx = np.arange(Legmems[0, 0], Legmems[-1, 1] / nlegs + 1) - 1
 
@@ -149,8 +150,6 @@ class JcktLoadPre(Component):
         else:  # 3legged jacket in progress
             # TODO: THIS CASE
             sys.exit("nlegs <>4 not implemented yet for loading")
-
-
 
 # from scipy.integrate import cumtrapz
 
@@ -230,6 +229,7 @@ class JcktLoadPost(Component):
         twrndIDs=self.twrndIDs
 
         wdepth=self.wdepth
+
        #COSINE MATRIX FROM LOCAL TO GLOBAL COORDINATE SYSTEMS
         DIRCOSwind=np.array([ [cosd(psi_wi) , -sind(psi_wi) ,0.],
                           [    sind(psi_wi) , cosd(psi_wi),0.],
@@ -254,15 +254,17 @@ class JcktLoadPost(Component):
             deltaz=np.hstack((deltaz[0],(np.roll(deltaz,-1)+deltaz)[0:-1],deltaz[-1]))  #This is the actual DeltaZ to be assigned at each node starting from the 2nd and ending at the one before last
 
             #Correct the delta z for the node just below water to avoid jumps in loading - use refined mesh however
-            idx_bw=np.nonzero(pillegZs<= wdepth)[0][-1]
+            #idx_bw=np.nonzero(pillegZs<= wdepth)[0][-1] #CJB- Original code. Modified line below
+            idx_bw=np.nonzero(pillegZs<= 0)[0][-1] #CJBe THe MSL is now at z=0, not z=wdepth
             #Also Attempt at using load at z=0
             ###Px0=self.pileLegWaveLoads.Px_i0overd2*pillegDs[idx_bw]**2+self.pileLegWaveLoads.Px_d0overd*pillegDs[idx_bw]
             ###Py0=self.pileLegWaveLoads.Py_i0overd2*pillegDs[idx_bw]**2+self.pileLegWaveLoads.Py_d0overd*pillegDs[idx_bw]
             Px0=self.pileLegWaveLoads.Px0
             Py0=self.pileLegWaveLoads.Py0
-            deltaz0=(wdepth-pillegZs[idx_bw])
-
-            if (wdepth-pillegZs[idx_bw])> deltaz[idx_bw]/2.:  #point with its deltaz entriely below surface
+            #deltaz0=(wdepth-pillegZs[idx_bw]) #CJB- Original code. Modified line below
+            deltaz0=np.abs(0-pillegZs[idx_bw]) #CJBe
+            #if (wdepth-pillegZs[idx_bw])> deltaz[idx_bw]/2.:  #point with its deltaz entriely below surface #CJB- Original code. Modified line below
+            if np.abs(0-pillegZs[idx_bw])> np.abs(deltaz[idx_bw]/2.): #CJBe Remove wdepth
                 deltaz0 -= deltaz[idx_bw]/2.  #note deltaz0 before deltaz as deltaz gets modified
                 #deltaz[idx_bw]=deltaz[idx_bw]/2. -(pillegZs[idx_bw]-wdepth)
             else:
@@ -372,7 +374,6 @@ class JcktLoadPost(Component):
 
         #Then rotate them in the global coordinate system for PYFRAME to account for yaw
         RNAload=np.dot(DIRCOSwind,RNAload) #Gravity is already accounted for by Frame3DD for concentrated masses: Jacket.Twr.RNAmass*aux['g_z'],np.zeros(3)))  self.RNA_F.reshape([2,3]).T
-
         if not(TwrRigidTop):
             twr_ndsfrc[-1,1:] += RNAload.T.flatten()
         else:
@@ -391,8 +392,6 @@ class JcktLoadPost(Component):
 
         #STACK ALLOF THEM TOGETHER
         self.Loadouts.nds_frc=np.vstack((pilleg_ndsfrc, twr_ndsfrc))  #Concentrated loads
-
-
 
         # import matplotlib.pyplot as plt
         # plt.plot(self.towerWindLoads.Px, self.towerWindLoads.z)
@@ -492,6 +491,7 @@ class JcktLoad(Assembly):
         self.connect('waterIns.Uc', ['wavej.Uc', 'wavet.Uc'])
         self.connect('waterIns.wdepth + waterIns.z_floor', ['wavej.z_surface', 'wavet.z_surface'])
         self.connect('waterIns.HW', ['wavej.hmax', 'wavet.hmax'])
+        self.connect('waterIns.wdepth', ['wavej.wdepth','wavet.wdepth']) #CJB+
         # self.connect('waterIns.T', ['wavej.T', 'wavet.T'])
         self.connect('waterIns.T', 'wavej.T')
         self.connect('waterIns.T', 'wavet.T')
@@ -572,7 +572,6 @@ class JcktLoad(Assembly):
         #self.connect('waveLoadst.waveLoads','twrWaveLoads')
         self.create_passthrough('windLoadst.windLoads')
         self.create_passthrough('waveLoadst.waveLoads')
-
 
 if __name__ == '__main__':
 

@@ -1,0 +1,21 @@
+Customized jacket driver file for SubDyn
+Compatible with SubDyn v1.01.xx
+True Echo - Echo the input file data (flag)
+---------------------- ENVIRONMENTAL CONDITIONS ------------------------------
+9.81 Gravity - Gravity (m/s^2)
+43.127 WtrDpth - Water Depth (m) positive value
+---------------------- SubDyn ------------------------------------------------
+"C:\wisdem\plugins\JacketSE\src\jacketse\SubDyn\CertTest\pySubDynTest.txt" SDInputFile
+"C:\wisdem\plugins\JacketSE\src\jacketse\SubDyn\CertTest\pySubDynTest" OutRootName
+600 NSteps - Number of time steps in the simulations (-)
+0.005 TimeInterval - TimeInterval for the simulation (sec)
+0.0 0.0 0.0 TP_RefPoint - Location of the TP reference point in global coordinates (m)
+0.0 SubRotateZ - Rotation angle of the structure geometry in degrees about the global Z axis.
+---------------------- INPUTS ------------------------------------------------
+1 InputsMod
+"" InputsFile
+---------------------- STEADY INPUTS  ----------------------------------------
+0.1 0.0 0.0 0.0 0.0 0.0 uTPInSteady - input displacements and rotations ( m, rads )
+0.0 0.0 0.0 0.0 0.0 0.0 uDotTPInSteady - input translational and rotational velocities ( m/s, rads/s)
+0.0 0.0 0.0 0.0 0.0 0.0 uDotDotTPInSteady - input translational and rotational accelerations ( m/s^2, rads/s^2)
+END of driver input file

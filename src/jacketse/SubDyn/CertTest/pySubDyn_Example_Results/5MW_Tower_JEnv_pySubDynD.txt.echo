@@ -1,0 +1,27 @@
+Customized jacket driver file for SubDyn
+Compatible with SubDyn v1.01.xx
+            T  Echo           - Echo the input file data
+---------------------- ENVIRONMENTAL CONDITIONS ------------------------------
+   9.8065E+00  Gravity        - Gravity
+   5.0000E+01  WtrDpth        - WtrDpth
+---------------------- SubDyn ------------------------------------------------
+               HDInputFile    - SubDyn input filename
+  "C:\wisdem\plugins\JacketSE\src\jacketse\SubDyn\CertTest\5MW_Tower_JEnv_pySubDyn.txt"
+               OutRootName    - SubDyn output root filename
+  "C:\wisdem\plugins\JacketSE\src\jacketse\SubDyn\CertTest\5MW_Tower_JEnv_pySubDyn"
+          600  NSteps         - Number of time steps in the SubDyn simulation
+   5.0000E-03  TimeInterval   - Time interval for any SubDyn inputs
+               TP reference p - TP reference point
+   0.0000E+00   0.0000E+00   1.0811E+02
+   0.0000E+00  SubRotateZ     - Rotation angle in degrees about Z axis.
+---------------------- INPUTS ------------------------------------------------
+            1  InputsMod      - Model for the inputs
+               InputsFile     - Filename for the SubDyn inputs
+  ""
+---------------------- STEADY INPUTS  ----------------------------------------
+               uInSteady      - Steady-state TP displacements and rotations.
+   1.0000E-01   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
+               uDotTPInSteady -  Steady-state TP translational and rotational velocities.
+   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00
+               uDotDotTPInSte -  Steady-state TP translational and rotational accelerations.
+   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00   0.0000E+00

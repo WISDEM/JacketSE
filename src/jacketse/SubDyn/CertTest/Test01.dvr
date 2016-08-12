@@ -1,0 +1,21 @@
+SubDyn Driver file for a version of the OC3_Monopile.  Certification Test01 
+Compatible with SubDyn v1.01.xx
+TRUE               Echo           - Echo the input file data (flag)
+---------------------- ENVIRONMENTAL CONDITIONS ------------------------------
+9.81               Gravity        - Gravity (m/s^2)
+20.0               WtrDpth        - Water Depth (m) positive value
+---------------------- SubDyn ------------------------------------------------
+"Test01\Test01.txt"        SDInputFile
+"C:\wisdem\plugins\JacketSE\src\jacketse\SubDyn\CertTest"           OutRootName
+600                NSteps         - Number of time steps in the simulations (-)
+0.001              TimeInterval   - TimeInterval for the simulation (sec)
+0.0   0.0   10.0   TP_RefPoint    - Location of the TP reference point in global coordinates (m)
+0.0                SubRotateZ     - Rotation angle of the structure geometry in degrees about the global Z axis.   
+---------------------- INPUTS ------------------------------------------------
+   1               InputsMod      - Inputs model {0: all inputs are zero for every timestep, 1: steadystate inputs, 2: read inputs from a file (InputsFile)} (switch)
+""                 InputsFile     - Name of the inputs file if InputsMod = 2
+---------------------- STEADY INPUTS  ----------------------------------------
+0.0   0.0   0.0   0.0   0.0   0.0   uTPInSteady     - input displacements and rotations ( m, rads )
+0.0   0.0   0.0   0.0   0.0   0.0   uDotTPInSteady  - input translational and rotational velocities ( m/s, rads/s)
+0.0   0.0   0.0   0.0   0.0   0.0   uDotTPInSteady  - input translational and rotational accelerations( m/s^2, rads/s^2)
+END of driver input file
