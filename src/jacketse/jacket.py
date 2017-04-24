@@ -2922,7 +2922,11 @@ class JacketSE(Assembly):
         self.add('SDReturns', SubDynReturns()) #CJB+
 
         # BUILD UP THE DRIVER
-        self.driver.workflow.add(['PreLeg','PreBuild', 'Soil', 'Legs', 'Piles', 'Xbraces', 'Mudbraces', 'Hbraces', 'SDpySubDynA', 'SDReturns']) #CJBe
+        casey = False
+        if casey:
+           self.driver.workflow.add(['PreLeg','PreBuild', 'Soil', 'Legs', 'Piles', 'Xbraces', 'Mudbraces', 'Hbraces', 'SDpySubDynA', 'SDReturns']) #CJBe
+        else:
+           self.driver.workflow.add(['PreLeg','PreBuild', 'Soil', 'Legs', 'Piles', 'Xbraces', 'Mudbraces', 'Hbraces'])
 
 ##        if self.PrebuildTP:
 ##            self.driver.workflow.add(['PreBuildTP','PreBuildTP2'])
@@ -3054,77 +3058,78 @@ class JacketSE(Assembly):
         self.connect('PreBuild.WaterNew.wdepth',       'BrcCriteria.wdepth') #CJB+ water flag
 
         #SubDyn #CJB+
-        self.connect('InputFile_name',          'SDpySubDynA.InputFile_name') #CJB+
-        self.connect('Echo',                    'SDpySubDynA.Echo') #CJB+
-        self.connect('SDdeltaT',                'SDpySubDynA.SDdeltaT') #CJB+
-        self.connect('IntMethod',               'SDpySubDynA.IntMethod') #CJB+
-        self.connect('SttcSolve',               'SDpySubDynA.SttcSolve') #CJB+
-        self.connect('FEMmod',                  'SDpySubDynA.FEMmod') #CJB+
-        self.connect('NDiv',                    'SDpySubDynA.NDiv') #CJB+
-        self.connect('CBMod',                   'SDpySubDynA.CBMod') #CJB+
-        self.connect('Nmodes',                  'SDpySubDynA.Nmodes') #CJB+
-        self.connect('JDampings',               'SDpySubDynA.JDampings') #CJB+
-        self.connect('SDjointsHeader',          'SDpySubDynA.SDjointsHeader') #CJB+
-        self.connect('SDjoints',                'SDpySubDynA.SDjoints') #CJB+
-        self.connect('BaseRxnJointsHeader',     'SDpySubDynA.BaseRxnJointsHeader') #CJB+
-        self.connect('BaseRxnJoints',           'SDpySubDynA.BaseRxnJoints') #CJB+
-        self.connect('InterfaceRxnJointsHeader','SDpySubDynA.InterfaceRxnJointsHeader') #CJB+
-        self.connect('InterfaceJointsFlags',    'SDpySubDynA.InterfaceJoints') #CJB+
-        self.connect('MembersHeader',           'SDpySubDynA.MembersHeader') #CJB+
-        self.connect('Members',                 'SDpySubDynA.Members') #CJB+
-        self.connect('NPropSets',               'SDpySubDynA.NPropSets') #CJB+
-        self.connect('PropSet1Header',          'SDpySubDynA.PropSet1Header') #CJB+
-        self.connect('PropSet1',                'SDpySubDynA.PropSet1') #CJB+
-        self.connect('PropSet2Header',          'SDpySubDynA.PropSet2Header') #CJB+
-        self.connect('PropSet2',                'SDpySubDynA.PropSet2') #CJB+
-        self.connect('COSMHeader',              'SDpySubDynA.COSMHeader') #CJB+
-        self.connect('COSMs',                   'SDpySubDynA.COSMs') #CJB+
-        self.connect('CmassHeader',             'SDpySubDynA.CmassHeader') #CJB+
-        self.connect('Cmass',                   'SDpySubDynA.Cmass') #CJB+
-        self.connect('SSSum',                   'SDpySubDynA.SSSum') #CJB+
-        self.connect('OutCOSM',                 'SDpySubDynA.OutCOSM') #CJB+
-        self.connect('OutAll',                  'SDpySubDynA.OutAll') #CJB+
-        self.connect('OutSwtch',                'SDpySubDynA.OutSwtch') #CJB+
-        self.connect('TabDelim',                'SDpySubDynA.TabDelim') #CJB+
-        self.connect('OutDec',                  'SDpySubDynA.OutDec') #CJB+
-        self.connect('OutFmt',                  'SDpySubDynA.OutFmt') #CJB+
-        self.connect('OutSFmt',                 'SDpySubDynA.OutSFmt') #CJB+
-        self.connect('MemOutListHeader',        'SDpySubDynA.MemOutListHeader') #CJB+
-        self.connect('MemOutList',              'SDpySubDynA.MemOutList') #CJB+
-        self.connect('SSOutlist',               'SDpySubDynA.SSOutlist') #CJB+
-        self.connect('InputandDriverpath',      'SDpySubDynA.InputandDriverpath') #CJB+
-        self.connect('EchoD',                   'SDpySubDynA.EchoD') #CJB+
-        self.connect('Gravity',                 'SDpySubDynA.Gravity') #CJB+
-        self.connect('WtrDpth',                 'SDpySubDynA.WtrDpth') #CJB+
-        self.connect('SDInputFile',             'SDpySubDynA.SDInputFile') #CJB+
-        self.connect('OutRootName',             'SDpySubDynA.OutRootName') #CJB+
-        self.connect('NSteps',                  'SDpySubDynA.NSteps') #CJB+
-        self.connect('TimeInterval',            'SDpySubDynA.TimeInterval') #CJB+
-        self.connect('TP_RefPoint',             'SDpySubDynA.TP_RefPoint') #CJB+
-        self.connect('SubRotateZ',              'SDpySubDynA.SubRotateZ') #CJB+
-        self.connect('InputsMod',               'SDpySubDynA.InputsMod') #CJB+
-        self.connect('InputsFile',              'SDpySubDynA.InputsFile') #CJB+
-        self.connect('uTPInSteady',             'SDpySubDynA.uTPInSteady') #CJB+
-        self.connect('uDotTPInSteady',          'SDpySubDynA.uDotTPInSteady') #CJB+
-        self.connect('uDotDotTPInSteady',       'SDpySubDynA.uDotDotTPInSteady') #CJB+
-        self.connect('SDpath',                  'SDpySubDynA.SDpath') #CJB+
-        self.connect('Readpath_out',            'SDpySubDynA.Readpath_out') #CJB+
-        self.connect('Readpath_sum',            'SDpySubDynA.Readpath_sum') #CJB+
-        self.connect('Delete_file',             'SDpySubDynA.Delete_file') #CJB+
-        self.connect('InputFile_path',          'SDpySubDynA.InputFile_path') #CJB+
-        self.connect('Driver_path',             'SDpySubDynA.Driver_path') #CJB+
-
-        #SubDyn Outputs CJB+
-        self.connect('SDpySubDynA.SubDynAOuts', 'SDReturns.SubDynOuts') #CJB+
-
-        #SubDyn Inputs from Jacket
-        #gravity, nodes (see below)
-        self.connect('PreBuild.WaterNew.wdepth', 'SDpySubDynA.wdepth') #CJB+ #CJB+ water flag
-        self.connect('JcktGeoIn.dck_botz', 'SDpySubDynA.dck_botz') #CJB+
-        self.connect('Build.JcktGeoOut.mems','SDpySubDynA.mems') #CJB+
-        self.connect('Build.JcktGeoOut.Reacts','SDpySubDynA.Reacts') #CJB+
-        self.connect('Build.SDPropSet', 'SDpySubDynA.SDPropSet') #CJB+
-        self.connect('RNAinputs',          'SDpySubDynA.RNAinputs' ) #CJB+ test
+        if casey:
+            self.connect('InputFile_name',          'SDpySubDynA.InputFile_name') #CJB+
+            self.connect('Echo',                    'SDpySubDynA.Echo') #CJB+
+            self.connect('SDdeltaT',                'SDpySubDynA.SDdeltaT') #CJB+
+            self.connect('IntMethod',               'SDpySubDynA.IntMethod') #CJB+
+            self.connect('SttcSolve',               'SDpySubDynA.SttcSolve') #CJB+
+            self.connect('FEMmod',                  'SDpySubDynA.FEMmod') #CJB+
+            self.connect('NDiv',                    'SDpySubDynA.NDiv') #CJB+
+            self.connect('CBMod',                   'SDpySubDynA.CBMod') #CJB+
+            self.connect('Nmodes',                  'SDpySubDynA.Nmodes') #CJB+
+            self.connect('JDampings',               'SDpySubDynA.JDampings') #CJB+
+            self.connect('SDjointsHeader',          'SDpySubDynA.SDjointsHeader') #CJB+
+            self.connect('SDjoints',                'SDpySubDynA.SDjoints') #CJB+
+            self.connect('BaseRxnJointsHeader',     'SDpySubDynA.BaseRxnJointsHeader') #CJB+
+            self.connect('BaseRxnJoints',           'SDpySubDynA.BaseRxnJoints') #CJB+
+            self.connect('InterfaceRxnJointsHeader','SDpySubDynA.InterfaceRxnJointsHeader') #CJB+
+            self.connect('InterfaceJointsFlags',    'SDpySubDynA.InterfaceJoints') #CJB+
+            self.connect('MembersHeader',           'SDpySubDynA.MembersHeader') #CJB+
+            self.connect('Members',                 'SDpySubDynA.Members') #CJB+
+            self.connect('NPropSets',               'SDpySubDynA.NPropSets') #CJB+
+            self.connect('PropSet1Header',          'SDpySubDynA.PropSet1Header') #CJB+
+            self.connect('PropSet1',                'SDpySubDynA.PropSet1') #CJB+
+            self.connect('PropSet2Header',          'SDpySubDynA.PropSet2Header') #CJB+
+            self.connect('PropSet2',                'SDpySubDynA.PropSet2') #CJB+
+            self.connect('COSMHeader',              'SDpySubDynA.COSMHeader') #CJB+
+            self.connect('COSMs',                   'SDpySubDynA.COSMs') #CJB+
+            self.connect('CmassHeader',             'SDpySubDynA.CmassHeader') #CJB+
+            self.connect('Cmass',                   'SDpySubDynA.Cmass') #CJB+
+            self.connect('SSSum',                   'SDpySubDynA.SSSum') #CJB+
+            self.connect('OutCOSM',                 'SDpySubDynA.OutCOSM') #CJB+
+            self.connect('OutAll',                  'SDpySubDynA.OutAll') #CJB+
+            self.connect('OutSwtch',                'SDpySubDynA.OutSwtch') #CJB+
+            self.connect('TabDelim',                'SDpySubDynA.TabDelim') #CJB+
+            self.connect('OutDec',                  'SDpySubDynA.OutDec') #CJB+
+            self.connect('OutFmt',                  'SDpySubDynA.OutFmt') #CJB+
+            self.connect('OutSFmt',                 'SDpySubDynA.OutSFmt') #CJB+
+            self.connect('MemOutListHeader',        'SDpySubDynA.MemOutListHeader') #CJB+
+            self.connect('MemOutList',              'SDpySubDynA.MemOutList') #CJB+
+            self.connect('SSOutlist',               'SDpySubDynA.SSOutlist') #CJB+
+            self.connect('InputandDriverpath',      'SDpySubDynA.InputandDriverpath') #CJB+
+            self.connect('EchoD',                   'SDpySubDynA.EchoD') #CJB+
+            self.connect('Gravity',                 'SDpySubDynA.Gravity') #CJB+
+            self.connect('WtrDpth',                 'SDpySubDynA.WtrDpth') #CJB+
+            self.connect('SDInputFile',             'SDpySubDynA.SDInputFile') #CJB+
+            self.connect('OutRootName',             'SDpySubDynA.OutRootName') #CJB+
+            self.connect('NSteps',                  'SDpySubDynA.NSteps') #CJB+
+            self.connect('TimeInterval',            'SDpySubDynA.TimeInterval') #CJB+
+            self.connect('TP_RefPoint',             'SDpySubDynA.TP_RefPoint') #CJB+
+            self.connect('SubRotateZ',              'SDpySubDynA.SubRotateZ') #CJB+
+            self.connect('InputsMod',               'SDpySubDynA.InputsMod') #CJB+
+            self.connect('InputsFile',              'SDpySubDynA.InputsFile') #CJB+
+            self.connect('uTPInSteady',             'SDpySubDynA.uTPInSteady') #CJB+
+            self.connect('uDotTPInSteady',          'SDpySubDynA.uDotTPInSteady') #CJB+
+            self.connect('uDotDotTPInSteady',       'SDpySubDynA.uDotDotTPInSteady') #CJB+
+            self.connect('SDpath',                  'SDpySubDynA.SDpath') #CJB+
+            self.connect('Readpath_out',            'SDpySubDynA.Readpath_out') #CJB+
+            self.connect('Readpath_sum',            'SDpySubDynA.Readpath_sum') #CJB+
+            self.connect('Delete_file',             'SDpySubDynA.Delete_file') #CJB+
+            self.connect('InputFile_path',          'SDpySubDynA.InputFile_path') #CJB+
+            self.connect('Driver_path',             'SDpySubDynA.Driver_path') #CJB+
+    
+            #SubDyn Outputs CJB+
+            self.connect('SDpySubDynA.SubDynAOuts', 'SDReturns.SubDynOuts') #CJB+
+    
+            #SubDyn Inputs from Jacket
+            #gravity, nodes (see below)
+            self.connect('PreBuild.WaterNew.wdepth', 'SDpySubDynA.wdepth') #CJB+ #CJB+ water flag
+            self.connect('JcktGeoIn.dck_botz', 'SDpySubDynA.dck_botz') #CJB+
+            self.connect('Build.JcktGeoOut.mems','SDpySubDynA.mems') #CJB+
+            self.connect('Build.JcktGeoOut.Reacts','SDpySubDynA.Reacts') #CJB+
+            self.connect('Build.SDPropSet', 'SDpySubDynA.SDPropSet') #CJB+
+            self.connect('RNAinputs',          'SDpySubDynA.RNAinputs' ) #CJB+ test
 
         # LoadFrameOuts and LoadFrameOuts2
         self.connect('RNA_F',                      'LoadFrameOuts.RNA_F')
@@ -3482,7 +3487,7 @@ if __name__ == '__main__':
         OPTswitch -string, ['Cobyla'/ 'PyOptSNOPT'/ 'PyOPTCobyla'] for python Cobyla, or PyOPT SNOPT, or PyOPT Cobyla."""
 
     optimize = False        #Set this one to True if you want a test on optimization
-    OPTswitch= 'Cobyla'     #'Cobyla', 'PyOptSNOPT', 'PyOPTCobyla'
+    #OPTswitch= 'Cobyla'     #'Cobyla', 'PyOptSNOPT', 'PyOPTCobyla'
 
     if len(sys.argv)>1 and len(sys.argv)<5: #This means individual case
         optimize=sys.argv[1]
@@ -3731,7 +3736,8 @@ if __name__ == '__main__':
     #INPUT FILE PATH  #CJB+
     myjckt.InputFile_name=str(Base_name)+".txt"  #CJB+
     #myjckt.SDpySubDynA.InputFile_name=str(Base_name)+".txt"  #CJB+
-    myjckt.InputandDriverpath="C:\wisdem\plugins\JacketSE\src\jacketse\SubDyn\CertTest"  #CJB+
+    myjckt.InputandDriverpath=os.sep.join(['SubDyn', 'CertTest'])
+    #myjckt.InputandDriverpath="C:\wisdem\plugins\JacketSE\src\jacketse\SubDyn\CertTest"  #CJB+
     myjckt.InputFile_path=myjckt.InputandDriverpath+os.sep+str(myjckt.InputFile_name)  #CJB+
 
     #DRIVER PATH  #CJB+

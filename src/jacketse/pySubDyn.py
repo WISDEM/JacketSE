@@ -411,6 +411,7 @@ class RunSubDyn(Component):
         #way 2 (Preferred)
 
         def run_command(command):
+            print 'running ',command
             p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, stdin=subprocess.PIPE, shell=False)
             return iter(p.stdout.readline, b'')
 
