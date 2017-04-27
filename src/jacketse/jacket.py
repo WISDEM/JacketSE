@@ -2,7 +2,7 @@
 # encoding: utf-8
 """
 jacket.py
-
+(pySubDyn branch)
 Created by Rick Damiani and Andrew Ning on 2013-10-28.
 Copyright (c) NREL. All rights reserved.
 
