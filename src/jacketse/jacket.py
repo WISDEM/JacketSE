@@ -8,18 +8,14 @@ Copyright (c) NREL. All rights reserved.
 
 !!!!!TO CHECK Buckling LENGTH PASSED TO Tube.py: element length vs. joint2joint length!!!!
 ALSO lENGTH OF LEGS may not be right.
-
-All lines marked CJB+, CJB-, or CJBe have been added, "removed" (commented out), or edited respectively by Casey Broslawski. Summer 2016
 """
-print("Modified JacketSE") #CJB+
-
-import matplotlib.pyplot as plt #first in the list for peregrine's sake
+import matplotlib.pyplot as plt  #first in the list for peregrine's sake
 import math
 import copy
 import numpy as np
 import warnings
 from openmdao.main.api import VariableTree,  Component, Assembly, set_as_top
-from openmdao.main.datatypes.api import Int, Float, Array, Str, VarTree, Bool, Dict, Instance
+from openmdao.main.datatypes.api import Int, Float, Array, VarTree, Bool, Dict,Instance
 from openmdao.lib.drivers.api import COBYLAdriver
 #from openmdao.main.api import enable_console
 #enable_console()
@@ -46,9 +42,7 @@ from VarTrees import JcktGeoOutputs,TwrGeoOutputs,RNAprops, Frame3DDaux
 from loads import JcktLoad,LoadOutputs, WaterInputs, WindInputs
 from Utilization import UtilAssembly, IEC_PSFS
 
-from pySubDyn import pySubDynA, WriteInputFile, WriteDriver, RunSubDyn, ReadOutput, SubDynAOutputs #CJB+
-
-import sys, os
+import sys
 pi = math.pi
 tan=np.tan
 pi=np.pi
@@ -222,10 +216,6 @@ class legs(Component):
     leginputs =VarTree(LegGeoInputs(),iotype='in',  desc="Leg Input Data")
     legbot_stmph =Float( iotype='in',     units='m',desc='Bottom Leg Stump Vertical Height, must be >0 !!')  #Updated legbot_stmph : This should be set to 1.5 Dleg[0] if user did not set it, done in PreBuild
 
-    wdepth   = Float(units='m',  iotype='in',desc='Water Depth') #CJB+
-    wlevel   = Float(units='m',  iotype='in',desc='Water Level (total height of submerged+buried structure)') #CJB+
-    z_floor   = Float(units='m',  iotype='in',desc='z_floor') #CJB water flag
-
     #outputs
     bay_hslegs   = Array(          iotype='out',   units='m', dtype=np.float,  desc='Bay Heights Augmented for stump')
     legouts  = VarTree(LegGeoOutputs(), iotype='out', desc='Leg Geometry Output')
@@ -234,8 +224,6 @@ class legs(Component):
     #nNodesLeg= Int(iotype='out', units=None, desc='Number of (1) Leg Nodes')
     #njs=       Int(iotype='out', units=None, desc='Number of Leg Joints')
     #joints   = Array(iotype='out',units='m', dtype=np.float, desc='Leg Joints Coordinates') #shape=(3,nlegs,nbays+2),
-
-
 
     def execute(self):
         #Simplify nomenclature
@@ -251,10 +239,6 @@ class legs(Component):
         legmatins =self.leginputs.legmatins
         stump_h=self.legbot_stmph    #Leg bottom stump vertical height
 
-        wdepth=self.wdepth #CJB+
-        wlevel=self.wlevel #CJB+
-        z_floor=self.z_floor #CJB water flag
-
         # Nodes associated with joints starting from joint with pile, and including X-brace joints
         # Note: these are not necessarily the FEA model nodes if more than 1 element are
         #       used for each member, though for the time being they are, we will need TO CHANGE THIS
@@ -267,23 +251,19 @@ class legs(Component):
 
         #First joint (connection to pilehead) coordinates
         self.legouts.xyz[0,0,0]=-dck_width/2. + (1+weld2D)*Dleg[-1]/2. - (self.JcktH)/batter
-        #self.legouts.xyz[2,0,0]=self.leginputs.legZbot #CJB- Original code modified in the line below
-        self.legouts.xyz[2,0,0]=self.leginputs.legZbot-wlevel #CJBe Successfully shifts the jacket (everything above the mudbraces) down
+        self.legouts.xyz[2,0,0]=self.leginputs.legZbot
         #Add stumps to bay heights, at the bottom
-        self.bay_hslegs=np.insert(self.bay_hs,0,stump_h) #np.insert(self.bay_hs,-1*wdepth,stump_h-wdepth)
+        self.bay_hslegs=np.insert(self.bay_hs,0,stump_h)
         baydiv=self.bay_hslegs.repeat(ndiv)/ndiv
 
         #Other coordinates
         self.legouts.xyz[2,0,1:]=  self.legouts.xyz[2,0,0]+baydiv.cumsum() #z coordinates 1st leg
         #self.legouts.xyz[2,0,-1]+= Dleg[-1]/2.    #not sure why i had this, i remove it for now                 #z coordinates 1st leg
-        #self.legouts.xyz[0,0,1:]=  self.legouts.xyz[0,0,0]+\
-        #                        (self.legouts.xyz[2,0,1:]-self.leginputs.legZbot+wdepth)/batter    #x coordinates 1st leg #CJB- Original code modified in the line below
         self.legouts.xyz[0,0,1:]=  self.legouts.xyz[0,0,0]+\
-                                (self.legouts.xyz[2,0,1:]-self.leginputs.legZbot+wlevel)/batter #x coordinates 1st leg #CJBe Add wlevel to the parenthesis to account for shift in self.legouts.xyz[2,0,1:]
+                                (self.legouts.xyz[2,0,1:]-self.leginputs.legZbot)/batter #x coordinates 1st leg
         self.legouts.xyz[1,0,:]=self.legouts.xyz[0,0,0:]*np.tan(self.innr_ang) #y coordinates 1st leg
         #Now create nodes for other legs
         self.legouts.xyz[2,1:,:]=self.legouts.xyz[2,0,:]  #z,to replicate perhaps
-
         if nlegs==4:
             self.legouts.xyz[0,1:3,:]=-self.legouts.xyz[0,0,:] #x legs 2 and 3
             self.legouts.xyz[0,3,:]  = self.legouts.xyz[0,0,:] #x leg 4
@@ -367,7 +347,6 @@ class Xbraces(Component):
     Hbrct =  Float(units='m',iotype='out',desc='Recommended Hbrace Wall Thickness')
 
     def execute(self):
-
         #Simplify nomenclature
         Dbrc=self.Xbrcinputs.Dbrc
         tbrc=self.Xbrcinputs.tbrc
@@ -493,7 +472,6 @@ class Xbraces(Component):
         #Store recommended HbrcD and Hbrct
         self.HbrcD=self.Xbrcouts.LLURObj.D[-1]
         self.Hbrct=self.Xbrcouts.LLURObj.t[-1]
-
 #_____________________________________________________#
 class MudBrcGeoInputs(VariableTree):
     """Basic Geometric Inputs need to build Mudbraces of Jacket"""
@@ -976,6 +954,7 @@ class TP(Component):
                                           self.TPlumpinputs.I[3],self.TPlumpinputs.I[4],self.TPlumpinputs.I[5], \
                                           self.TPlumpinputs.CMoff[0],self.TPlumpinputs.CMoff[1],self.TPlumpinputs.CMoff[2]])
 
+
 #_____________________________________________________#
 
 class TwrGeoInputs(VariableTree):
@@ -1085,15 +1064,13 @@ class Tower(Component):
         if not(Htwr) and not(self.Twrouts.HH) and not(nNodes):  #Htwr not specified, HH is specified
             sys.exit('!!!You must specify either HH and Thzoff, or Htwr!!!')
         elif nNodes: #Stations are given, thus HTwr is given, need to check HH
-            Htwr=ztwr[-1]-ztwr[0] #CJB I believe this line is OK as is
+            Htwr=ztwr[-1]-ztwr[0]
         elif not(Htwr):  #HH is specified
-                Htwr=self.Twrouts.HH-Thzoff-TwrBsZ #+self.wdepth #self.RNAinputs.CMzoff
-                #CJBe Comment out self.wdepth from the above line to consider z=0 at MSL.
+                Htwr=self.Twrouts.HH-Thzoff-TwrBsZ+self.wdepth  #self.RNAinputs.CMzoff
         elif not(self.Twrouts.HH):            #Htwr is specified
-            self.Twrouts.HH=TwrBsZ+Htwr+Thzoff #+self.wdepth #+self.RNAinputs.CMzoff
-            #CJBe Comment out self.wdepth from the above line to consider z=0 at MSL.
+            self.Twrouts.HH=TwrBsZ+Htwr+Thzoff+self.wdepth  #+self.RNAinputs.CMzoff
 
-        if abs(Htwr-(self.Twrouts.HH-Thzoff-TwrBsZ)) >0.00001: #Both are specified but they do not jive -self.RNAinputs.CMzoff #CJB- Originally: (self.Twrouts.HH-Thzoff-TwrBsZ+self.wdepth) Remove +self.wdepth
+        if abs(Htwr-(self.Twrouts.HH-Thzoff-TwrBsZ+self.wdepth)) >0.00001:  #BOth are specified but they do not jive -self.RNAinputs.CMzoff
             sys.exit('HH and HTwr incompatible: HH=Thzoff+Htwr+TwrBsZ')
 
         Htwr2=Htwr2frac*Htwr
@@ -1257,7 +1234,6 @@ class Tower(Component):
             Vfrst = V0s - V01s  #Frustum
             rhos=np.array([mat.rho for mat in self.Twrouts.TwrObj.mat])
             self.Twrouts.mass = (rhos*Vfrst).sum()
-
 #_____________________________________________________#
 class SoilGeoInputs(VariableTree):
     """Basic Soil Properties needed to assess Soil and Embedment Length"""
@@ -1413,7 +1389,6 @@ class Piles(Component):
            self.Pileouts.nodes=np.empty([nlegs,0,3])
            self.Pileouts.PileObj=Tube(np.array([]),np.array([]),np.array([]),self.Pileinputs.Kbuck,np.array([]))
            self.Pileouts.AFObj=self.Pileouts.PileObj
-
        else:
            #Simplify nomenclature
            legbotjnts=self.legjnts[:,:,0].transpose()  #joints with legs
@@ -1468,6 +1443,7 @@ class Piles(Component):
                 #Now need to get structural properties
            self.Pileouts.PileObj=Tube(Ds,ts,pile_lgths.flatten(),self.Pileinputs.Kbuck,pilemats) #This is for members of 1 leg only, for non-AF portion of pile
 
+
 #________________________________________________#
 
 class PreJcktBuild(Component):
@@ -1494,9 +1470,7 @@ class PreJcktBuild(Component):
     # inputs
     JcktGeoIn = VarTree(JcktGeoInputs(), iotype='in', desc='Geometric Inputs for BuildJckt')
     #RNAgeo    = VarTree(RNAprops(),     iotype='in', desc='Geometric Inputs for BuildJckt')
-    #wdepth   = Float( units='m',iotype='in',   desc='Water Depth') #CJB- water flag   #TO DO, this should really come from environment
-    #wlevel  = Float( units='m',iotype='in',   desc='Water Level') #CJB- water flag  #TO DO, this should really come from environment
-    WaterNew  = VarTree(WaterInputs(),  iotype='in', desc='Water Data') #CJB water flag
+    wdepth   = Float( units='m',iotype='in',   desc='Water Depth')   #TO DO, this should really come from environment
 
     LegbD     =Float(    iotype='in',           desc="Leg Base OD")
     LegtD     =Float(    iotype='in',           desc="Leg Top OD")
@@ -1539,11 +1513,6 @@ class PreJcktBuild(Component):
           It requires an object as input and spits out an augmented version of it.
 
         !!!!soil and apparent fixity still to fix!!!!"""
-        if self.WaterNew.wlevel==0 and self.WaterNew.wdepth!=0: #CJB+
-            self.WaterNew.wlevel=self.WaterNew.wdepth #CJB+
-        if self.WaterNew.z_floor==0 and self.WaterNew.wdepth!=0: #CJB+
-            self.WaterNew.z_floor=-self.WaterNew.wdepth #CJB+
-
         nbays=self.JcktGeoIn.nbays
 
         #X-brace precalculations: Next two useful in case Dbrc0 is the only optimization variable in optimization problems
@@ -1607,7 +1576,7 @@ class PreJcktBuild(Component):
         dck_botz=self.JcktGeoIn.dck_botz              #deck-bottom height
         weld2D=self.JcktGeoIn.weld2D                  #fraction of chord OD used in the weldment
 
-        wdpth=self.WaterNew.wdepth    #CJBe                         #water depth
+        wdpth=self.wdepth                              #water depth
         #pileZtop=self.JcktGeoIn.pileZtop              #top of pile z coordinate
 
         legZbot=self.legZbot                          #bottom of leg z coordinate
@@ -1671,8 +1640,6 @@ class BuildGeometry(Component):
     XjntIDs     =Array(dtype=int,     iotype='out',desc='X-Joint IDs, as for Frame3DD, used to do checks later')
     KjntIDs     =Array(dtype=int,     iotype='out',desc='K-Joint IDs, as for Frame3DD, used to do checks later')
 
-    SDPropSet=Array(iotype='out', desc='Properties to be used in SubDyn') #CJB+ test
-
     def execute(self):
         #simplify nomenclature
         nlegs=self.JcktGeoIn.nlegs
@@ -1697,6 +1664,7 @@ class BuildGeometry(Component):
 
     #Total number of nodes
         self.JcktGeoOut.nNodesJckt = nlegs* (nNodesPile+nNodesLeg+nNodesXbrc+nNodesMbrc+nNodesHbrc+nNodesBrc+nNodesStrt+nNodesGir+nNodesStmp)+nNodesStem +nNodesTwr
+
         out1=np.arange(0,self.JcktGeoOut.nNodesJckt,dtype=int)+1 #node IDs  (+1 since python starts at 0, but frame3DD needs 1)
         self.JcktGeoOut.radii=np.zeros(self.JcktGeoOut.nNodesJckt)      #radii for frame3DD, this will be fixed at one point
 
@@ -2117,21 +2085,6 @@ class BuildGeometry(Component):
                        np.tile(self.TPouts.strtObj.mat,nlegs),\
                        self.Twrouts.TwrObj.mat,self.Twrouts.Twr2RNAObj.mat))
 
-        #CJB TODO: This technique creates redundant property sets. A better method would be to search the PropSetSub array and only make a new property set for unique values.
-        i=0 #CJB+
-        EArray=[] #CJB+
-        GArray=[] #CJB+
-        rhoArray=[] #CJB+
-        PropSetSub=[] #CJB+
-        SDPropSet=[1,1,1,1,1,1] #CJB+
-        for i in range(len(mats)): #CJB+
-            EArray=np.append(EArray,mats[i].E) #CJB+
-            GArray=np.append(GArray,mats[i].G) #CJB+
-            rhoArray=np.append(rhoArray,mats[i].rho) #CJB+
-            PropSetSub=np.hstack(((i+1),EArray[i],GArray[i],rhoArray[i],Ds[i],ts[i])) #CJB+
-            SDPropSet=np.vstack((SDPropSet,PropSetSub)) #CJB+
-
-        self.SDPropSet=np.delete(SDPropSet, (0), axis=0) #CJB+
 
         self.JcktGeoOut.TubeObjs=Tube(Ds,ts,Lgths,Kbucks,mats)
 
@@ -2157,7 +2110,7 @@ class BuildGeometry(Component):
         TP_jnt_in_no  =out1[idxSm]*(TPjnt_inertia[0] !=0)
         RNA_jnt_in_no =out1[-1]*(RNAjnt_inertia[0] !=0)
 
-        #For the tower I need to find the nearest nodes to the assigned heights;
+        #For the tower I need to find the nearest nodes to teh assigned heights;
         Twr_jnt_in_no =0 #initialize
         nTwrmas=np.nonzero(Twrjnt_inertia[:,1])[-1]
         if nTwrmas.size:
@@ -2217,7 +2170,6 @@ class BuildGeometry(Component):
         #self.XjntIDs=np.hstack((XjntIDs.flatten(), out1[idxSm]))
         self.XjntIDs=XjntIDs.flatten()
         self.KjntIDs=np.unique(np.hstack((LLUR1jntIDs.flatten(),LLUR2jntIDs.flatten(),mudjntIDs)))  #Top hbrace joints included regardless of whether or not H brace is present;mudjoints are added in case the mudbrace is offset from bottom xbrace
-
 #______________________________________________________________________________#
 
 class PileEmbdL(Component):
@@ -2395,13 +2347,15 @@ class BrcCriteria(Component):
 ##    else:
 ##        func=lambda x: abs(braces(x).Klr-Klr_mx)  #we are trying to enforce a Klr=70 in case we do not use mass minimization
 
-class SubDynReturns(Component): #CJB+
-    SubDynOuts=VarTree(SubDynAOutputs(), iotype='in', desc='Selected outputs from SubDyn') #CJB+
-    def execute(self): #CJB+
-        print "SubDynReturns has run"
-        self.SDFEMEigenvalues=self.SubDynOuts.FEMeigenvalues #CJB+
-        self.SDStructureMass=self.SubDynOuts.StructureMass #CJB+ #Structural mass, does not include RNA lumped mass
-        self.SDStructureCM=self.SubDynOuts.StructureCM #CJB+
+
+
+
+
+
+
+
+
+
 
 #______________________________________________________________________________#
 #                             RUN FRAME 3DD
@@ -2438,6 +2392,7 @@ class RunFrame3DDstatic(Component):
 
         reactions = ReactionData(self.JcktGeoOut.Reacts[:,0], self.JcktGeoOut.Reacts[:,1], self.JcktGeoOut.Reacts[:,2], self.JcktGeoOut.Reacts[:,3], \
                               self.JcktGeoOut.Reacts[:,4], self.JcktGeoOut.Reacts[:,5], self.JcktGeoOut.Reacts[:,6],1)
+
         if self.SPI_Kmat.size:  #Take care of the BCs if we are running it for the second time (old runframe3dd modal basically)
             nReacts=self.JcktGeoOut.Reacts[:,0].size
 
@@ -2504,8 +2459,6 @@ class RunFrame3DDstatic(Component):
         DeltaZ2=(frame.nz[elements.N2-1]-frame.nz[elements.N1-1])**2
         self.Frameouts.ElemL = np.sqrt( DeltaX2+DeltaY2+DeltaZ2)
         self.Frameouts.ElemMass =elements[-1]* frame.eAx * self.Frameouts.ElemL
-
-        print(str(self.Frameouts.mass)+' self.Frameouts.mass (Structural Mass and Total mass in the Jacket-Tower Structure)') #CJB+
 #______________________________________________________________________________#
 #        Auxiliary Component to Calculate ABS
 class ABSaux(Component):
@@ -2588,8 +2541,6 @@ class LoadFrameOuts(Assembly):
     L_reinforced = Float( units='m',        iotype='in', desc='reinforcement length.')
 
     IECpsfIns = VarTree(IEC_PSFS(),      iotype='in', desc='Basic IEC psfs.')
-
-    legjnts = Array(iotype='in', desc='Leg joint coordinates.')  #CJB+ Comes from legs.legjnts
 
     #outs
     Frameouts = VarTree(Frame3DDOutputs(),           iotype='out', desc='Basic output data from Frame3DD.')
@@ -2725,12 +2676,6 @@ class LoadFrameOuts(Assembly):
         self.connect('Embedment.Lp0rat','Lp0rat')
 
 class JacketSE(Assembly):
-    gravity  = Float(units='m/s**2', iotype='in',desc='Gravity Acceleration (ABSOLUTE VALUE!).') #CJB+ test
-    dck_botz=Float(units='m', iotype='in', desc='Distance from bottom of TP to MSL') #CJB+ test
-    nodes=Array(iotype='in', desc='Nodes from JacketSE') #CJB+ test
-    mems=Array(iotype='in',desc='Member connections between') #CJB+ test
-    Reacts=Array(iotype='in', desc='Base joint IDs and fixity') #CJB+ test
-    SDPropSet=Array(iotype='in', desc='Properties to be used in SubDyn') #CJB+ test
 
     #ins
     JcktGeoIn=   VarTree(JcktGeoInputs(),  iotype='in', desc='Jacket Geometry Basic Inputs')
@@ -2761,119 +2706,6 @@ class JacketSE(Assembly):
     IECpsfIns = VarTree(IEC_PSFS(), iotype='in', desc='Basic IEC psfs')
 
     TwrRigidTop =Bool( units=None,iotype='in',desc='Rigid Member used in tower top or not')
-
-    SubDynOuts=VarTree(SubDynAOutputs(), iotype='in', desc='Selected outputs from SubDyn') #CJB+
-
-    #--------------------------------------------------------------------------------------------------------------------
-
-    #INPUT FILE INPUTS----------------------------------------------------------
-
-    InputFile_name=Str(iotype='in') #CJB+
-
-    #Simulation Control
-    Echo=Array(iotype='in') #CJB+
-    SDdeltaT=Array(iotype='in') #CJB+
-    IntMethod=Array(iotype='in') #CJB+
-    SttcSolve=Array(iotype='in') #CJB+
-
-    #FEA and CRAIG-BAMPTON PARAMETERS
-    FEMmod=Array(iotype='in') #CJB+
-    NDiv=Array(iotype='in') #CJB+
-    CBMod=Array(iotype='in') #CJB+
-    Nmodes=Array(iotype='in') #CJB+
-    JDampings=Array(iotype='in') #CJB+
-
-    #Structure Joints
-    SDjointsHeader=Array(iotype='in') #CJB+
-    SDjoints=Array(iotype='in', desc='Leg joints from jacket.py. In SD joints are used to build the structure, not nodes.') #CJB+
-
-    #Base Reaction Joints
-    BaseRxnJointsHeader=Array(iotype='in') #CJB+
-    BaseRxnJoints=Array(iotype='in', desc='Base joints of the structure.') #CJB+
-
-    #Interface Joints
-    InterfaceRxnJointsHeader=Array(iotype='in') #CJB+
-    InterfaceJointsFlags=Array(iotype='in', desc='Interface joints.') #CJB+
-
-    #Members
-    MembersHeader=Array(iotype='in') #CJB+
-    Members=Array(iotype='in', desc='Build members from joints, not nodes.') #CJB+
-
-    #MEMBER X-SECTION PROPERTY data 1/2
-    NPropSets=Array(iotype='in') #CJB+
-    PropSet1Header=Array(iotype='in') #CJB+
-    PropSet1=Array(iotype='in') #CJB+
-
-    #MEMBER X-SECTION PROPERTY data 2/2
-    PropSet2Header=Array(iotype='in') #CJB+
-    PropSet2=Array(iotype='in') #CJB+
-
-    #MEMBER COSINE MATRICES COSM(i,j)
-    COSMHeader=Array(iotype='in') #CJB+
-    COSMs=Array(iotype='in') #CJB+
-
-    #JOINT ADDITIONAL CONCENTRATED MASSES
-    CmassHeader=Array(iotype='in') #CJB+
-    Cmass=Array(iotype='in') #CJB+
-
-    #OUTPUT: SUMMARY & OUTFILE
-    SSSum=Array(iotype='in') #CJB+
-    OutCOSM=Array(iotype='in') #CJB+
-    OutAll=Array(iotype='in') #CJB+
-    OutSwtch=Array(iotype='in') #CJB+
-    TabDelim=Array(iotype='in') #CJB+
-    OutDec=Array(iotype='in') #CJB+
-    OutFmt=Array(iotype='in') #CJB+
-    OutSFmt=Array(iotype='in') #CJB+
-
-    #MEMBER OUTPUT LIST
-    MemOutListHeader=Array(iotype='in') #CJB+
-    MemOutList=Array(iotype='in', desc='Members whose loads and dynamics will be output.') #CJB+
-
-    #SSOutline
-    SSOutlist=Array(iotype='in') #CJB+
-
-    #DRIVER INPUTS--------------------------------------------------------------
-
-    InputandDriverpath=Str(iotype='in') #CJB+
-    Driver_path=Str(iotype='in') #CJB+
-
-    EchoD=Array(iotype='in') #CJB+
-
-    #Environmental Conditions
-    Gravity=Array(iotype='in') #CJB+
-    WtrDpth=Array(iotype='in') #CJB+
-
-    #SubDyn
-    SDInputFile=Array(iotype='in') #CJB+
-    OutRootName=Array(iotype='in') #CJB+
-    NSteps=Array(iotype='in') #CJB+
-    TimeInterval=Array(iotype='in') #CJB+
-    TP_RefPoint=Array(iotype='in') #CJB+
-    SubRotateZ=Array(iotype='in') #CJB+
-
-    #INPUTS
-    InputsMod=Array(iotype='in') #CJB+
-    InputsFile=Array(iotype='in') #CJB+
-
-    #STEADY INPUTS
-    uTPInSteady=Array(iotype='in') #CJB+
-    uDotTPInSteady=Array(iotype='in') #CJB+
-    uDotDotTPInSteady=Array(iotype='in') #CJB+
-
-    #INPUTS TO RUN SUBDYN-------------------------------------------------------
-
-    SDpath=Str(iotype='in') #CJB+
-
-    #INPUTS TO READ OUTPUT------------------------------------------------------
-
-    Readpath_out=Str(iotype='in') #CJB+
-    Readpath_sum=Str(iotype='in') #CJB+
-    Delete_file=Bool(iotype='in') #CJB+
-    InputFile_path=Str(iotype='in') #CJB+
-    Driver_path=Str(iotype='in') #CJB+
-
-#--------------------------------------------------------------------------------------------------------------------
 
     #outs
     #JcktGeoOut = VarTree(JcktGeoOutputs(), iotype='out', desc='Geometry of the Jacket -Node Coordinates and Member Connectivity')
@@ -2917,16 +2749,16 @@ class JacketSE(Assembly):
         self.add('ABS2',ABSaux())  #aux component
         self.add('FrameOut',FrameOutsaux()) #auxiliary component
 
-        #pySubDyn CJB+
-        self.add('SDpySubDynA', pySubDynA())              #CJB+
-        self.add('SDReturns', SubDynReturns()) #CJB+
-
         # BUILD UP THE DRIVER
+<<<<<<< HEAD
         casey = False
         if casey:
            self.driver.workflow.add(['PreLeg','PreBuild', 'Soil', 'Legs', 'Piles', 'Xbraces', 'Mudbraces', 'Hbraces', 'SDpySubDynA', 'SDReturns']) #CJBe
         else:
            self.driver.workflow.add(['PreLeg','PreBuild', 'Soil', 'Legs', 'Piles', 'Xbraces', 'Mudbraces', 'Hbraces'])
+=======
+        self.driver.workflow.add(['Soil','PreLeg','PreBuild', 'Legs', 'Piles', 'Xbraces', 'Mudbraces', 'Hbraces'])
+>>>>>>> master
 
 ##        if self.PrebuildTP:
 ##            self.driver.workflow.add(['PreBuildTP','PreBuildTP2'])
@@ -2939,32 +2771,14 @@ class JacketSE(Assembly):
         self.driver.workflow.add(['FrameOut','BrcCriteria','TotMass' ])
         #________________________#
 
+
         #Take care of Connections
+        #Soil
+        self.connect('Soilinputs',   'Soil.SoilIns' )
 
         # prelegs
         self.connect('JcktGeoIn.nbays',           'PreLeg.nbays' )
         self.connect('leginputs',             'PreLeg.leginputs' )
-
-        # PreJckBuild
-        self.create_passthrough('PreBuild.legbot_stmphin')
-
-        self.connect('Waterinputs', 'PreBuild.WaterNew') #CJB+ water flag
-
-        self.connect('JcktGeoIn',          'PreBuild.JcktGeoIn')
-        self.connect('PreLeg.prelegouts.legZbot',  'PreBuild.legZbot')
-        self.connect('PreLeg.prelegouts.Dleg[0]' , 'PreBuild.LegbD')
-        self.connect('PreLeg.prelegouts.Dleg[-1]', 'PreBuild.LegtD')
-        self.connect('PreLeg.prelegouts.tleg[-1]', 'PreBuild.Legtt')
-
-        self.connect('Xbrcinputs',         'PreBuild.Xbrcinputs' )
-        self.connect('JcktGeoIn.PreBuildTPLvl', 'PreBuild.PreBuildTPLvl')
-        self.connect('Twrinputs.Db'      ,      'PreBuild.TwrDb')
-        self.connect('Twrinputs.DTRb'      ,    'PreBuild.TwrDTRb')
-        self.connect('TPinputs',                'PreBuild.TPinputs' )
-        self.connect('PreBuild.BuildTPouts',    'TP.TPinputs' ) #this provides upgraded and overwritten inputs to TP
-
-        #Soil
-        self.connect('Soilinputs',   'Soil.SoilIns' )
 
         # legs
         self.connect('PreLeg.prelegouts',     'Legs.leginputs' )
@@ -2974,9 +2788,25 @@ class JacketSE(Assembly):
         self.connect('PreBuild.innr_ang',     'Legs.innr_ang')
         self.connect('PreBuild.dck_width',    'Legs.dck_width')  #updates deck_width with what PreBuild Calculates
         self.connect('PreBuild.legbot_stmph', 'Legs.legbot_stmph')
-        self.connect('PreBuild.WaterNew.wdepth',    'Legs.wdepth') #CJB+ water flag
-        self.connect('PreBuild.WaterNew.wlevel',    'Legs.wlevel') #CJB+ water flag
-        self.connect('PreBuild.WaterNew.z_floor',    'Legs.z_floor') #CJB+ water flag
+
+        # PreJckBuild
+        self.create_passthrough('PreBuild.legbot_stmphin')
+
+
+        self.connect('JcktGeoIn',          'PreBuild.JcktGeoIn')
+        self.connect('PreLeg.prelegouts.legZbot',  'PreBuild.legZbot')
+        self.connect('PreLeg.prelegouts.Dleg[0]' , 'PreBuild.LegbD')
+        self.connect('PreLeg.prelegouts.Dleg[-1]', 'PreBuild.LegtD')
+        self.connect('PreLeg.prelegouts.tleg[-1]', 'PreBuild.Legtt')
+
+        self.connect('Waterinputs.wdepth', 'PreBuild.wdepth')
+
+        self.connect('Xbrcinputs',         'PreBuild.Xbrcinputs' )
+        self.connect('JcktGeoIn.PreBuildTPLvl', 'PreBuild.PreBuildTPLvl')
+        self.connect('Twrinputs.Db'      ,      'PreBuild.TwrDb')
+        self.connect('Twrinputs.DTRb'      ,    'PreBuild.TwrDTRb')
+        self.connect('TPinputs',                'PreBuild.TPinputs' )
+        self.connect('PreBuild.BuildTPouts',    'TP.TPinputs' ) #this provides upgraded and overwritten inputs to TP
 
         # Xbraces
         ##self.connect('Xbrcinputs',         'Xbraces.Xbrcinputs' )
@@ -2984,19 +2814,20 @@ class JacketSE(Assembly):
 
         self.connect('JcktGeoIn.nbays',    'Xbraces.nbays')
         self.connect('Legs.legouts.joints','Xbraces.legjnts')
-        self.connect('PreBuild.WaterNew.wdepth', 'Xbraces.wdepth') #CJB+ water flag
+        self.connect('Waterinputs.wdepth', 'Xbraces.wdepth')
         self.connect('PreBuild.bay_bs',    'Xbraces.bay_bs')
         self.connect('PreBuild.bay_hs',    'Xbraces.bay_hs')
         self.connect('PreBuild.al_bat2D',  'Xbraces.al_bat2D')
         self.connect('PreBuild.innr_ang',  'Xbraces.innr_ang')
         self.connect('Legs.legouts.LegObj','Xbraces.LegObj')
 
+
         # MudBraces
         self.connect('Mbrcinputs',         'Mudbraces.Mbrcinputs' )
         self.connect('Legs.legouts.joints','Mudbraces.legjnts')
         self.connect('JcktGeoIn.VPFlag',   'Mudbraces.VPFlag')
         self.connect('Piles.PileFlag',     'Mudbraces.PileFlag')
-        self.connect('PreBuild.WaterNew.wdepth', 'Mudbraces.wdepth') #CJB+ water flag
+        self.connect('Waterinputs.wdepth', 'Mudbraces.wdepth')
         self.connect('PreBuild.bay_bs',    'Mudbraces.bay_bs')
         self.connect('Legs.legouts.LegObj','Mudbraces.LegObj')
 
@@ -3034,7 +2865,7 @@ class JacketSE(Assembly):
 
         # Tower
         self.connect('TwrRigidTop',        'Tower.RigidTop')
-        self.connect('PreBuild.WaterNew.wdepth', 'Tower.wdepth') #CJB+ water flag
+        self.connect('Waterinputs.wdepth', 'Tower.wdepth')
         self.connect('Twrinputs',          'Tower.Twrins' )
         self.connect('RNAinputs',          'Tower.RNAinputs' )
         self.connect('TP.TwrBsZ',          'Tower.TwrBsZ')
@@ -3055,6 +2886,7 @@ class JacketSE(Assembly):
         self.connect('Legs.legouts.LegObj',      'BrcCriteria.LegObj')
         self.connect('Mudbraces.Mbrcouts.brcObj','BrcCriteria.MudBrcObj')
         self.connect('Xbraces.Xbrcouts.LLURObj', 'BrcCriteria.XBrcObj')
+<<<<<<< HEAD
         self.connect('PreBuild.WaterNew.wdepth',       'BrcCriteria.wdepth') #CJB+ water flag
 
         #SubDyn #CJB+
@@ -3130,11 +2962,14 @@ class JacketSE(Assembly):
             self.connect('Build.JcktGeoOut.Reacts','SDpySubDynA.Reacts') #CJB+
             self.connect('Build.SDPropSet', 'SDpySubDynA.SDPropSet') #CJB+
             self.connect('RNAinputs',          'SDpySubDynA.RNAinputs' ) #CJB+ test
+=======
+        self.connect('Waterinputs.wdepth',       'BrcCriteria.wdepth')
+>>>>>>> master
 
         # LoadFrameOuts and LoadFrameOuts2
         self.connect('RNA_F',                      'LoadFrameOuts.RNA_F')
         self.connect('RNAinputs',                  'LoadFrameOuts.RNAinputs' )
-        self.connect('PreBuild.WaterNew',                'LoadFrameOuts.Waterinputs') #CJB+ water flag
+        self.connect('Waterinputs',                'LoadFrameOuts.Waterinputs')
         self.connect('Windinputs',                 'LoadFrameOuts.Windinputs')
 
         self.connect('JcktGeoIn.VPFlag',           ['LoadFrameOuts.VPFlag'      ,    'LoadFrameOuts2.VPFlag'])
@@ -3146,7 +2981,7 @@ class JacketSE(Assembly):
         self.connect('Build.TPmems',               ['LoadFrameOuts.TPmems'      ,    'LoadFrameOuts2.TPmems'])
         self.connect('PreBuild.al_bat3D',          ['LoadFrameOuts.al_bat3D'    ,    'LoadFrameOuts2.al_bat3D'])
         self.connect('JcktGeoIn.nlegs' ,           ['LoadFrameOuts.nlegs'       ,    'LoadFrameOuts2.nlegs'])
-        self.connect('Build.JcktGeoOut.nodes',     ['LoadFrameOuts.nodes'       ,    'LoadFrameOuts2.nodes', 'SDpySubDynA.nodes']) #CJBe
+        self.connect('Build.JcktGeoOut.nodes',     ['LoadFrameOuts.nodes'       ,    'LoadFrameOuts2.nodes'])
         self.connect('Build.JcktGeoOut',           ['LoadFrameOuts.JcktGeoOut'  ,    'LoadFrameOuts2.JcktGeoOut'])
         self.connect('TwrRigidTop',                ['LoadFrameOuts.TwrRigidTop' ,    'LoadFrameOuts2.TwrRigidTop'])
         self.connect('Build.XjntIDs',              ['LoadFrameOuts.XjntIDs'     ,    'LoadFrameOuts2.XjntIDs'])
@@ -3160,7 +2995,7 @@ class JacketSE(Assembly):
         self.connect('FrameAuxIns',                ['LoadFrameOuts.FrameAuxIns' ,    'LoadFrameOuts2.FrameAuxIns'])
 
         self.connect('FrameAuxIns.gvector[2]','ABS1.varin')
-        self.connect('ABS1.varout',                ['LoadFrameOuts.gravity'     ,    'LoadFrameOuts2.gravity', 'SDpySubDynA.gravity' ]) #CJBe test
+        self.connect('ABS1.varout',                ['LoadFrameOuts.gravity'     ,    'LoadFrameOuts2.gravity'])
 
         self.connect('Pileinputs.Lp',              ['LoadFrameOuts.Lp'          ,  'LoadFrameOuts2.Lp' ])
         self.connect('Piles.PileObjout',           ['LoadFrameOuts.PileObjout'  ,  'LoadFrameOuts2.PileObjout'])
@@ -3173,8 +3008,11 @@ class JacketSE(Assembly):
         # LoadFrameOuts2
         self.connect('RNA_F2',                     'LoadFrameOuts2.RNA_F')
         self.connect('RNAinputs2',                 'LoadFrameOuts2.RNAinputs' )
-        self.connect('PreBuild.WaterNew',               'LoadFrameOuts2.Waterinputs') #CJB+ water flag I think this should work, but I'm not sure
+        self.connect('Waterinputs2',               'LoadFrameOuts2.Waterinputs')
         self.connect('Windinputs2',                'LoadFrameOuts2.Windinputs')
+
+
+
 
         #Total Mass
         self.connect('JcktGeoIn.nlegs',          'TotMass.nlegs')
@@ -3189,6 +3027,8 @@ class JacketSE(Assembly):
         self.create_passthrough('PreBuild.bay_hs')
         self.create_passthrough('PreBuild.dck_width')
 
+
+
         self.connect('LoadFrameOuts.Frameouts','FrameOut.Frameouts_ins')  #Needed to please the optimizer in OPENmdao
 
         if not self.clamped:
@@ -3197,7 +3037,7 @@ class JacketSE(Assembly):
 
         self.create_passthrough('TotMass.ToTMass')
 
-        self.create_passthrough('PreBuild.wbase')  #Width at the mudline send it as output
+        self.create_passthrough('PreBuild.wbase')  #Widht at the mudline send it as output
         self.create_passthrough('LoadFrameOuts.Mpiles') #Mass of all piles with given Lp
         self.create_passthrough('BrcCriteria.MudBrcCriteria') #MudBrace constraints
         self.create_passthrough('BrcCriteria.XBrcCriteria') #XBrace constraints
@@ -3286,7 +3126,7 @@ def FindBrcAng(Hbays,nbays,wbas0,al_bat2D):   #Does it need to be a component???
 def FindBeta3D(beta_2D, al_bat2D, al_bat3D, innr_ang, wbas0):
     """This function calculates the 3D beta angle based on the bottom bay. This \n
     is the angle you would compare against NORSOK 30 degrees.
-    It also returns the angle between X-braces (facing the botom bay width)
+    It also returns the angle between X-braces (facing the bottom bay width)
     INPUTS:
         Jacket- object of class JacketC"""
     #1st bay height
@@ -3502,7 +3342,7 @@ if __name__ == '__main__':
     #--- Set Jacket Input Parameters ---#
     Jcktins=JcktGeoInputs()
     Jcktins.nlegs =4
-    Jcktins.nbays =5 #CJBe Makes the program run faster for debugging
+    Jcktins.nbays =5
     Jcktins.batter=12.
     Jcktins.dck_botz =16.
     Jcktins.dck_width=2*6.
@@ -3528,18 +3368,13 @@ if __name__ == '__main__':
     #Water and wind inputs
     Waterinputs=WaterInputs()
     Waterinputs.wdepth   =30.
-    #Waterinputs.wlevel   =30. #CJB- #Distance from bottom of structure to surface  THIS, I believe is no longer needed as piles may be negative in z, to check and remove in case
-        #CJB The above line sets z's based on bottom of pile; initially z=0 is at the bottom of the piles. wlevel is used (exlusively in jacket.py) to shift the z-coordinates
-        #so that z=0 is at the MSL. This is used instead of wdepth as the piles can go deeper than the water.
-
-
+    Waterinputs.wlevel   =30. #Distance from bottom of structure to surface  THIS, I believe is no longer needed as piles may be negative in z, to check and remove in case
     Waterinputs.T=12.  #Wave Period
     Waterinputs.HW=10. #Wave Height
     Waterinputs.Cd=3.  #Drag Coefficient, enhanced to account for marine growth and other members not calculated
-    Waterinputs.Cm=8.#2.  #Added mass Coefficient
+    Waterinputs.Cm=8.#2.  #ADded mass Coefficient
 
-    Waterinputs2=copy.copy(Waterinputs)  #PARKED CONDITIONS - still max wave hereyou
-
+    Waterinputs2=copy.copy(Waterinputs)  #PARKED CONDITIONS - still max wave here
     Waterinputs.T=8.  #Wave Period
     Waterinputs.HW=4. #Wave Height
 
@@ -3679,7 +3514,7 @@ if __name__ == '__main__':
     ## if turbine_jacket
     ##Twrinputs.Dt = 3.87
 
-    TwrRigidTop= False #False       #False=Account for RNA via math rather than a physical rigidmember
+    TwrRigidTop=True #False       #False=Account for RNA via math rather than a physical rigidmember
 
     #RNA data
     RNAins=RNAprops()
@@ -3722,6 +3557,7 @@ if __name__ == '__main__':
     #Decide whether or not to consider DLC 6.1 as well
     twodlcs=False
 
+<<<<<<< HEAD
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,twodlcs=twodlcs)) ##(Jcktins.PreBuildTPLvl>0),
 
@@ -3853,9 +3689,11 @@ if __name__ == '__main__':
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+=======
+>>>>>>> master
     #-----Launch the assembly-----#
 
-    #myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,twodlcs=twodlcs)) ##(Jcktins.PreBuildTPLvl>0),
+    myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,twodlcs=twodlcs)) ##(Jcktins.PreBuildTPLvl>0),
 
     #Pass all inputs to assembly
     myjckt.JcktGeoIn=Jcktins
@@ -3866,9 +3704,6 @@ if __name__ == '__main__':
     myjckt.Waterinputs=Waterinputs
     myjckt.Windinputs=Windinputs
     myjckt.RNA_F=RNA_F
-
-    #myjckt.SDpySubDynA=SDpySubDynA #CJB+
-
     myjckt.Waterinputs2=Waterinputs2 #Parked conditions
     myjckt.Windinputs2=Windinputs2   #Parked conditions
     myjckt.RNA_F2=RNA_F2            #Parked conditions
@@ -3886,6 +3721,7 @@ if __name__ == '__main__':
     myjckt.Twrinputs=Twrinputs
     myjckt.TwrRigidTop=TwrRigidTop
     myjckt.FrameAuxIns=FrameAuxIns
+
 
     #--- RUN OPTIMIZATION ---#
     if optimize:
@@ -3974,7 +3810,6 @@ if __name__ == '__main__':
         # ----------------------
 
     #--- RUN JACKET ---#
-    print myjckt.SDpySubDynA.InputFile_name
     myjckt.run()
     # ---------------
 
@@ -3983,247 +3818,6 @@ if __name__ == '__main__':
     print('Minimum found at: \n')
     printJacket(myjckt)
 
-    #CJB+ Prepare utilization data to be plotted
-    #TODO Format arrays in a dedicated component
-    #Inputs: nodes=self.JcktGeoOut.nodes, t_util=self.jacket_utilization.t_util, cb_util=self.jacket_utilization.cb_util, XjntUtil=self.jacket_utilization.XjntUtil, KjntUtil=self.jacket_utilization.KjntUtil,
-             #StressUtil=self.tower_utilization.StressUtil, GLUtil=self.tower_utilization.GLUtil, EUshUtil=self.tower_utilization.EUshUtil, myjckt.JcktGeoOut.nmems, myjckt.LoadFrameOuts.TPmems, myjckt.LoadFrameOuts.Twrmems
-    #Outputs: member_check, KXcoords, KXcolors
-
-    t_util_list=np.array([[1,1]])  #CJB+
-    count_t=1  #CJB+
-    for i in myjckt.LoadFrameOuts.jacket_utilization.t_util:  #CJB+
-        if i>=1:  #CJB+
-            step=np.array([count_t,'r'])  #CJB+
-        elif .8<=i<1:  #CJB+
-            step=np.array([count_t,'m'])  #CJB+
-        elif .6<=i<.8:  #CJB+
-            step=np.array([count_t,'y'])  #CJB+
-        elif .4<=i<.6:  #CJB+
-            step=np.array([count_t,'g'])  #CJB+
-        elif .2<=i<.4:  #CJB+
-            step=np.array([count_t,'b'])  #CJB+
-        else:  #CJB+
-            step=np.array([count_t,'k'])  #CJB+
-        count_t+=1  #CJB+
-        t_util_list=np.vstack((t_util_list, step))  #CJB+
-    t_util_list=np.delete(t_util_list,0,0)  #CJB+
-    #print t_util_list  #CJB+
-
-    cb_util_list=np.array([[1,1]])  #CJB+
-    count_cb=1  #CJB+
-    for j in myjckt.LoadFrameOuts.jacket_utilization.cb_util:  #CJB+
-        if j>=1:  #CJB+
-            step=np.array([count_cb,'r'])  #CJB+
-        elif .8<=j<1:  #CJB+
-            step=np.array([count_cb,'m'])  #CJB+
-        elif .6<=j<8:  #CJB+
-            step=np.array([count_cb,'y'])  #CJB+
-        elif .4<=j<6:  #CJB+
-            step=np.array([count_cb,'g'])  #CJB+
-        elif .2<=j<.4:  #CJB+
-            step=np.array([count_cb,'b'])  #CJB+
-        else:  #CJB+
-            step=np.array([count_cb,'k'])  #CJB+
-        count_cb+=1  #CJB+
-        cb_util_list=np.vstack((cb_util_list, step))  #CJB+
-    cb_util_list=np.delete(cb_util_list,0,0)  #CJB+
-    #print cb_util_list  #CJB+
-
-    tower_Stressutil_list=np.array([[1,1]])  #CJB+
-    count_tower=1  #CJB+
-    for k in myjckt.LoadFrameOuts.tower_utilization.StressUtil:  #CJB+
-        if k>=1:  #CJB+
-            step=np.array([count_tower,'r'])  #CJB+
-        elif .8<=k<1:  #CJB+
-            step=np.array([count_tower,'m'])  #CJB+
-        elif .6<=k<.8:  #CJB+
-            step=np.array([count_tower,'y'])  #CJB+
-        elif .4<=k<.6:  #CJB+
-            step=np.array([count_tower,'g'])  #CJB+
-        elif .2<=k<.4:  #CJB+
-            step=np.array([count_tower,'b'])  #CJB+
-        else:  #CJB+
-            step=np.array([count_tower,'k'])  #CJB+
-        count_tower+=1  #CJB+
-        tower_Stressutil_list=np.vstack((tower_Stressutil_list, step))  #CJB+
-    tower_Stressutil_list=np.delete(tower_Stressutil_list,0,0)  #CJB+
-    #print tower_Stressutil_list  #CJB+
-
-    tower_GLutil_list=np.array([[1,1]])  #CJB+
-    count_tower=1  #CJB+
-    for k in myjckt.LoadFrameOuts.tower_utilization.GLUtil:  #CJB+
-        if k>=1:  #CJB+
-            step=np.array([count_tower,'r'])  #CJB+
-        elif .8<=k<1:  #CJB+
-            step=np.array([count_tower,'m'])  #CJB+
-        elif .6<=k<.8:  #CJB+
-            step=np.array([count_tower,'y'])  #CJB+
-        elif .4<=k<.6:  #CJB+
-            step=np.array([count_tower,'g'])  #CJB+
-        elif .2<=k<.4:  #CJB+
-            step=np.array([count_tower,'b'])  #CJB+
-        else:  #CJB+
-            step=np.array([count_tower,'k'])  #CJB+
-        count_tower+=1  #CJB+
-        tower_GLutil_list=np.vstack((tower_GLutil_list, step))  #CJB+
-    tower_GLutil_list=np.delete(tower_GLutil_list,0,0)  #CJB+
-    #print tower_GLutil_list  #CJB+
-
-    tower_EUshutil_list=np.array([[1,1]])  #CJB+
-    count_tower=1  #CJB+
-    for k in myjckt.LoadFrameOuts.tower_utilization.EUshUtil:  #CJB+
-        if k>=1:  #CJB+
-            step=np.array([count_tower,'r'])  #CJB+
-        elif .8<=k<1:  #CJB+
-            step=np.array([count_tower,'m'])  #CJB+
-        elif .6<=k<.8:  #CJB+
-            step=np.array([count_tower,'y'])  #CJB+
-        elif .4<=k<.6:  #CJB+
-            step=np.array([count_tower,'g'])  #CJB+
-        elif .2<=k<.4:  #CJB+
-            step=np.array([count_tower,'b'])  #CJB+
-        else:  #CJB+
-            step=np.array([count_tower,'k'])  #CJB+
-        count_tower+=1  #CJB+
-        tower_EUshutil_list=np.vstack((tower_EUshutil_list, step))  #CJB+
-    tower_EUshutil_list=np.delete(tower_EUshutil_list,0,0)  #CJB+
-    #print tower_EUshutil_list  #CJB+
-
-    t_condensed=np.array([[1,1]])  #CJB+
-    for m in range(len(t_util_list)):  #CJB+
-        counter=(m/8+1)  #CJB+
-        if t_util_list[m][1]=='r':  #CJB+
-            step=np.array([counter, 'r'])  #CJB+
-        elif t_util_list[m][1]=='m':  #CJB+
-            step=np.array([counter, 'm'])  #CJB+
-        elif t_util_list[m][1]=='y':  #CJB+
-            step=np.array([counter, 'y'])  #CJB+
-        elif t_util_list[m][1]=='g':  #CJB+
-            step=np.array([counter, 'g'])  #CJB+
-        elif t_util_list[m][1]=='b':  #CJB+
-            step=np.array([counter, 'b'])  #CJB+
-        else:  #CJB+
-            step=np.array([counter, 'k'])  #CJB+
-        t_condensed=np.vstack((t_condensed,step))  #CJB+
-    t_condensed=np.delete(t_condensed,0,0)  #CJB+
-    t_condensed=t_condensed[0:-1:8]  #CJB+
-    #print t_condensed  #CJB+
-
-    cb_condensed=np.array([[1,1]])  #CJB+
-    for m in range(len(cb_util_list)):  #CJB+
-        counter=(m/4+1)  #CJB+
-        if cb_util_list[m][1]=='r':  #CJB+
-            step=np.array([counter, 'r'])  #CJB+
-        elif cb_util_list[m][1]=='m':  #CJB+
-            step=np.array([counter, 'm'])  #CJB+
-        elif cb_util_list[m][1]=='y':  #CJB+
-            step=np.array([counter, 'y'])  #CJB+
-        elif cb_util_list[m][1]=='g':  #CJB+
-            step=np.array([counter, 'g'])  #CJB+
-        elif cb_util_list[m][1]=='b':  #CJB+
-            step=np.array([counter, 'b'])  #CJB+
-        else:  #CJB+
-            step=np.array([counter, 'k'])  #CJB+
-        cb_condensed=np.vstack((cb_condensed,step))  #CJB+
-    cb_condensed=np.delete(cb_condensed,0,0)  #CJB+
-    cb_condensed=cb_condensed[0:-1:4]  #CJB+
-    #print cb_condensed  #CJB+
-
-    jacket_check=np.array([[1,1]])  #CJB+
-    for n in range(len(t_condensed)):  #CJB+
-        counter=n+1  #CJB+
-        if t_condensed[n][1]=='r' or cb_condensed[n][1]=='r':  #CJB+
-            step=np.array([counter, 'r'])  #CJB+
-        elif t_condensed[n][1]=='m' or cb_condensed[n][1]=='m':  #CJB+
-            step=np.array([counter, 'm'])  #CJB+
-        elif t_condensed[n][1]=='y' or cb_condensed[n][1]=='y':  #CJB+
-            step=np.array([counter, 'y'])  #CJB+
-        elif t_condensed[n][1]=='g' or cb_condensed[n][1]=='g':  #CJB+
-            step=np.array([counter, 'g'])  #CJB+
-        elif t_condensed[n][1]=='b' or cb_condensed[n][1]=='b':  #CJB+
-            step=np.array([counter, 'b'])  #CJB+
-        else:  #CJB+
-            step=np.array([counter, 'k'])  #CJB+
-        jacket_check=np.vstack((jacket_check,step))  #CJB+
-    jacket_check=np.delete(jacket_check,0,0)  #CJB+
-    #print jacket_check  #CJB+
-
-    tower_check=np.array([[1,1]])  #CJB+
-    for p in range(len(tower_Stressutil_list)):  #CJB+
-        counter=p+len(jacket_check)+1  #CJB+
-        if tower_Stressutil_list[p][1]=='r' or tower_GLutil_list[p][1]=='r' or tower_EUshutil_list[p][1]=='r':  #CJB+
-            step=np.array([counter, 'r'])  #CJB+
-        elif tower_Stressutil_list[p][1]=='m' or tower_GLutil_list[p][1]=='m' or tower_EUshutil_list[p][1]=='m':  #CJB+
-            step=np.array([counter, 'm'])  #CJB+
-        elif tower_Stressutil_list[p][1]=='y' or tower_GLutil_list[p][1]=='y' or tower_EUshutil_list[p][1]=='y':  #CJB+
-            step=np.array([counter, 'y'])  #CJB+
-        elif tower_Stressutil_list[p][1]=='g' or tower_GLutil_list[p][1]=='g' or tower_EUshutil_list[p][1]=='g':  #CJB+
-            step=np.array([counter, 'g'])  #CJB
-        elif tower_Stressutil_list[p][1]=='b' or tower_GLutil_list[p][1]=='b' or tower_EUshutil_list[p][1]=='b':  #CJB+
-            step=np.array([counter, 'b'])  #CJB+
-        else:  #CJB+
-            step=np.array([counter, 'k'])  #CJB+
-        tower_check=np.vstack((tower_check,step))  #CJB+
-    tower_check=np.delete(tower_check,0,0)  #CJB+
-    #print tower_check  #CJB+
-
-    member_check=np.vstack((jacket_check,tower_check))  #CJB+
-    #print member_check  #CJB+
-
-    Kjnts_check=np.array([[1,1,1]])  #CJB+
-    for i in myjckt.Build.KjntIDs:  #CJB+
-        Kjnts_check=np.vstack((Kjnts_check,myjckt.JcktGeoOut.nodes[i-1]))  #CJB+
-    Kjnts_check=np.delete(Kjnts_check,0,0)  #CJB+
-
-    K_count=1  #CJB+
-    K_joints_color=np.array([[1,1]])  #CJB+
-    for i in myjckt.LoadFrameOuts.jacket_utilization.KjntUtil:  #CJB+
-        if i>=1:  #CJB+
-            step=np.array([K_count,'r^'])  #CJB+
-        elif .8<=i<1:  #CJB+
-            step=np.array([K_count,'mo'])  #CJB+
-        elif .6<=i<.8:  #CJB+
-            step=np.array([K_count,'yo'])  #CJB+
-        elif .4<=i<.6:  #CJB+
-            step=np.array([K_count,'go'])  #CJB+
-        elif .2<=i<.4:  #CJB+
-            step=np.array([K_count,'bo'])  #CJB+
-        else:  #CJB+
-            step=np.array([K_count,'ko'])  #CJB+
-        K_count+=1  #CJB+
-        K_joints_color=np.vstack((K_joints_color,step))  #CJB+
-    K_joints_color=np.delete(K_joints_color,0,0)  #CJB+
-    #print K_joints_color  #CJB+
-
-    Xjnts_check=np.array([[1,1,1]])  #CJB+
-    for i in myjckt.Build.XjntIDs:  #CJB+
-        Xjnts_check=np.vstack((Xjnts_check,myjckt.JcktGeoOut.nodes[i-1]))  #CJB+
-    Xjnts_check=np.delete(Xjnts_check,0,0)  #CJB+
-
-    X_count=1  #CJB+
-    X_joints_color=np.array([[1,1]])  #CJB+
-    for i in myjckt.LoadFrameOuts.jacket_utilization.XjntUtil:  #CJB+
-        if i>=1:  #CJB+
-            step=np.array([X_count,'r^'])  #CJB+
-        elif .8<=i<1:  #CJB+
-            step=np.array([X_count,'mo'])  #CJB+
-        elif .6<=i<.8:  #CJB+
-            step=np.array([X_count,'yo'])  #CJB+
-        elif .4<=i<.6:  #CJB+
-            step=np.array([X_count,'go'])  #CJB+
-        elif .2<=i<.4:  #CJB+
-            step=np.array([X_count,'bo'])  #CJB+
-        else:  #CJB+
-            step=np.array([X_count,'ko'])  #CJB+
-        X_count+=1  #CJB+
-        X_joints_color=np.vstack((X_joints_color,step))  #CJB+
-    X_joints_color=np.delete(X_joints_color,0,0)  #CJB+
-    #print X_joints_color  #CJB+
-
-    KXcoords=np.vstack((Kjnts_check,Xjnts_check))  #CJB+
-    KXcolors=np.vstack((K_joints_color,X_joints_color))  #CJB+
-    #print KXcoords  #CJB+
-    #print KXcolors  #CJB+
 
     #Plot geometry
 
@@ -4242,23 +3836,20 @@ if __name__ == '__main__':
     Zs=np.vstack((XYZ1[:,2],XYZ2[:,2])).T
     #ax.plot([XYZ1[1:5,0],XYZ2[1:5,0]],[XYZ1[1:5,1],XYZ2[1:5,1]],[XYZ1[1:5,2],XYZ2[1:5,2]])
     for i in range(0,mems.shape[0]): #mems.shape[0])
-        ax.plot([XYZ1[i,0],XYZ2[i,0]],[XYZ1[i,1],XYZ2[i,1]],[XYZ1[i,2],XYZ2[i,2]],member_check[i][1]) #CJBe Member check gives memebrs utilization colors
-        #CJB TODO If RigidTop=False, then the code does not make the top member. However, the utilization plot (Figure 2) will still show the utiliazation of the top member.  (There is a different number of tower members being plotted)
+        ax.plot([XYZ1[i,0],XYZ2[i,0]],[XYZ1[i,1],XYZ2[i,1]],[XYZ1[i,2],XYZ2[i,2]])
     axisEqual3D(ax)
 #    ax.set_aspect('equal')
 #    ax.auto_scale_xyz([min(XYZ1[:,0]),max(XYZ1[:,0])],[min(XYZ1[:,1]),max(XYZ1[:,1])],[min(XYZ1[:,2]),max(XYZ1[:,2])])
     plt.show()
 
    #Plot tower utilization
-    #twr_zs=myjckt.Tower.Twrouts.nodes[2, :-int(myjckt.TwrRigidTop)] #CJB-
-    twr_zs=myjckt.Tower.Twrouts.nodes[2,0:myjckt.Tower.Twrouts.nNodes-int(myjckt.TwrRigidTop)]-myjckt.Tower.Twrouts.nodes[2,0] #CJB+ This line, taken from PlotJacket.py, plots the utilization with or without a RigidMember
+    twr_zs=myjckt.Tower.Twrouts.nodes[2, :-int(myjckt.TwrRigidTop)]
     twr_ds=np.hstack((myjckt.Tower.Twrouts.TwrObj.D,myjckt.Tower.Dt))
 
     fig2= plt.figure(2,figsize=(6.0, 3.5))
 
     ax1=plt.subplot2grid((3, 3), (0, 0), colspan=2, rowspan=3)
 
-    ax1.plot([],[],'k',label='Tower Profile') #CJB+
     ax1.plot(myjckt.LoadFrameOuts.tower_utilization.StressUtil,twr_zs , label='VonMises Util')
     ax1.plot(myjckt.LoadFrameOuts.tower_utilization.GLUtil,twr_zs, label='GL Util')
     ax1.plot(myjckt.LoadFrameOuts.tower_utilization.EUshUtil, twr_zs, label='EUsh Util')
@@ -4282,15 +3873,6 @@ if __name__ == '__main__':
     plt.xlabel('utilization')
     plt.ylabel('height along tower (m)')
     plt.show()
-
-    fig3= plt.figure(3) #CJB+
-    ax = Axes3D(fig3) #CJB+
-    for i in range(myjckt.JcktGeoOut.nmems-len(myjckt.LoadFrameOuts.TPmems)-len(myjckt.LoadFrameOuts.Twrmems)): #CJB+
-        plt.plot([XYZ1[i,0],XYZ2[i,0]],[XYZ1[i,1],XYZ2[i,1]],[XYZ1[i,2],XYZ2[i,2]],'.75') #CJB+
-    for i in range(0,KXcoords.shape[0]): #CJB+
-        plt.plot([KXcoords[i,0]],[KXcoords[i,1]],[KXcoords[i,2]], KXcolors[i][1]) #CJB+
-    axisEqual3D(ax) #CJB+
-    plt.show() #CJB+
 
 ##________________SAMPLE CALL from outside IDE________________##
 ## python jacket.py True PyOPTSnopt
