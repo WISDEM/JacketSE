@@ -23,7 +23,7 @@ from xlutils.copy import copy as xlscopy
 
 from VarTrees import RNAprops
 from commonse.GetSheetByName import get_sheet_idx
-import SetJacketInputsPeregrine
+
 from PlotJacket import main as PlotJacket
 from RRD_towerse.DesVarsAux import TwrDesPrms, TwrDesVarBounds
 #__________________________________________________________#
@@ -113,7 +113,7 @@ def Recon1LineJckt(casefile,caseno,xlsfilename=[],optfile=[],titlines=3,hdrlines
         It creates a plot of the configuration, utilization of tower. \n
         myjckt  -OpenMdao object assembly of JacketSE with the design parameters and optimzation variables found.\n
         """
-
+    import SetJacketInputsPeregrine
     desvars=DesVars() #instance of design variables
 
     #First read design parameters from table file

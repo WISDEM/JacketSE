@@ -2751,15 +2751,7 @@ class JacketSE(Assembly):
         self.add('FrameOut',FrameOutsaux()) #auxiliary component
 
         # BUILD UP THE DRIVER
-<<<<<<< HEAD
-        casey = False
-        if casey:
-           self.driver.workflow.add(['PreLeg','PreBuild', 'Soil', 'Legs', 'Piles', 'Xbraces', 'Mudbraces', 'Hbraces', 'SDpySubDynA', 'SDReturns']) #CJBe
-        else:
-           self.driver.workflow.add(['PreLeg','PreBuild', 'Soil', 'Legs', 'Piles', 'Xbraces', 'Mudbraces', 'Hbraces'])
-=======
         self.driver.workflow.add(['Soil','PreLeg','PreBuild', 'Legs', 'Piles', 'Xbraces', 'Mudbraces', 'Hbraces'])
->>>>>>> master
 
 ##        if self.PrebuildTP:
 ##            self.driver.workflow.add(['PreBuildTP','PreBuildTP2'])
@@ -2887,85 +2879,7 @@ class JacketSE(Assembly):
         self.connect('Legs.legouts.LegObj',      'BrcCriteria.LegObj')
         self.connect('Mudbraces.Mbrcouts.brcObj','BrcCriteria.MudBrcObj')
         self.connect('Xbraces.Xbrcouts.LLURObj', 'BrcCriteria.XBrcObj')
-<<<<<<< HEAD
-        self.connect('PreBuild.WaterNew.wdepth',       'BrcCriteria.wdepth') #CJB+ water flag
-
-        #SubDyn #CJB+
-        if casey:
-            self.connect('InputFile_name',          'SDpySubDynA.InputFile_name') #CJB+
-            self.connect('Echo',                    'SDpySubDynA.Echo') #CJB+
-            self.connect('SDdeltaT',                'SDpySubDynA.SDdeltaT') #CJB+
-            self.connect('IntMethod',               'SDpySubDynA.IntMethod') #CJB+
-            self.connect('SttcSolve',               'SDpySubDynA.SttcSolve') #CJB+
-            self.connect('FEMmod',                  'SDpySubDynA.FEMmod') #CJB+
-            self.connect('NDiv',                    'SDpySubDynA.NDiv') #CJB+
-            self.connect('CBMod',                   'SDpySubDynA.CBMod') #CJB+
-            self.connect('Nmodes',                  'SDpySubDynA.Nmodes') #CJB+
-            self.connect('JDampings',               'SDpySubDynA.JDampings') #CJB+
-            self.connect('SDjointsHeader',          'SDpySubDynA.SDjointsHeader') #CJB+
-            self.connect('SDjoints',                'SDpySubDynA.SDjoints') #CJB+
-            self.connect('BaseRxnJointsHeader',     'SDpySubDynA.BaseRxnJointsHeader') #CJB+
-            self.connect('BaseRxnJoints',           'SDpySubDynA.BaseRxnJoints') #CJB+
-            self.connect('InterfaceRxnJointsHeader','SDpySubDynA.InterfaceRxnJointsHeader') #CJB+
-            self.connect('InterfaceJointsFlags',    'SDpySubDynA.InterfaceJoints') #CJB+
-            self.connect('MembersHeader',           'SDpySubDynA.MembersHeader') #CJB+
-            self.connect('Members',                 'SDpySubDynA.Members') #CJB+
-            self.connect('NPropSets',               'SDpySubDynA.NPropSets') #CJB+
-            self.connect('PropSet1Header',          'SDpySubDynA.PropSet1Header') #CJB+
-            self.connect('PropSet1',                'SDpySubDynA.PropSet1') #CJB+
-            self.connect('PropSet2Header',          'SDpySubDynA.PropSet2Header') #CJB+
-            self.connect('PropSet2',                'SDpySubDynA.PropSet2') #CJB+
-            self.connect('COSMHeader',              'SDpySubDynA.COSMHeader') #CJB+
-            self.connect('COSMs',                   'SDpySubDynA.COSMs') #CJB+
-            self.connect('CmassHeader',             'SDpySubDynA.CmassHeader') #CJB+
-            self.connect('Cmass',                   'SDpySubDynA.Cmass') #CJB+
-            self.connect('SSSum',                   'SDpySubDynA.SSSum') #CJB+
-            self.connect('OutCOSM',                 'SDpySubDynA.OutCOSM') #CJB+
-            self.connect('OutAll',                  'SDpySubDynA.OutAll') #CJB+
-            self.connect('OutSwtch',                'SDpySubDynA.OutSwtch') #CJB+
-            self.connect('TabDelim',                'SDpySubDynA.TabDelim') #CJB+
-            self.connect('OutDec',                  'SDpySubDynA.OutDec') #CJB+
-            self.connect('OutFmt',                  'SDpySubDynA.OutFmt') #CJB+
-            self.connect('OutSFmt',                 'SDpySubDynA.OutSFmt') #CJB+
-            self.connect('MemOutListHeader',        'SDpySubDynA.MemOutListHeader') #CJB+
-            self.connect('MemOutList',              'SDpySubDynA.MemOutList') #CJB+
-            self.connect('SSOutlist',               'SDpySubDynA.SSOutlist') #CJB+
-            self.connect('InputandDriverpath',      'SDpySubDynA.InputandDriverpath') #CJB+
-            self.connect('EchoD',                   'SDpySubDynA.EchoD') #CJB+
-            self.connect('Gravity',                 'SDpySubDynA.Gravity') #CJB+
-            self.connect('WtrDpth',                 'SDpySubDynA.WtrDpth') #CJB+
-            self.connect('SDInputFile',             'SDpySubDynA.SDInputFile') #CJB+
-            self.connect('OutRootName',             'SDpySubDynA.OutRootName') #CJB+
-            self.connect('NSteps',                  'SDpySubDynA.NSteps') #CJB+
-            self.connect('TimeInterval',            'SDpySubDynA.TimeInterval') #CJB+
-            self.connect('TP_RefPoint',             'SDpySubDynA.TP_RefPoint') #CJB+
-            self.connect('SubRotateZ',              'SDpySubDynA.SubRotateZ') #CJB+
-            self.connect('InputsMod',               'SDpySubDynA.InputsMod') #CJB+
-            self.connect('InputsFile',              'SDpySubDynA.InputsFile') #CJB+
-            self.connect('uTPInSteady',             'SDpySubDynA.uTPInSteady') #CJB+
-            self.connect('uDotTPInSteady',          'SDpySubDynA.uDotTPInSteady') #CJB+
-            self.connect('uDotDotTPInSteady',       'SDpySubDynA.uDotDotTPInSteady') #CJB+
-            self.connect('SDpath',                  'SDpySubDynA.SDpath') #CJB+
-            self.connect('Readpath_out',            'SDpySubDynA.Readpath_out') #CJB+
-            self.connect('Readpath_sum',            'SDpySubDynA.Readpath_sum') #CJB+
-            self.connect('Delete_file',             'SDpySubDynA.Delete_file') #CJB+
-            self.connect('InputFile_path',          'SDpySubDynA.InputFile_path') #CJB+
-            self.connect('Driver_path',             'SDpySubDynA.Driver_path') #CJB+
-    
-            #SubDyn Outputs CJB+
-            self.connect('SDpySubDynA.SubDynAOuts', 'SDReturns.SubDynOuts') #CJB+
-    
-            #SubDyn Inputs from Jacket
-            #gravity, nodes (see below)
-            self.connect('PreBuild.WaterNew.wdepth', 'SDpySubDynA.wdepth') #CJB+ #CJB+ water flag
-            self.connect('JcktGeoIn.dck_botz', 'SDpySubDynA.dck_botz') #CJB+
-            self.connect('Build.JcktGeoOut.mems','SDpySubDynA.mems') #CJB+
-            self.connect('Build.JcktGeoOut.Reacts','SDpySubDynA.Reacts') #CJB+
-            self.connect('Build.SDPropSet', 'SDpySubDynA.SDPropSet') #CJB+
-            self.connect('RNAinputs',          'SDpySubDynA.RNAinputs' ) #CJB+ test
-=======
         self.connect('Waterinputs.wdepth',       'BrcCriteria.wdepth')
->>>>>>> master
 
         # LoadFrameOuts and LoadFrameOuts2
         self.connect('RNA_F',                      'LoadFrameOuts.RNA_F')
@@ -3328,7 +3242,7 @@ if __name__ == '__main__':
         OPTswitch -string, ['Cobyla'/ 'PyOptSNOPT'/ 'PyOPTCobyla'] for python Cobyla, or PyOPT SNOPT, or PyOPT Cobyla."""
 
     optimize = False        #Set this one to True if you want a test on optimization
-    #OPTswitch= 'Cobyla'     #'Cobyla', 'PyOptSNOPT', 'PyOPTCobyla'
+    OPTswitch= 'Cobyla'     #'Cobyla', 'PyOptSNOPT', 'PyOPTCobyla'
 
     if len(sys.argv)>1 and len(sys.argv)<5: #This means individual case
         optimize=sys.argv[1]
@@ -3558,140 +3472,6 @@ if __name__ == '__main__':
     #Decide whether or not to consider DLC 6.1 as well
     twodlcs=False
 
-<<<<<<< HEAD
-#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,twodlcs=twodlcs)) ##(Jcktins.PreBuildTPLvl>0),
-
-    #pySubDyn Parameters CJB+
-    #SDpySubDynA = pySubDynA()
-
-    #INPUTS TO RUN SUBDYN-------------------------------------------------------
-    #(PATH INFORMATION FOR INPUT FILE AND DRIVER)
-
-    Base_name="Jacket_pySubDyn" #CJB+ #Input name here
-
-    #INPUT FILE PATH  #CJB+
-    myjckt.InputFile_name=str(Base_name)+".txt"  #CJB+
-    #myjckt.SDpySubDynA.InputFile_name=str(Base_name)+".txt"  #CJB+
-    myjckt.InputandDriverpath=os.sep.join(['SubDyn', 'CertTest'])
-    #myjckt.InputandDriverpath="C:\wisdem\plugins\JacketSE\src\jacketse\SubDyn\CertTest"  #CJB+
-    myjckt.InputFile_path=myjckt.InputandDriverpath+os.sep+str(myjckt.InputFile_name)  #CJB+
-
-    #DRIVER PATH  #CJB+
-    myjckt.Driver_name=str(Base_name)+"D"+".txt"  #CJB+
-    myjckt.Driver_path=myjckt.InputandDriverpath+os.sep+str(myjckt.Driver_name)  #CJB+
-    myjckt.Driver_path=myjckt.InputandDriverpath+os.sep+str(myjckt.Driver_name)  #CJB+
-
-    #PATH TO RUN SUBDYN  #CJB+
-    SDEXEpath="C:\wisdem\plugins\JacketSE\src\jacketse\SubDyn"+os.sep+"bin\SubDyn_Win32.exe"  #CJB+
-    myjckt.SDpath=str(SDEXEpath)+' '+str(myjckt.Driver_path)  #CJB+
-    #test.SDpath='r'+"'''"+test.SDEXEpath+' '+test.SDDriverpath+"'''"  #CJB+
-
-    #PATH TO READ OUTPUT (INPUTS TO READ OUTPUT)  #CJB+
-    myjckt.Readpath_out=str(myjckt.InputandDriverpath)+os.sep+str(Base_name)+".SD.out"  #CJB+
-    myjckt.Readpath_sum=str(myjckt.InputandDriverpath)+os.sep+str(Base_name)+".SD.sum"  #CJB+
-    myjckt.Delete_file=False #Deletes driver, input, and output files. Does not delete Echo file.  #CJB+
-
-    #INPUT FILE INPUTS----------------------------------------------------------  #CJB+
-
-    #Simulation Control  #CJB+
-    myjckt.Echo=np.array([False, "Echo", "- Echo input data to ""<rootname>.SD.ech"" (flag)"])  #CJB+
-    myjckt.SDdeltaT=np.array(["DEFAULT", "SDdeltaT", "- Local Integration Step. If ""default"", the glue-code integration step will be used."])  #CJB+
-    myjckt.IntMethod=np.array([4, "IntMethod", "- Integration Method [1/2/3/4 = RK4/AB4/ABM4/AM2]."])  #CJB+
-    myjckt.SttcSolve=np.array([False, "SttcSolve", "- Solve dynamics about static equilibrium point"])  #CJB+
-
-    #FEA and CRAIG-BAMPTON PARAMETERS  #CJB+
-    myjckt.FEMmod=np.array([3, "- FEM switch: element model in the FEM. [1= Euler-Bernoulli(E-B);  2=Tapered E-B (unavailable);  3= 2-node Timoshenko;  4= 2-node tapered Timoshenko (unavailable)]"])  #CJB+
-    myjckt.NDiv=np.array([1, "NDiv", "- Number of sub-elements per member"])#CJB "HARDWIRED" INTO PYSUBDYN AS 1 TO ALLOW JACKETSE'S NODES TO BE USED AS SUBDYN'S JOINTS  #CJB+
-    myjckt.CBMod=np.array([False, "- [T/F] If True perform C-B reduction, else full FEM dofs will be retained. If True, select Nmodes to retain in C-B reduced system."])  #CJB+
-    myjckt.Nmodes=np.array([75, "- Number of internal modes to retain (ignored if CBMod=False). If Nmodes=0 --> Guyan Reduction."])  #CJB+
-    myjckt.JDampings=np.array([2, "JDampings", "- Damping Ratios for each retained mode (% of critical) If Nmodes>0, list Nmodes structural damping ratios for each retained mode (% of critical),\
-     or a single damping ratio to be applied to all retained modes. (last entered value will be used for all remaining modes)."])  #CJB+
-
-    #Structure Joints  #CJB+
-    myjckt.SDjointsHeader=np.array([['JointID','JointXss','JointYss','JointZss','[Coordinates of Member joints in SS-Coordinate System]'], ['(-)','(m)','(m)','(m)']])  #CJB+
-
-    #Base Reaction Joints  #CJB+
-    myjckt.BaseRxnJointsHeader=np.array([['RJointID','RctTDXss','RctTDYss','RctTDZss','RctRDXss','RctRDYss','RctRDZss','[Global Coordinate System]'], ['(-)',('flag'),('flag'),('flag'),('flag'),('flag'),('flag')]])  #CJB+
-
-    #Interface Joints  #CJB+
-    myjckt.InterfaceRxnJointsHeader=np.array([['IJointID','ItfTDXss','ItfTDYss','ItfTDZss','ItfRDXss','ItfRDYss','ItfRDZss','[Global Coordinate System]'], ['(-)',('flag'),('flag'),('flag'),('flag'),('flag'),('flag')]])  #CJB+
-
-    #Members  #CJB+
-    myjckt.MembersHeader=np.array([['MemberID','MJointID1','MJointID2','MPropSetID1','MPropSetID2','COSMID'], ['(-)','(-)','(-)','(-)','(-)','(-)']])  #CJB+
-
-    #MEMBER X-SECTION PROPERTY data 1/2  #CJB+
-    myjckt.NPropSets=np.array([6, 'NPropSets', '- # of structurally unique x-sections (i.e. # of X-sectional props utilized throughout all of the members)'])  #CJB+
-    myjckt.PropSet1Header=np.array([['PropSetID', 'YoungE', 'ShearG', 'MatDens', 'XsecD', 'XsecT'],['(-)', '(N/m2)', '(N/m2)', '(kg/m3)', '(m)', '(m)']])  #CJB+
-
-    #MEMBER X-SECTION PROPERTY data 2/2  #CJB+
-    myjckt.PropSet2=np.array([])  #CJB+
-    myjckt.PropSet2Header=np.array([["PropSetID","YoungE","ShearG","MatDens","XsecA","XsecAsx","XsecAsy","XsecJxx","XsecJyy","XsecJ0"],["(-)","(N/m2)","(N/m2)","(kg/m3)","(m2)","(m2)","(m2)","(m4)","(m4)","(m4)"]])  #CJB+
-
-    #MEMBER COSINE MATRICES COSM(i,j)  #CJB+
-    myjckt.COSMHeader=np.array([["COSMID","COSM11","COSMID12","COSMID13","COSMID21","COSMID22","COSMID23","COSMID31","COSMID32","COSMID33"],["(-)","(-)","(-)","(-)","(-)","(-)","(-)","(-)","(-)","(-)"]])  #CJB+
-    myjckt.COSMs=np.array([])  #CJB+
-
-    #JOINT ADDITIONAL CONCENTRATED MASSES  #CJB+
-    myjckt.CmassHeader=np.array([["CMJointID","JMass","JMXX","JMYY","JMZZ"],["(-)","(kg)" ,"(kg*m^2)","(kg*m^2)","(kg*m^2)"]])  #CJB+
-    myjckt.Cmass=np.array([])  #CJB+
-
-    #OUTPUT: SUMMARY & OUTFILE  #CJB+
-    myjckt.SSSum=np.array([True, "SSSum", "- Output a Summary File (flag).It contains: matrices K,M  and C-B reduced M_BB, M-BM, K_BB, K_MM(OMG^2), PHI_R, PHI_L. It can also contain COSMs if requested."])  #CJB+
-    myjckt.OutCOSM=np.array([True, "OutCOSM", "- Output cosine matrices with the selected output member forces (flag)"])  #CJB+
-    myjckt.OutAll=np.array([True, "OutAll", "- [T/F] Output all members' end forces "])  #CJB+
-    myjckt.OutSwtch=np.array([1, "OutSwtch", "- [1/2/3] Output requested channels to: 1=<rootname>.SD.out;  2=<rootname>.out (generated by FAST);  3=both files."])  #CJB+
-    myjckt.TabDelim=np.array([True, "TabDelim", "- Generate a tab-delimited output in the <rootname>.SD.out file"])  #CJB+
-    myjckt.OutDec=np.array([1, "OutDec", "- Decimation of output in the <rootname>.SD.out file"])  #CJB+
-    myjckt.OutFmt=np.array(["Es11.4e2", "OutFmt", "- Output format for numerical results in the <rootname>.SD.out file"])  #CJB+
-    myjckt.OutSFmt=np.array(["A11", "OutFmt", "- Output format for header strings in the <rootname>.SD.out file"])  #CJB+
-
-    #MEMBER OUTPUT LIST  #CJB+
-    myjckt.MemOutListHeader=np.array([['MemberID','NoutCnt','NodeCnt','[NOutCnt=how many nodes to get output for [< 10]; NodeCnt are local ordinal numbers from the start of the member, and must be >=1 and <= NDiv+1] If NMOutputs=0 leave blank as well.]'],\
-                                           ['(-)','(-)','(-)']])  #CJB+
-
-    #SSOutline  #CJB+
-    myjckt.SSOutlist=np.array([["ReactFXss, ReactFYss, ReactFZss, ReactMXss, ReactMYss, ReactMZss",'-Base reactions (forces onto SS structure)'],\
-                    ["IntfFXss,  IntfFYss,  IntfFZss,  IntfMXss, IntfMYss, IntfMZss",'-Interface reactions (forces from SS structure)'],\
-                    ["IntfTDXss,  IntfTDYss,  IntfTDZss,  IntfRDXss, IntfRDYss, IntfRDZss",'-Interface deflections '],\
-                    ["IntfTAXss,  IntfTAYss,  IntfTAZss,  IntfRAXss, IntfRAYss, IntfRAZss",'Interface accelerations']])
-
-
-    myjckt.InterfaceJointsFlags=np.array([[10,1,1,1,1,1,1]]) #CJB+ The first entry is just a placeholder; the 6 ones need to be there.
-
-    myjckt.MemOutList=np.array([[1,2,1,2]])  #CJB+
-
-    #DRIVER INPUTS--------------------------------------------------------------  #CJB+
-
-    myjckt.EchoD=np.array([True, "Echo", "- Echo the input file data (flag)"])  #CJB+
-
-    #Environmental Conditions  #CJB+
-    myjckt.Gravity=np.array([9.81, "Gravity", "- Gravity (m/s^2)"])  #CJB+
-    myjckt.WtrDpth=np.array([43.127, "WtrDpth", "- Water Depth (m) positive value"])  #CJB+
-
-    #SubDyn  #CJB+
-    myjckt.SDInputFile=np.array([myjckt.InputFile_path, "SDInputFile"])  #CJB+
-    myjckt.OutRootName=np.array([str(myjckt.InputandDriverpath)+os.sep+str(Base_name), "OutRootName"])  #CJB+
-    myjckt.NSteps=np.array([600, "NSteps", "- Number of time steps in the simulations (-)"])  #CJB+
-    myjckt.TimeInterval=np.array([0.005, "TimeInterval", "- TimeInterval for the simulation (sec)"])  #CJB+
-    myjckt.TP_RefPoint=np.array([0.0, 0.0, 18.15, "TP_RefPoint", "- Location of the TP reference point in global coordinates (m)"])  #CJB+
-    myjckt.SubRotateZ=np.array([0.0, "SubRotateZ", "- Rotation angle of the structure geometry in degrees about the global Z axis."])  #CJB+
-
-    #INPUTS  #CJB+
-    myjckt.InputsMod=np.array([1, "InputsMod", "- Inputs model {0: all inputs are zero for every timestep, 1: steadystate inputs, 2: read inputs from a file (InputsFile)} (switch)"])  #CJB+
-    myjckt.InputsFile=np.array(['""', "InputsFile", "- Name of the inputs file if InputsMod = 2"])  #CJB+
-
-    #STEADY INPUTS  #CJB+
-    myjckt.uTPInSteady=np.array([0.1, 0.0, 0.0, 0.0, 0.0, 0.0, "uTPInSteady", "- input displacements and rotations ( m, rads )"])  #CJB+
-    myjckt.uDotTPInSteady=np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "uDotTPInSteady", "- input translational and rotational velocities ( m/s, rads/s)"])  #CJB+
-    myjckt.uDotDotTPInSteady=np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "uDotDotTPInSteady", "- input translational and rotational accelerations ( m/s^2, rads/s^2)"])  #CJB+
-
-    #myjckt.SDpySubDynA.run()  #CJB+
-
-#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-=======
->>>>>>> master
     #-----Launch the assembly-----#
 
     myjckt=set_as_top(JacketSE(Jcktins.clamped,Jcktins.AFflag,twodlcs=twodlcs)) ##(Jcktins.PreBuildTPLvl>0),
