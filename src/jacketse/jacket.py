@@ -2246,7 +2246,8 @@ class SPIstiffness(Component):
         ks_avg=SubgrReact(self.SoilObj,self.Lp, sndflg=self.SoilObj.sndflg, bwtable=True)  #offshore pile is always below water table
 
         #Here is the Stiffness matrix
-        self.SPI_Kmat=SoilPileStiffness(ks_avg,Dp,self.Lp,Ep,Gp,Jxx_p,loadZ=self.loadZ,PenderSwtch=self.SoilObj.PenderSwtch,sndflg=self.SoilObj.sndflg,H=self.H,M=self.M,batter=self.batter*(not(self.VPFlag)),psi=self.innr_ang)
+        self.SPI_Kmat=SoilPileStiffness(ks_avg,Dp,self.Lp,Ep,Gp,Jxx_p,loadZ=self.loadZ,PenderSwtch=self.SoilObj.PenderSwtch,H=self.H,M=self.M,batter=self.batter*(not(self.VPFlag)),psi=self.innr_ang)
+        #self.SPI_Kmat=SoilPileStiffness(ks_avg,Dp,self.Lp,Ep,Gp,Jxx_p,loadZ=self.loadZ,PenderSwtch=self.SoilObj.PenderSwtch,sndflg=self.SoilObj.sndflg,H=self.H,M=self.M,batter=self.batter*(not(self.VPFlag)),psi=self.innr_ang)
 
 #_____________________________________________________#
 
