@@ -7,8 +7,6 @@
 Documentation
 -------------
 
-If you have a normal Python code there are better ways to do this with autodoc.  For that case, see an example at `<https://raw.githubusercontent.com/WISDEM/CCBlade/master/docs/documentation.rst>`_.  For OpenMDAO classes there aren't any autodoc plugins (yet), so there isn't much you can do.  Fortunately, the definition of the assemblies can in many cases serve as useful documentaiton (assuming you have done a good job documenting through desc tags, units, etc.)  You can dump this out with a literalinclude
-
 .. literalinclude:: ../src/jacketse/jacket.py
     :language: python
     :start-after: JacketSE(Assembly)
@@ -19,7 +17,7 @@ Beyond that you should provide links to important modules in your code.  This wi
 
 
 Referenced Utilization Modules
-============================
+===============================
 .. module:: jacketse.Utilization
 .. class:: TwrUtilization
 .. class:: JcktUtilization

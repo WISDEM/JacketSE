@@ -11,7 +11,7 @@ Two examples are included in this tutorial section: simulation of a jacket-tower
 .. currentmodule:: jacketse.jacket
 
 This example demonstrates how to setup and run *analysis* for a jacket-tower support structure.
-The structure looks as shown in :num:`Figure jacketTut-fig` :
+The structure looks as shown in Figure :ref:`jacketTut-fig` :
 
 .. _jacketTut-fig:
 
@@ -155,7 +155,7 @@ They should look as shown here:
 >>>MAX X-joint  utilization at joints = 0.2600
 >>>MAX K-joint  utilization at joints = 0.3667
 
-If you plot the utilization of the tower, you should get something as in :num:`Figure #utilization-fig`, where
+If you plot the utilization of the tower, you should get something as in Figure :ref:`utilization-fig`, where
 the Von Mises stress, global and shell buckling utilizations are shown along the tower span.  Each curve represents material utilization and so should be <1 for feasibility.
 
 .. _utilization-fig:
@@ -238,8 +238,8 @@ Now the optimization can be run.
     :end-before: # ---------------
     
 
-THe final configuration skeleton is shown in :num:`Figure #jacket_tower_tutOpt`.
-If you plot the utilization of the tower, you should get something as in :num:`Figure #utilopt-fig`, where
+THe final configuration skeleton is shown in Figure :ref:`jacket_tower_tutOpt`.
+If you plot the utilization of the tower, you should get something as in Figure :ref:`utilopt-fig`, where
 the Von Mises stress, global and shell buckling utilizations are shown along the tower span.  Each is a utilization and so should be <1 for feasibility.
 
 ::
@@ -261,7 +261,7 @@ the Von Mises stress, global and shell buckling utilizations are shown along the
 The total mass of the jacket, tower, and TP (both structural and lumped mass), and piles is 1,627,139 kg.
 Also note that the first natural frequencies do NOT match the requirement >0.22 Hz.
 
-.. _jacket_tower_tutOpt-fig:
+.. _jacket_tower_tutOpt:
 
 .. figure:: ./images/jacket_tower_tutOpt.*
     :width: 6in
@@ -408,6 +408,7 @@ Cobyla seems to perform better than the other optimization options.
 .. <!-- ________________________________________ !>
 
 .. _MDAOcoby:
+
 Jacket-Tower Optimization - Optimization via OpenMDAOs Cobyla (non-PyOPT)
 =========================================================================
 
