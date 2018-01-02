@@ -13,8 +13,6 @@ Documentation
     :end-before: def configure(self)
     :prepend: class JacketSE(Assembly):
 
-Beyond that you should provide links to important modules in your code.  This will allow you to refer to them in other modules and the source will be linked.
-
 
 Referenced Utilization Modules
 ===============================
