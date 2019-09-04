@@ -1,3 +1,11 @@
+# DEPRECATED
+------------
+
+**THIS REPOSITORY IS DEPRECATED AND WILL BE ARCHIVED (READ-ONLY) IN NOVEMBER 2019.**
+
+WISDEM has moved to a single, integrated repository at https://github.com/wisdem/wisdem
+
+---------------
 # JacketSE
 
 JacketSE is a systems engineering model for 3 and 4-legged lattice structures (jackets) supporting tubular steel towers for offshore wind turbines.  The analysis uses beam finite element theory, cylinder drag data, linear wave theory, shell and global buckling methods, and API RP-2A standard code checks.  The module is developed as an OpenMDAO assembly.
